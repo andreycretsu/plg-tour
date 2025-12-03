@@ -276,6 +276,24 @@
     const selector = generateSelector(currentElement);
     const rect = currentElement.getBoundingClientRect();
     
+    // Show success feedback
+    const toolbar = document.getElementById('tourlayer-picker-toolbar');
+    if (toolbar) {
+      toolbar.innerHTML = `
+        <div style="text-align: center; padding: 20px;">
+          <div style="font-size: 48px; margin-bottom: 10px;">✅</div>
+          <h3 style="color: #22c55e; margin: 0 0 8px 0;">Element Selected!</h3>
+          <p style="color: #94a3b8; font-size: 13px; margin: 0;">Selector: <code style="background: #0f172a; padding: 2px 6px; border-radius: 4px; color: #22c55e;">${selector}</code></p>
+          <p style="color: #64748b; font-size: 12px; margin-top: 12px;">Returning to TourLayer...</p>
+        </div>
+      `;
+    }
+    
+    // Hide the highlight box
+    if (highlightBox) {
+      highlightBox.style.display = 'none';
+    }
+    
     // Send selector back to extension/web app
     chrome.runtime.sendMessage({
       type: 'ELEMENT_SELECTED',
@@ -290,7 +308,10 @@
       }
     });
     
-    cleanup();
+    // Delay cleanup so user can see the success message
+    setTimeout(() => {
+      cleanup();
+    }, 1500);
   }
 
   function cleanup() {

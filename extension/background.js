@@ -50,6 +50,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     case 'ELEMENT_SELECTED':
       // Forward selected element to any listening tabs (web app)
+      console.log('Element selected:', message.selector);
       broadcastToWebApp({
         type: 'ELEMENT_PICKED',
         selector: message.selector,
@@ -57,6 +58,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         text: message.text,
         rect: message.rect
       });
+      
+      // Switch back to the web app tab
+      switchToWebAppTab();
+      
       sendResponse({ success: true });
       break;
 
@@ -184,14 +189,22 @@ async function startElementPicker(tabId) {
   }
 }
 
-// Broadcast message to web app tabs
+// Broadcast message to web app tabs (any Vercel deployment)
 async function broadcastToWebApp(message) {
   try {
-    const tabs = await chrome.tabs.query({ url: `${apiUrl}/*` });
+    // Search for ALL vercel.app tabs that might be TourLayer
+    const tabs = await chrome.tabs.query({ url: 'https://*.vercel.app/*' });
     
-    for (const tab of tabs) {
+    // Also check localhost for development
+    const localTabs = await chrome.tabs.query({ url: 'http://localhost:3000/*' });
+    const allTabs = [...tabs, ...localTabs];
+    
+    console.log('Broadcasting to tabs:', allTabs.length);
+    
+    for (const tab of allTabs) {
       try {
         await chrome.tabs.sendMessage(tab.id, message);
+        console.log('Sent message to tab:', tab.id, tab.url);
       } catch (e) {
         // Tab might not have content script, inject it
         try {
@@ -202,13 +215,36 @@ async function broadcastToWebApp(message) {
             },
             args: [message]
           });
+          console.log('Injected message to tab:', tab.id);
         } catch (e2) {
-          console.log('Could not send to tab:', tab.id);
+          console.log('Could not send to tab:', tab.id, e2.message);
         }
       }
     }
   } catch (error) {
     console.error('Failed to broadcast:', error);
+  }
+}
+
+// Switch back to web app tab after element selection
+async function switchToWebAppTab() {
+  try {
+    // Find web app tabs
+    const tabs = await chrome.tabs.query({ url: 'https://*.vercel.app/*' });
+    const localTabs = await chrome.tabs.query({ url: 'http://localhost:3000/*' });
+    const allTabs = [...tabs, ...localTabs];
+    
+    // Find a tab that looks like TourLayer (has /tours in URL)
+    const tourLayerTab = allTabs.find(tab => 
+      tab.url.includes('/tours') || tab.url.includes('/dashboard')
+    );
+    
+    if (tourLayerTab) {
+      await chrome.tabs.update(tourLayerTab.id, { active: true });
+      console.log('Switched to web app tab:', tourLayerTab.id);
+    }
+  } catch (error) {
+    console.error('Failed to switch tabs:', error);
   }
 }
 
