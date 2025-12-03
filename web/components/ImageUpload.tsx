@@ -9,11 +9,16 @@ interface ImageUploadProps {
   placeholder?: string;
 }
 
+// Cloudinary configuration
+const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'demo';
+const CLOUDINARY_UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || 'ml_default';
+
 export default function ImageUpload({ value, onChange, placeholder }: ImageUploadProps) {
   const [mode, setMode] = useState<'upload' | 'url'>('upload');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [dragActive, setDragActive] = useState(false);
+  const [urlInput, setUrlInput] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = async (file: File) => {
@@ -26,9 +31,9 @@ export default function ImageUpload({ value, onChange, placeholder }: ImageUploa
       return;
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError('File too large. Maximum 5MB');
+    // Validate file size (max 10MB for Cloudinary free tier)
+    if (file.size > 10 * 1024 * 1024) {
+      setError('File too large. Maximum 10MB');
       return;
     }
 
@@ -36,27 +41,31 @@ export default function ImageUpload({ value, onChange, placeholder }: ImageUploa
     setUploading(true);
 
     try {
-      const token = localStorage.getItem('token');
+      // Upload directly to Cloudinary
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      formData.append('folder', 'tourlayer');
 
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-        body: formData,
-      });
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+        {
+          method: 'POST',
+          body: formData,
+        }
+      );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Upload failed');
+        throw new Error(data.error?.message || 'Upload failed');
       }
 
-      onChange(data.url);
+      // Use the secure URL from Cloudinary
+      onChange(data.secure_url);
     } catch (err: any) {
-      setError(err.message);
+      console.error('Upload error:', err);
+      setError(err.message || 'Failed to upload image');
     } finally {
       setUploading(false);
     }
@@ -84,8 +93,16 @@ export default function ImageUpload({ value, onChange, placeholder }: ImageUploa
   const clearImage = () => {
     onChange('');
     setError('');
+    setUrlInput('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+  };
+
+  const handleUrlSubmit = () => {
+    if (urlInput.trim()) {
+      onChange(urlInput.trim());
+      setUrlInput('');
     }
   };
 
@@ -170,7 +187,7 @@ export default function ImageUpload({ value, onChange, placeholder }: ImageUploa
                 <span className="text-sm text-blue-600 font-medium">Click to upload</span>
                 <span className="text-sm text-gray-500"> or drag & drop</span>
               </div>
-              <span className="text-xs text-gray-400">JPG, PNG, GIF, WebP (max 5MB)</span>
+              <span className="text-xs text-gray-400">JPG, PNG, GIF, WebP (max 10MB)</span>
             </div>
           )}
         </div>
@@ -178,13 +195,24 @@ export default function ImageUpload({ value, onChange, placeholder }: ImageUploa
 
       {/* URL Mode */}
       {mode === 'url' && !value && (
-        <input
-          type="url"
-          className="input text-sm"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder || "https://example.com/image.png"}
-        />
+        <div className="flex gap-2">
+          <input
+            type="url"
+            className="input text-sm flex-1"
+            value={urlInput}
+            onChange={(e) => setUrlInput(e.target.value)}
+            placeholder={placeholder || "https://example.com/image.png"}
+            onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
+          />
+          <button
+            type="button"
+            onClick={handleUrlSubmit}
+            className="btn btn-secondary btn-sm"
+            disabled={!urlInput.trim()}
+          >
+            Add
+          </button>
+        </div>
       )}
 
       {/* Error */}
@@ -194,4 +222,3 @@ export default function ImageUpload({ value, onChange, placeholder }: ImageUploa
     </div>
   );
 }
-
