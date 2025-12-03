@@ -1,88 +1,130 @@
-// Content script - Tour player that runs on websites
+// TourLayer Content Script - Renders tours on matching websites
+(function() {
+  // Prevent multiple injections
+  if (window.__tourLayerInitialized) return;
+  window.__tourLayerInitialized = true;
 
-const API_URL = 'https://plg-tour.vercel.app/api';
+  const API_URL = 'https://plg-tour.vercel.app';
+  
+  let currentTour = null;
+  let currentStepIndex = 0;
+  let tourContainer = null;
 
-class TourLayerPlayer {
-  constructor() {
-    this.shadowRoot = null;
-    this.currentTour = null;
-    this.currentStepIndex = 0;
-    this.init();
-  }
-
-  async init() {
-    // Get API token
+  // Initialize
+  async function init() {
+    console.log('TourLayer: Initializing...');
+    
+    // Get API token from storage
     const result = await chrome.storage.local.get(['apiToken']);
+    
     if (!result.apiToken) {
-      console.log('TourLayer: No API token found');
+      console.log('TourLayer: No API token configured');
       return;
     }
 
     // Fetch tours for current URL
-    await this.fetchAndDisplayTours(result.apiToken);
+    await fetchAndShowTours(result.apiToken);
   }
 
-  async fetchAndDisplayTours(apiToken) {
+  // Fetch tours from API
+  async function fetchAndShowTours(apiToken) {
     try {
       const currentUrl = window.location.href;
-      const response = await fetch(`${API_URL}/public/tours?url=${encodeURIComponent(currentUrl)}`, {
-        headers: {
-          'X-API-Token': apiToken,
-        },
-      });
+      const response = await fetch(
+        `${API_URL}/api/public/tours?url=${encodeURIComponent(currentUrl)}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${apiToken}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
 
       if (!response.ok) {
-        console.error('TourLayer: Failed to fetch tours');
+        console.error('TourLayer: Failed to fetch tours', response.status);
         return;
       }
 
-      const tours = await response.json();
-      
-      if (tours && tours.length > 0) {
-        console.log(`TourLayer: Found ${tours.length} tour(s) for this page`);
-        // For now, show the first matching tour
-        this.currentTour = tours[0];
-        this.setupShadowDOM();
-        this.startTour();
-      } else {
-        console.log('TourLayer: No tours found for this URL');
+      const data = await response.json();
+      const tours = data.tours || [];
+
+      console.log('TourLayer: Found', tours.length, 'tours for this page');
+
+      if (tours.length > 0 && tours[0].steps?.length > 0) {
+        // Show first matching tour
+        currentTour = tours[0];
+        currentStepIndex = 0;
+        
+        // Check if user has already seen this tour
+        const seenKey = `tourlayer_seen_${currentTour.id}`;
+        const seen = await chrome.storage.local.get([seenKey]);
+        
+        if (!seen[seenKey]) {
+          showStep(currentStepIndex);
+        }
       }
     } catch (error) {
-      console.error('TourLayer: Error fetching tours:', error);
+      console.error('TourLayer: Error fetching tours', error);
     }
   }
 
-  setupShadowDOM() {
-    // Create shadow root container
-    const container = document.createElement('div');
-    container.id = 'tourlayer-root';
-    container.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999999;';
-    
-    this.shadowRoot = container.attachShadow({ mode: 'open' });
+  // Create tour container (Shadow DOM for isolation)
+  function createContainer() {
+    if (tourContainer) return tourContainer;
+
+    const host = document.createElement('div');
+    host.id = 'tourlayer-container';
+    host.style.cssText = 'all: initial; position: fixed; z-index: 2147483647;';
+    document.body.appendChild(host);
+
+    const shadow = host.attachShadow({ mode: 'closed' });
     
     // Add styles
-    const style = document.createElement('style');
-    style.textContent = this.getStyles();
-    this.shadowRoot.appendChild(style);
-    
-    document.body.appendChild(container);
-  }
-
-  getStyles() {
-    return `
+    const styles = document.createElement('style');
+    styles.textContent = `
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+      
+      .tourlayer-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1;
+      }
+      
+      .tourlayer-highlight {
+        position: fixed;
+        box-shadow: 0 0 0 4px #3b82f6, 0 0 0 9999px rgba(0, 0, 0, 0.5);
+        border-radius: 4px;
+        z-index: 2;
+        pointer-events: none;
+        transition: all 0.3s ease;
+      }
+      
       .tourlayer-beacon {
-        position: absolute;
-        width: 24px;
-        height: 24px;
+        position: fixed;
+        width: 20px;
+        height: 20px;
+        z-index: 3;
+        cursor: pointer;
+      }
+      
+      .tourlayer-beacon-dot {
+        width: 20px;
+        height: 20px;
         background: #3b82f6;
         border-radius: 50%;
-        cursor: pointer;
-        pointer-events: auto;
-        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
-        animation: pulse 2s infinite;
+        animation: tourlayer-pulse 2s infinite;
       }
-
-      @keyframes pulse {
+      
+      @keyframes tourlayer-pulse {
         0% {
           box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
         }
@@ -93,257 +135,331 @@ class TourLayerPlayer {
           box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
         }
       }
-
+      
       .tourlayer-tooltip {
-        position: absolute;
+        position: fixed;
         background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-        padding: 20px;
-        max-width: 400px;
-        pointer-events: auto;
-        z-index: 1000000;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        border-radius: 12px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        max-width: 320px;
+        z-index: 4;
+        overflow: hidden;
       }
-
-      .tourlayer-tooltip h3 {
-        margin: 0 0 12px 0;
-        font-size: 18px;
+      
+      .tourlayer-tooltip-header {
+        padding: 16px 20px;
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        color: white;
+      }
+      
+      .tourlayer-tooltip-title {
+        font-size: 16px;
         font-weight: 600;
-        color: #111827;
+        margin-bottom: 4px;
       }
-
-      .tourlayer-tooltip p {
-        margin: 0 0 16px 0;
+      
+      .tourlayer-tooltip-step {
+        font-size: 12px;
+        opacity: 0.8;
+      }
+      
+      .tourlayer-tooltip-body {
+        padding: 16px 20px;
+      }
+      
+      .tourlayer-tooltip-content {
         font-size: 14px;
-        color: #6b7280;
-        line-height: 1.5;
+        color: #374151;
+        line-height: 1.6;
       }
-
-      .tourlayer-tooltip img {
+      
+      .tourlayer-tooltip-image {
         width: 100%;
-        border-radius: 6px;
+        max-height: 150px;
+        object-fit: cover;
         margin-bottom: 12px;
+        border-radius: 8px;
       }
-
-      .tourlayer-footer {
+      
+      .tourlayer-tooltip-footer {
+        padding: 12px 20px;
+        background: #f9fafb;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        gap: 12px;
       }
-
-      .tourlayer-progress {
-        font-size: 12px;
-        color: #9ca3af;
-      }
-
-      .tourlayer-buttons {
-        display: flex;
-        gap: 8px;
-      }
-
+      
       .tourlayer-btn {
         padding: 8px 16px;
-        border: none;
         border-radius: 6px;
         font-size: 14px;
         font-weight: 500;
         cursor: pointer;
+        border: none;
         transition: all 0.2s;
       }
-
+      
+      .tourlayer-btn-secondary {
+        background: #e5e7eb;
+        color: #374151;
+      }
+      
+      .tourlayer-btn-secondary:hover {
+        background: #d1d5db;
+      }
+      
       .tourlayer-btn-primary {
         background: #3b82f6;
         color: white;
       }
-
+      
       .tourlayer-btn-primary:hover {
         background: #2563eb;
       }
-
-      .tourlayer-btn-secondary {
-        background: #f3f4f6;
+      
+      .tourlayer-btn-skip {
+        background: transparent;
+        color: #6b7280;
+        padding: 8px;
+      }
+      
+      .tourlayer-btn-skip:hover {
         color: #374151;
       }
-
-      .tourlayer-btn-secondary:hover {
-        background: #e5e7eb;
-      }
-
+      
       .tourlayer-close {
         position: absolute;
         top: 12px;
         right: 12px;
-        background: none;
+        width: 24px;
+        height: 24px;
+        background: rgba(255, 255, 255, 0.2);
         border: none;
-        color: #9ca3af;
+        border-radius: 50%;
+        color: white;
         cursor: pointer;
-        font-size: 20px;
-        line-height: 1;
-        padding: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
       }
-
+      
       .tourlayer-close:hover {
-        color: #374151;
+        background: rgba(255, 255, 255, 0.3);
       }
     `;
+    shadow.appendChild(styles);
+
+    const container = document.createElement('div');
+    shadow.appendChild(container);
+
+    tourContainer = container;
+    return container;
   }
 
-  startTour() {
-    if (!this.currentTour || !this.currentTour.steps || this.currentTour.steps.length === 0) {
+  // Show a tour step
+  function showStep(index) {
+    if (!currentTour || !currentTour.steps || index >= currentTour.steps.length) {
+      endTour();
       return;
     }
 
-    this.currentStepIndex = 0;
-    this.showStep(this.currentStepIndex);
-  }
+    const step = currentTour.steps[index];
+    const element = document.querySelector(step.selector);
 
-  async showStep(index) {
-    const step = this.currentTour.steps[index];
-    if (!step) return;
-
-    // Find element
-    const element = await this.waitForElement(step.selector);
     if (!element) {
-      console.warn(`TourLayer: Element not found: ${step.selector}`);
+      console.warn('TourLayer: Element not found:', step.selector);
+      // Try next step after a delay (element might load later)
+      setTimeout(() => {
+        const retryElement = document.querySelector(step.selector);
+        if (retryElement) {
+          renderStep(step, retryElement, index);
+        } else {
+          // Skip to next step
+          if (index < currentTour.steps.length - 1) {
+            currentStepIndex = index + 1;
+            showStep(currentStepIndex);
+          } else {
+            endTour();
+          }
+        }
+      }, 1000);
       return;
     }
 
-    // Show beacon
-    this.showBeacon(element, step);
+    renderStep(step, element, index);
   }
 
-  showBeacon(element, step) {
-    const rect = element.getBoundingClientRect();
-    const beacon = document.createElement('div');
-    beacon.className = 'tourlayer-beacon';
-    beacon.style.left = `${rect.left + rect.width / 2 - 12}px`;
-    beacon.style.top = `${rect.top + rect.height / 2 - 12}px`;
-    
-    beacon.onclick = () => {
-      beacon.remove();
-      this.showTooltip(element, step);
-    };
+  // Render step UI
+  function renderStep(step, element, index) {
+    const container = createContainer();
+    container.innerHTML = '';
 
-    this.shadowRoot.appendChild(beacon);
+    const rect = element.getBoundingClientRect();
+
+    // Scroll element into view if needed
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    // Wait for scroll to complete
+    setTimeout(() => {
+      const updatedRect = element.getBoundingClientRect();
+      
+      // Create highlight
+      const highlight = document.createElement('div');
+      highlight.className = 'tourlayer-highlight';
+      highlight.style.cssText = `
+        top: ${updatedRect.top - 4}px;
+        left: ${updatedRect.left - 4}px;
+        width: ${updatedRect.width + 8}px;
+        height: ${updatedRect.height + 8}px;
+      `;
+      container.appendChild(highlight);
+
+      // Create tooltip
+      const tooltip = document.createElement('div');
+      tooltip.className = 'tourlayer-tooltip';
+      
+      const totalSteps = currentTour.steps.length;
+      const isLastStep = index === totalSteps - 1;
+      const isFirstStep = index === 0;
+
+      tooltip.innerHTML = `
+        <button class="tourlayer-close" data-action="close">&times;</button>
+        <div class="tourlayer-tooltip-header">
+          <div class="tourlayer-tooltip-title">${escapeHtml(step.title)}</div>
+          <div class="tourlayer-tooltip-step">Step ${index + 1} of ${totalSteps}</div>
+        </div>
+        <div class="tourlayer-tooltip-body">
+          ${step.image_url ? `<img src="${escapeHtml(step.image_url)}" class="tourlayer-tooltip-image" alt="">` : ''}
+          <div class="tourlayer-tooltip-content">${escapeHtml(step.content)}</div>
+        </div>
+        <div class="tourlayer-tooltip-footer">
+          <button class="tourlayer-btn tourlayer-btn-skip" data-action="skip">Skip tour</button>
+          <div style="display: flex; gap: 8px;">
+            ${!isFirstStep ? '<button class="tourlayer-btn tourlayer-btn-secondary" data-action="prev">Back</button>' : ''}
+            <button class="tourlayer-btn tourlayer-btn-primary" data-action="next">
+              ${isLastStep ? 'Finish' : step.button_text || 'Next'}
+            </button>
+          </div>
+        </div>
+      `;
+
+      // Position tooltip
+      positionTooltip(tooltip, updatedRect, step.placement || 'bottom');
+      container.appendChild(tooltip);
+
+      // Add event listeners
+      tooltip.addEventListener('click', handleTooltipClick);
+
+    }, 300);
   }
 
-  showTooltip(element, step) {
-    const rect = element.getBoundingClientRect();
+  // Position tooltip relative to element
+  function positionTooltip(tooltip, rect, placement) {
+    const padding = 16;
+    const tooltipWidth = 320;
     
-    const tooltip = document.createElement('div');
-    tooltip.className = 'tourlayer-tooltip';
-    
-    // Position based on placement
-    let top = rect.bottom + 10;
-    let left = rect.left;
+    let top, left;
 
-    if (step.placement === 'top') {
-      top = rect.top - 200;
-    } else if (step.placement === 'left') {
-      left = rect.left - 420;
-      top = rect.top;
-    } else if (step.placement === 'right') {
-      left = rect.right + 10;
-      top = rect.top;
+    switch (placement) {
+      case 'top':
+        top = rect.top - padding;
+        left = rect.left + rect.width / 2 - tooltipWidth / 2;
+        tooltip.style.transform = 'translateY(-100%)';
+        break;
+      case 'bottom':
+        top = rect.bottom + padding;
+        left = rect.left + rect.width / 2 - tooltipWidth / 2;
+        break;
+      case 'left':
+        top = rect.top + rect.height / 2;
+        left = rect.left - tooltipWidth - padding;
+        tooltip.style.transform = 'translateY(-50%)';
+        break;
+      case 'right':
+        top = rect.top + rect.height / 2;
+        left = rect.right + padding;
+        tooltip.style.transform = 'translateY(-50%)';
+        break;
+      default:
+        top = rect.bottom + padding;
+        left = rect.left + rect.width / 2 - tooltipWidth / 2;
     }
+
+    // Keep within viewport
+    left = Math.max(padding, Math.min(left, window.innerWidth - tooltipWidth - padding));
+    top = Math.max(padding, top);
 
     tooltip.style.top = `${top}px`;
     tooltip.style.left = `${left}px`;
+  }
 
-    tooltip.innerHTML = `
-      <button class="tourlayer-close" id="closeBtn">×</button>
-      <h3>${step.title}</h3>
-      ${step.image_url ? `<img src="${step.image_url}" alt="${step.title}">` : ''}
-      <p>${step.content}</p>
-      <div class="tourlayer-footer">
-        <div class="tourlayer-progress">
-          ${this.currentStepIndex + 1} of ${this.currentTour.steps.length}
-        </div>
-        <div class="tourlayer-buttons">
-          ${this.currentStepIndex > 0 ? '<button class="tourlayer-btn tourlayer-btn-secondary" id="backBtn">Back</button>' : ''}
-          <button class="tourlayer-btn tourlayer-btn-primary" id="nextBtn">
-            ${this.currentStepIndex < this.currentTour.steps.length - 1 ? step.button_text : 'Done'}
-          </button>
-        </div>
-      </div>
-    `;
+  // Handle tooltip button clicks
+  function handleTooltipClick(e) {
+    const action = e.target.dataset.action;
+    if (!action) return;
 
-    this.shadowRoot.appendChild(tooltip);
-
-    // Event listeners
-    const closeBtn = tooltip.querySelector('#closeBtn');
-    const nextBtn = tooltip.querySelector('#nextBtn');
-    const backBtn = tooltip.querySelector('#backBtn');
-
-    closeBtn.onclick = () => {
-      tooltip.remove();
-      this.currentStepIndex = 0;
-    };
-
-    nextBtn.onclick = () => {
-      tooltip.remove();
-      if (this.currentStepIndex < this.currentTour.steps.length - 1) {
-        this.currentStepIndex++;
-        this.showStep(this.currentStepIndex);
-      } else {
-        this.currentStepIndex = 0;
-      }
-    };
-
-    if (backBtn) {
-      backBtn.onclick = () => {
-        tooltip.remove();
-        this.currentStepIndex--;
-        this.showStep(this.currentStepIndex);
-      };
+    switch (action) {
+      case 'next':
+        if (currentStepIndex < currentTour.steps.length - 1) {
+          currentStepIndex++;
+          showStep(currentStepIndex);
+        } else {
+          endTour(true);
+        }
+        break;
+      case 'prev':
+        if (currentStepIndex > 0) {
+          currentStepIndex--;
+          showStep(currentStepIndex);
+        }
+        break;
+      case 'skip':
+      case 'close':
+        endTour(false);
+        break;
     }
   }
 
-  waitForElement(selector, timeout = 5000) {
-    return new Promise((resolve) => {
-      const element = document.querySelector(selector);
-      if (element) {
-        resolve(element);
-        return;
-      }
+  // End tour
+  function endTour(completed = false) {
+    if (tourContainer) {
+      tourContainer.innerHTML = '';
+    }
 
-      const observer = new MutationObserver(() => {
-        const element = document.querySelector(selector);
-        if (element) {
-          observer.disconnect();
-          resolve(element);
-        }
-      });
+    if (currentTour && completed) {
+      // Mark tour as seen
+      const seenKey = `tourlayer_seen_${currentTour.id}`;
+      chrome.storage.local.set({ [seenKey]: true });
+    }
 
-      observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-      });
-
-      setTimeout(() => {
-        observer.disconnect();
-        resolve(null);
-      }, timeout);
-    });
+    currentTour = null;
+    currentStepIndex = 0;
   }
-}
 
-// Initialize player
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    new TourLayerPlayer();
-  });
-} else {
-  new TourLayerPlayer();
-}
-
-// Listen for token updates
-chrome.runtime.onMessage.addListener((message) => {
-  if (message.type === 'TOKEN_UPDATED') {
-    // Reload page to start tours
-    window.location.reload();
+  // Escape HTML
+  function escapeHtml(str) {
+    if (!str) return '';
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
   }
-});
 
+  // Start initialization
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+
+  // Re-check on URL changes (for SPAs)
+  let lastUrl = location.href;
+  new MutationObserver(() => {
+    if (location.href !== lastUrl) {
+      lastUrl = location.href;
+      init();
+    }
+  }).observe(document.body, { subtree: true, childList: true });
+
+})();

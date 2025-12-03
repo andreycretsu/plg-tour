@@ -16,36 +16,60 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const payload = verifyToken(token);
-    if (!payload) {
-      return NextResponse.json(
-        { error: 'Invalid token' },
-        { status: 401 }
+    let user;
+
+    // Check if it's an API token (starts with tl_)
+    if (token.startsWith('tl_')) {
+      // Look up user by API token
+      const result = await query(
+        `SELECT id, email, name, api_token, created_at 
+         FROM users WHERE api_token = $1`,
+        [token]
       );
-    }
 
-    // Get user
-    const result = await query(
-      `SELECT id, email, name, api_token, created_at 
-       FROM users WHERE id = $1`,
-      [payload.userId]
-    );
+      if (result.rows.length === 0) {
+        return NextResponse.json(
+          { error: 'Invalid API token' },
+          { status: 401 }
+        );
+      }
 
-    if (result.rows.length === 0) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
+      user = result.rows[0];
+    } else {
+      // It's a JWT token - verify it
+      const payload = verifyToken(token);
+      if (!payload) {
+        return NextResponse.json(
+          { error: 'Invalid token' },
+          { status: 401 }
+        );
+      }
+
+      // Get user by ID from JWT
+      const result = await query(
+        `SELECT id, email, name, api_token, created_at 
+         FROM users WHERE id = $1`,
+        [payload.userId]
       );
-    }
 
-    const user = result.rows[0];
+      if (result.rows.length === 0) {
+        return NextResponse.json(
+          { error: 'User not found' },
+          { status: 404 }
+        );
+      }
+
+      user = result.rows[0];
+    }
 
     return NextResponse.json({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      apiToken: user.api_token,
-      createdAt: user.created_at,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        apiToken: user.api_token,
+        createdAt: user.created_at,
+      }
     });
   } catch (error) {
     console.error('Auth me error:', error);
@@ -55,4 +79,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

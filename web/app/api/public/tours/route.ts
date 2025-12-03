@@ -1,12 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
+import { extractToken } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
+
+// Helper to check if URL matches pattern (supports * wildcards)
+function urlMatchesPattern(url: string, pattern: string): boolean {
+  // Convert wildcard pattern to regex
+  const regexPattern = pattern
+    .replace(/[.+?^${}()|[\]\\]/g, '\\$&') // Escape special regex chars except *
+    .replace(/\*/g, '.*'); // Convert * to .*
+  
+  try {
+    const regex = new RegExp(`^${regexPattern}$`, 'i');
+    return regex.test(url);
+  } catch {
+    return false;
+  }
+}
 
 // PUBLIC ENDPOINT: GET tours by API token (for extension)
 export async function GET(request: NextRequest) {
   try {
-    const apiToken = request.headers.get('x-api-token');
+    // Accept token from multiple sources
+    let apiToken = request.headers.get('x-api-token');
+    
+    // Also accept Authorization: Bearer token
+    if (!apiToken) {
+      const authHeader = request.headers.get('authorization');
+      apiToken = extractToken(authHeader);
+    }
 
     if (!apiToken) {
       return NextResponse.json({ error: 'Missing API token' }, { status: 401 });
@@ -26,22 +49,19 @@ export async function GET(request: NextRequest) {
     const url = request.nextUrl.searchParams.get('url');
 
     // Get active tours for this user
-    let toursQuery = `
-      SELECT t.id, t.name, t.url_pattern, t.is_active
-      FROM tours t
-      WHERE t.user_id = $1 AND t.is_active = true
-    `;
-    
-    const params: any[] = [userId];
+    const toursResult = await query(
+      `SELECT t.id, t.name, t.url_pattern, t.is_active
+       FROM tours t
+       WHERE t.user_id = $1 AND t.is_active = true`,
+      [userId]
+    );
 
-    // If URL provided, filter by pattern
+    let tours = toursResult.rows;
+
+    // Filter by URL pattern if URL provided
     if (url) {
-      toursQuery += ' AND $2 ~ t.url_pattern';
-      params.push(url);
+      tours = tours.filter(tour => urlMatchesPattern(url, tour.url_pattern));
     }
-
-    const toursResult = await query(toursQuery, params);
-    const tours = toursResult.rows;
 
     // Get steps for each tour
     for (const tour of tours) {
@@ -56,10 +76,9 @@ export async function GET(request: NextRequest) {
       tour.steps = stepsResult.rows;
     }
 
-    return NextResponse.json(tours);
+    return NextResponse.json({ tours });
   } catch (error) {
     console.error('Public get tours error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

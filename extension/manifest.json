@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "TourLayer",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Create interactive product tours on any website. Visual element picker & tour player.",
   "icons": {
     "16": "icon16.svg",
@@ -30,6 +30,16 @@
   },
   "content_scripts": [
     {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle",
+      "exclude_matches": [
+        "chrome://*/*",
+        "chrome-extension://*/*",
+        "about:*"
+      ]
+    },
+    {
       "matches": ["https://plg-tour.vercel.app/*", "http://localhost:3000/*"],
       "js": ["webapp-bridge.js"],
       "run_at": "document_end"
@@ -40,7 +50,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["picker.js"],
+      "resources": ["picker.js", "content.js"],
       "matches": ["<all_urls>"]
     }
   ]
