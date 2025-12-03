@@ -87,12 +87,17 @@
   }
 
   // Create tour container (Shadow DOM for isolation)
-  function createContainer() {
-    if (tourContainer) return tourContainer;
+  function createContainer(zIndex = 2147483647) {
+    if (tourContainer) {
+      // Update z-index if container exists
+      const host = document.getElementById('tourlayer-container');
+      if (host) host.style.zIndex = zIndex.toString();
+      return tourContainer;
+    }
 
     const host = document.createElement('div');
     host.id = 'tourlayer-container';
-    host.style.cssText = 'all: initial; position: fixed; z-index: 2147483647;';
+    host.style.cssText = `all: initial; position: fixed; z-index: ${zIndex};`;
     document.body.appendChild(host);
 
     const shadow = host.attachShadow({ mode: 'closed' });
@@ -327,7 +332,8 @@
 
   // Render centered modal (when no element target)
   function renderCenteredStep(step, index) {
-    const container = createContainer();
+    const zIndex = step.z_index || 2147483647;
+    const container = createContainer(zIndex);
     container.innerHTML = '';
 
     const totalSteps = currentTour.steps.length;
@@ -378,7 +384,8 @@
 
   // Render step UI
   function renderStep(step, element, index) {
-    const container = createContainer();
+    const zIndex = step.z_index || 2147483647;
+    const container = createContainer(zIndex);
     container.innerHTML = '';
 
     const rect = element.getBoundingClientRect();

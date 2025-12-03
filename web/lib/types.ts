@@ -30,6 +30,7 @@ export interface TourStep {
   buttonText: string;
   placement: 'top' | 'bottom' | 'left' | 'right' | 'auto';
   pulseEnabled: boolean;
+  zIndex?: number;
 }
 
 export interface TourAnalytics {

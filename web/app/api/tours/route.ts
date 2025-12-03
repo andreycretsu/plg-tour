@@ -77,8 +77,8 @@ export async function POST(request: NextRequest) {
         const step = steps[i];
         await query(
           `INSERT INTO tour_steps 
-           (tour_id, step_order, selector, title, content, image_url, button_text, placement, pulse_enabled) 
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+           (tour_id, step_order, selector, title, content, image_url, button_text, placement, pulse_enabled, z_index) 
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
           [
             tour.id,
             i,
@@ -89,6 +89,7 @@ export async function POST(request: NextRequest) {
             step.buttonText,
             step.placement,
             step.pulseEnabled,
+            step.zIndex || 2147483647,
           ]
         );
       }

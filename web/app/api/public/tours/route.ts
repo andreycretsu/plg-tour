@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
     for (const tour of tours) {
       const stepsResult = await query(
         `SELECT id, step_order, selector, title, content, 
-                image_url, button_text, placement, pulse_enabled
+                image_url, button_text, placement, pulse_enabled, z_index
          FROM tour_steps 
          WHERE tour_id = $1 
          ORDER BY step_order ASC`,
