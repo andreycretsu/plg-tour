@@ -40,7 +40,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       return true; // Async response
 
     case 'START_PICKER':
-      startElementPicker(sender.tab?.id).then(sendResponse);
+      // If targetUrl is provided, open it in new tab first
+      if (message.targetUrl) {
+        openUrlAndStartPicker(message.targetUrl).then(sendResponse);
+      } else {
+        startElementPicker(sender.tab?.id).then(sendResponse);
+      }
       return true;
 
     case 'ELEMENT_SELECTED':
@@ -109,6 +114,50 @@ async function validateToken(token) {
       return { success: false, error: 'Invalid token' };
     }
   } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+// Open URL in new tab and start picker
+async function openUrlAndStartPicker(targetUrl) {
+  try {
+    console.log('Opening URL for picker:', targetUrl);
+    
+    // Create a new tab with the target URL
+    const tab = await chrome.tabs.create({ 
+      url: targetUrl,
+      active: true 
+    });
+
+    // Wait for the tab to finish loading
+    await new Promise((resolve) => {
+      const listener = (tabId, changeInfo) => {
+        if (tabId === tab.id && changeInfo.status === 'complete') {
+          chrome.tabs.onUpdated.removeListener(listener);
+          resolve();
+        }
+      };
+      chrome.tabs.onUpdated.addListener(listener);
+      
+      // Timeout after 30 seconds
+      setTimeout(() => {
+        chrome.tabs.onUpdated.removeListener(listener);
+        resolve();
+      }, 30000);
+    });
+
+    // Small delay to ensure page is fully ready
+    await new Promise(r => setTimeout(r, 500));
+
+    // Inject picker script
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ['picker.js']
+    });
+
+    return { success: true, tabId: tab.id };
+  } catch (error) {
+    console.error('Failed to open URL and start picker:', error);
     return { success: false, error: error.message };
   }
 }

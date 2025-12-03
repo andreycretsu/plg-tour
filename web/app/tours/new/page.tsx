@@ -102,15 +102,29 @@ export default function NewTourPage() {
       alert('Please install the TourLayer Chrome extension first!');
       return;
     }
+
+    // Get target URL from URL pattern (remove wildcards for opening)
+    let targetUrl = urlPattern.replace(/\*+/g, '').trim();
+    
+    if (!targetUrl) {
+      alert('Please enter a URL pattern first so we know which website to pick elements from!');
+      return;
+    }
+
+    // Ensure it's a valid URL
+    if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+      targetUrl = 'https://' + targetUrl;
+    }
     
     setPickingForStep(stepId);
     setPickerStatus('waiting');
     
-    // Tell extension to start picker
+    // Tell extension to open target URL and start picker
     window.postMessage({ 
       source: 'tourlayer-webapp', 
       type: 'START_PICKER',
-      stepId 
+      stepId,
+      targetUrl
     }, '*');
   };
 

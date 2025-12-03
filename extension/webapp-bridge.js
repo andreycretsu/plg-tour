@@ -18,8 +18,12 @@
 
     switch (message.type) {
       case 'START_PICKER':
-        // Forward to background script
-        chrome.runtime.sendMessage({ type: 'START_PICKER' }, (response) => {
+        // Forward to background script with target URL
+        chrome.runtime.sendMessage({ 
+          type: 'START_PICKER',
+          targetUrl: message.targetUrl,
+          stepId: message.stepId
+        }, (response) => {
           window.postMessage({
             source: 'tourlayer-extension',
             type: 'PICKER_STARTED',
