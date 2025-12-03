@@ -217,8 +217,8 @@
       const sizes = { small: 12, medium: 16, large: 24 };
       const size = sizes[tooltip.icon_size] || 16;
       
-      // Use new edge-based positioning
-      const beaconPos = getBeaconPositionEdge(rect, tooltip.icon_edge || 'right', tooltip.icon_offset || 0, size);
+      // Use new edge-based positioning with Y offset
+      const beaconPos = getBeaconPositionEdge(rect, tooltip.icon_edge || 'right', tooltip.icon_offset || 0, size, tooltip.icon_offset_y || 0);
       
       const beacon = document.createElement('div');
       beacon.className = 'tl-beacon';
@@ -285,7 +285,7 @@
       // Update position on scroll/resize
       const updatePosition = () => {
         const newRect = element.getBoundingClientRect();
-        const newPos = getBeaconPositionEdge(newRect, tooltip.icon_edge || 'right', tooltip.icon_offset || 0, size);
+        const newPos = getBeaconPositionEdge(newRect, tooltip.icon_edge || 'right', tooltip.icon_offset || 0, size, tooltip.icon_offset_y || 0);
         beacon.style.top = `${newPos.top}px`;
         beacon.style.left = `${newPos.left}px`;
       };
@@ -296,31 +296,32 @@
     }, delay);
   }
 
-  // Edge-based positioning: beacon on element edge with offset
-  // offset: 0 = on edge, positive = outside, negative = inside
-  function getBeaconPositionEdge(rect, edge, offset = 0, size = 16) {
+  // Edge-based positioning with X and Y offsets
+  // offset: perpendicular to edge (0 = on edge, positive = outside, negative = inside)
+  // offsetY: along the edge (0 = center, positive = down/right, negative = up/left)
+  function getBeaconPositionEdge(rect, edge, offset = 0, size = 16, offsetY = 0) {
     const halfSize = size / 2;
     
     switch (edge) {
       case 'top':
         return { 
           top: rect.top - halfSize - offset, 
-          left: rect.left + rect.width / 2 - halfSize 
+          left: rect.left + rect.width / 2 - halfSize + offsetY
         };
       case 'bottom':
         return { 
           top: rect.bottom - halfSize + offset, 
-          left: rect.left + rect.width / 2 - halfSize 
+          left: rect.left + rect.width / 2 - halfSize + offsetY
         };
       case 'left':
         return { 
-          top: rect.top + rect.height / 2 - halfSize, 
+          top: rect.top + rect.height / 2 - halfSize + offsetY, 
           left: rect.left - halfSize - offset 
         };
       case 'right':
       default:
         return { 
-          top: rect.top + rect.height / 2 - halfSize, 
+          top: rect.top + rect.height / 2 - halfSize + offsetY, 
           left: rect.right - halfSize + offset 
         };
     }

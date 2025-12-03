@@ -86,6 +86,7 @@ export async function POST(request: NextRequest) {
       iconType = 'pulse',
       iconEdge = 'right',
       iconOffset = 0,
+      iconOffsetY = 0,
       iconSize = 'medium',
       iconColor = '#3b82f6',
       // Card content
@@ -123,17 +124,17 @@ export async function POST(request: NextRequest) {
       `INSERT INTO tooltips (
         workspace_id, user_id, name, url_pattern, selector,
         trigger_type, dismiss_type,
-        icon_type, icon_edge, icon_offset, icon_size, icon_color,
+        icon_type, icon_edge, icon_offset, icon_offset_y, icon_size, icon_color,
         title, body, image_url,
         card_width, card_padding, card_border_radius, card_shadow, text_align, card_text_color, card_bg_color,
         button_text, button_color, button_text_color, button_border_radius,
         z_index, show_once, delay_ms
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30)
       RETURNING *`,
       [
         workspaceId, payload.userId, name, urlPattern, selector,
         triggerType, dismissType,
-        iconType, iconEdge, iconOffset, iconSize, iconColor,
+        iconType, iconEdge, iconOffset, iconOffsetY, iconSize, iconColor,
         title, tooltipBody, imageUrl,
         cardWidth, cardPadding, cardBorderRadius, cardShadow, textAlign, cardTextColor, cardBgColor,
         buttonText, buttonColor, buttonTextColor, buttonBorderRadius,

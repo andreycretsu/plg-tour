@@ -26,6 +26,7 @@ export default function NewTooltipPage() {
   const [iconType, setIconType] = useState<'pulse' | 'beacon' | 'dot' | 'none'>('pulse');
   const [iconEdge, setIconEdge] = useState<'top' | 'right' | 'bottom' | 'left'>('right');
   const [iconOffset, setIconOffset] = useState(0);
+  const [iconOffsetY, setIconOffsetY] = useState(0); // Y-axis alignment
   const [iconSize, setIconSize] = useState<'small' | 'medium' | 'large'>('medium');
   const [iconColor, setIconColor] = useState('#3b82f6');
   
@@ -139,6 +140,7 @@ export default function NewTooltipPage() {
           iconType,
           iconEdge,
           iconOffset,
+          iconOffsetY,
           iconSize,
           iconColor,
           title,
@@ -179,6 +181,7 @@ export default function NewTooltipPage() {
     const sizes = { small: 12, medium: 16, large: 24 };
     const size = sizes[iconSize];
     const offset = iconOffset;
+    const offsetY = iconOffsetY;
     
     const base: React.CSSProperties = {
       position: 'absolute',
@@ -189,16 +192,18 @@ export default function NewTooltipPage() {
       animation: iconType === 'pulse' ? 'pulse 2s infinite' : undefined,
     };
 
+    // For left/right edges: Y offset moves vertically
+    // For top/bottom edges: Y offset moves horizontally
     switch (iconEdge) {
       case 'top':
-        return { ...base, top: offset - size/2, left: '50%', transform: 'translateX(-50%)' };
+        return { ...base, top: offset - size/2, left: `calc(50% + ${offsetY}px)`, transform: 'translateX(-50%)' };
       case 'bottom':
-        return { ...base, bottom: offset - size/2, left: '50%', transform: 'translateX(-50%)' };
+        return { ...base, bottom: offset - size/2, left: `calc(50% + ${offsetY}px)`, transform: 'translateX(-50%)' };
       case 'left':
-        return { ...base, left: offset - size/2, top: '50%', transform: 'translateY(-50%)' };
+        return { ...base, left: offset - size/2, top: `calc(50% + ${offsetY}px)`, transform: 'translateY(-50%)' };
       case 'right':
       default:
-        return { ...base, right: offset - size/2, top: '50%', transform: 'translateY(-50%)' };
+        return { ...base, right: offset - size/2, top: `calc(50% + ${offsetY}px)`, transform: 'translateY(-50%)' };
     }
   };
 
@@ -418,7 +423,7 @@ export default function NewTooltipPage() {
               </div>
             </div>
 
-            {/* Distance Slider */}
+            {/* Distance Slider (X-axis / perpendicular to edge) */}
             <div className="mb-4">
               <label className="label">Distance from Edge: {iconOffset}px</label>
               <input
@@ -433,6 +438,29 @@ export default function NewTooltipPage() {
                 <span>-20 (inside)</span>
                 <span>0 (edge)</span>
                 <span>+40 (outside)</span>
+              </div>
+            </div>
+
+            {/* Y-axis Slider (along the edge) */}
+            <div className="mb-4">
+              <label className="label">
+                Position Along Edge: {iconOffsetY}px 
+                <span className="text-gray-400 font-normal ml-1">
+                  ({iconEdge === 'left' || iconEdge === 'right' ? 'vertical' : 'horizontal'})
+                </span>
+              </label>
+              <input
+                type="range"
+                min="-50"
+                max="50"
+                value={iconOffsetY}
+                onChange={(e) => setIconOffsetY(parseInt(e.target.value))}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+              />
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <span>{iconEdge === 'left' || iconEdge === 'right' ? '↑ Top' : '← Left'}</span>
+                <span>Center</span>
+                <span>{iconEdge === 'left' || iconEdge === 'right' ? '↓ Bottom' : 'Right →'}</span>
               </div>
             </div>
 
@@ -816,21 +844,38 @@ export default function NewTooltipPage() {
             {/* Position Indicator */}
             <div className="mt-4 p-4 bg-white border border-gray-200 rounded-lg">
               <p className="text-xs text-gray-500 mb-2">Beacon Position:</p>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <div className="w-16 h-16 bg-gray-100 border border-gray-300 rounded relative">
                   <div 
                     className="absolute w-2 h-2 bg-blue-500 rounded-full"
                     style={{
-                      ...(iconEdge === 'top' && { top: `${50 - iconOffset}%`, left: '50%', transform: 'translate(-50%, -50%)' }),
-                      ...(iconEdge === 'bottom' && { bottom: `${50 - iconOffset}%`, left: '50%', transform: 'translate(-50%, 50%)' }),
-                      ...(iconEdge === 'left' && { left: `${50 - iconOffset}%`, top: '50%', transform: 'translate(-50%, -50%)' }),
-                      ...(iconEdge === 'right' && { right: `${50 - iconOffset}%`, top: '50%', transform: 'translate(50%, -50%)' }),
+                      ...(iconEdge === 'top' && { 
+                        top: `${50 - iconOffset}%`, 
+                        left: `calc(50% + ${iconOffsetY * 0.5}px)`, 
+                        transform: 'translate(-50%, -50%)' 
+                      }),
+                      ...(iconEdge === 'bottom' && { 
+                        bottom: `${50 - iconOffset}%`, 
+                        left: `calc(50% + ${iconOffsetY * 0.5}px)`, 
+                        transform: 'translate(-50%, 50%)' 
+                      }),
+                      ...(iconEdge === 'left' && { 
+                        left: `${50 - iconOffset}%`, 
+                        top: `calc(50% + ${iconOffsetY * 0.5}px)`, 
+                        transform: 'translate(-50%, -50%)' 
+                      }),
+                      ...(iconEdge === 'right' && { 
+                        right: `${50 - iconOffset}%`, 
+                        top: `calc(50% + ${iconOffsetY * 0.5}px)`, 
+                        transform: 'translate(50%, -50%)' 
+                      }),
                     }}
                   />
                 </div>
-                <div className="text-sm text-gray-600">
-                  <p><strong>{iconEdge}</strong> edge</p>
-                  <p>{iconOffset}px offset</p>
+                <div className="text-xs text-gray-600 space-y-1">
+                  <p><strong className="text-gray-800">{iconEdge}</strong> edge</p>
+                  <p>Distance: <span className="font-mono">{iconOffset}px</span></p>
+                  <p>Along: <span className="font-mono">{iconOffsetY}px</span></p>
                 </div>
               </div>
             </div>
