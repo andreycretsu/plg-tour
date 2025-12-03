@@ -94,8 +94,12 @@ export async function PUT(
       buttonBorderRadius,
       // Advanced
       zIndex,
-      showOnce,
       delayMs,
+      // Frequency
+      frequencyType,
+      frequencyCount,
+      frequencyDays,
+      showOnce,
     } = body;
 
     const result = await query(
@@ -127,10 +131,13 @@ export async function PUT(
         button_text_color = COALESCE($25, button_text_color),
         button_border_radius = COALESCE($26, button_border_radius),
         z_index = COALESCE($27, z_index),
-        show_once = COALESCE($28, show_once),
-        delay_ms = COALESCE($29, delay_ms),
+        delay_ms = COALESCE($28, delay_ms),
+        frequency_type = COALESCE($29, frequency_type),
+        frequency_count = COALESCE($30, frequency_count),
+        frequency_days = COALESCE($31, frequency_days),
+        show_once = COALESCE($32, show_once),
         updated_at = NOW()
-      WHERE id = $30
+      WHERE id = $33
       RETURNING *`,
       [
         name, urlPattern, selector, isActive,
@@ -139,7 +146,8 @@ export async function PUT(
         title, tooltipBody, imageUrl,
         cardWidth, cardPadding, cardBorderRadius, cardShadow, textAlign, cardTextColor, cardBgColor,
         buttonText, buttonColor, buttonTextColor, buttonBorderRadius,
-        zIndex, showOnce, delayMs,
+        zIndex, delayMs,
+        frequencyType, frequencyCount, frequencyDays, showOnce,
         tooltipId
       ]
     );

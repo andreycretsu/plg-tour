@@ -184,14 +184,36 @@
       tooltipContainer = container;
     }
 
-    // Render beacons for each tooltip
+    // Render beacons for each tooltip based on frequency settings
     activeTooltips.forEach(tooltip => {
-      if (tooltip.show_once) {
-        const seenKey = `tourlayer_seen_tooltip_${tooltip.id}`;
-        if (!localStorage.getItem(seenKey)) {
-          createBeacon(tooltip);
-        }
-      } else {
+      const frequencyType = tooltip.frequency_type || (tooltip.show_once ? 'once' : 'always');
+      const storageKey = `tourlayer_tooltip_${tooltip.id}`;
+      const stored = localStorage.getItem(storageKey);
+      const data = stored ? JSON.parse(stored) : { viewCount: 0, lastSeen: null };
+      const now = Date.now();
+      
+      let shouldShow = false;
+      
+      switch (frequencyType) {
+        case 'once':
+          shouldShow = data.viewCount === 0;
+          break;
+        case 'always':
+          shouldShow = true;
+          break;
+        case 'count':
+          shouldShow = data.viewCount < (tooltip.frequency_count || 1);
+          break;
+        case 'days':
+          const cooldownMs = (tooltip.frequency_days || 7) * 24 * 60 * 60 * 1000;
+          const timeSince = data.lastSeen ? (now - data.lastSeen) : Infinity;
+          shouldShow = timeSince >= cooldownMs;
+          break;
+        default:
+          shouldShow = data.viewCount === 0;
+      }
+      
+      if (shouldShow) {
         createBeacon(tooltip);
       }
     });
@@ -426,9 +448,14 @@
     const beacon = tooltipContainer?.querySelector(`.tl-beacon[data-tooltip-id="${tooltip.id}"]`);
     if (beacon) beacon.remove();
     
-    if (tooltip.show_once) {
-      localStorage.setItem(`tourlayer_seen_tooltip_${tooltip.id}`, 'true');
-    }
+    // Update view tracking for frequency logic
+    const storageKey = `tourlayer_tooltip_${tooltip.id}`;
+    const stored = localStorage.getItem(storageKey);
+    const data = stored ? JSON.parse(stored) : { viewCount: 0, lastSeen: null };
+    localStorage.setItem(storageKey, JSON.stringify({
+      viewCount: data.viewCount + 1,
+      lastSeen: Date.now()
+    }));
   }
 
   function getTooltipStyles() {

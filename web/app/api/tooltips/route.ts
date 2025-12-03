@@ -108,8 +108,12 @@ export async function POST(request: NextRequest) {
       buttonBorderRadius = 8,
       // Advanced
       zIndex = 2147483647,
-      showOnce = true,
       delayMs = 0,
+      // Frequency
+      frequencyType = 'once',
+      frequencyCount = 1,
+      frequencyDays = 7,
+      showOnce = true, // backwards compatibility
     } = body;
 
     // Validation
@@ -128,8 +132,9 @@ export async function POST(request: NextRequest) {
         title, body, image_url,
         card_width, card_padding, card_border_radius, card_shadow, text_align, card_text_color, card_bg_color,
         button_text, button_color, button_text_color, button_border_radius,
-        z_index, show_once, delay_ms
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30)
+        z_index, delay_ms,
+        frequency_type, frequency_count, frequency_days, show_once
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33)
       RETURNING *`,
       [
         workspaceId, payload.userId, name, urlPattern, selector,
@@ -138,7 +143,8 @@ export async function POST(request: NextRequest) {
         title, tooltipBody, imageUrl,
         cardWidth, cardPadding, cardBorderRadius, cardShadow, textAlign, cardTextColor, cardBgColor,
         buttonText, buttonColor, buttonTextColor, buttonBorderRadius,
-        zIndex, showOnce, delayMs
+        zIndex, delayMs,
+        frequencyType, frequencyCount, frequencyDays, showOnce
       ]
     );
 

@@ -52,9 +52,13 @@ export default function EditTooltipPage() {
   const [buttonTextColor, setButtonTextColor] = useState('#ffffff');
   const [buttonBorderRadius, setButtonBorderRadius] = useState(8);
   
+  // Display Frequency
+  const [frequencyType, setFrequencyType] = useState<'once' | 'always' | 'count' | 'days'>('once');
+  const [frequencyCount, setFrequencyCount] = useState(1);
+  const [frequencyDays, setFrequencyDays] = useState(7);
+  
   // Advanced
   const [zIndex, setZIndex] = useState(2147483647);
-  const [showOnce, setShowOnce] = useState(true);
   const [delayMs, setDelayMs] = useState(0);
 
   // Load tooltip data
@@ -97,8 +101,10 @@ export default function EditTooltipPage() {
         setButtonTextColor(t.button_text_color || '#ffffff');
         setButtonBorderRadius(t.button_border_radius || 8);
         setZIndex(t.z_index || 2147483647);
-        setShowOnce(t.show_once ?? true);
         setDelayMs(t.delay_ms || 0);
+        setFrequencyType(t.frequency_type || 'once');
+        setFrequencyCount(t.frequency_count || 1);
+        setFrequencyDays(t.frequency_days || 7);
         setIsActive(t.is_active ?? true);
       } catch (err) {
         console.error('Failed to load tooltip:', err);
@@ -228,8 +234,11 @@ export default function EditTooltipPage() {
           buttonTextColor,
           buttonBorderRadius,
           zIndex,
-          showOnce,
           delayMs,
+          frequencyType,
+          frequencyCount,
+          frequencyDays,
+          showOnce: frequencyType === 'once',
           isActive,
         }),
       });
@@ -806,11 +815,107 @@ export default function EditTooltipPage() {
             </div>
           </div>
 
+          {/* Display Frequency */}
+          <div className="card p-5 mb-5">
+            <h2 className="text-base font-semibold text-gray-900 mb-4">Display Frequency</h2>
+            <p className="text-sm text-gray-500 mb-4">Control how often users see this tooltip</p>
+            
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFrequencyType('once')}
+                  className={`p-4 rounded-lg border-2 text-left transition-all ${
+                    frequencyType === 'once'
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="font-medium text-gray-900">Show Once</div>
+                  <div className="text-xs text-gray-500 mt-1">User sees it only once, ever</div>
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => setFrequencyType('always')}
+                  className={`p-4 rounded-lg border-2 text-left transition-all ${
+                    frequencyType === 'always'
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="font-medium text-gray-900">Show Always</div>
+                  <div className="text-xs text-gray-500 mt-1">Show on every page visit</div>
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => setFrequencyType('count')}
+                  className={`p-4 rounded-lg border-2 text-left transition-all ${
+                    frequencyType === 'count'
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="font-medium text-gray-900">Show X Times</div>
+                  <div className="text-xs text-gray-500 mt-1">Limit total number of views</div>
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => setFrequencyType('days')}
+                  className={`p-4 rounded-lg border-2 text-left transition-all ${
+                    frequencyType === 'days'
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <div className="font-medium text-gray-900">Show Every X Days</div>
+                  <div className="text-xs text-gray-500 mt-1">Repeat after a cooldown period</div>
+                </button>
+              </div>
+
+              {frequencyType === 'count' && (
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <label className="label">Maximum Times to Show</label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="number"
+                      min="1"
+                      max="100"
+                      className="input w-24"
+                      value={frequencyCount}
+                      onChange={(e) => setFrequencyCount(parseInt(e.target.value) || 1)}
+                    />
+                    <span className="text-sm text-gray-600">times per user</span>
+                  </div>
+                </div>
+              )}
+
+              {frequencyType === 'days' && (
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <label className="label">Show Again After</label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="number"
+                      min="1"
+                      max="365"
+                      className="input w-24"
+                      value={frequencyDays}
+                      onChange={(e) => setFrequencyDays(parseInt(e.target.value) || 7)}
+                    />
+                    <span className="text-sm text-gray-600">days</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Advanced Settings */}
           <div className="card p-5 mb-5">
             <h2 className="text-base font-semibold text-gray-900 mb-4">Advanced</h2>
             
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="label">Z-Index</label>
                 <input
@@ -819,28 +924,18 @@ export default function EditTooltipPage() {
                   value={zIndex}
                   onChange={(e) => setZIndex(parseInt(e.target.value) || 2147483647)}
                 />
+                <p className="text-xs text-gray-500 mt-1">Higher = appears above other elements</p>
               </div>
 
               <div>
-                <label className="label">Delay (ms)</label>
+                <label className="label">Delay Before Showing (ms)</label>
                 <input
                   type="number"
                   className="input"
                   value={delayMs}
                   onChange={(e) => setDelayMs(parseInt(e.target.value) || 0)}
                 />
-              </div>
-
-              <div className="flex items-end">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={showOnce}
-                    onChange={(e) => setShowOnce(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 rounded"
-                  />
-                  <span className="text-sm text-gray-700">Show once</span>
-                </label>
+                <p className="text-xs text-gray-500 mt-1">Wait before showing (1000ms = 1 second)</p>
               </div>
             </div>
           </div>
