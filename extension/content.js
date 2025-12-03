@@ -1,7 +1,10 @@
 // TourLayer Content Script - Renders tours and tooltips on matching websites
 (function() {
-  // Prevent multiple injections
-  if (window.__tourLayerInitialized) return;
+  // Prevent multiple injections - also check for embed script
+  if (window.__tourLayerInitialized || window.__TourLayerLoaded) {
+    console.log('TourLayer Extension: Skipping - already initialized or embed script present');
+    return;
+  }
   window.__tourLayerInitialized = true;
 
   const API_URL = 'https://plg-tour.vercel.app';
@@ -239,6 +242,13 @@
   }
 
   function createBeacon(tooltip) {
+    // Check if beacon already exists for this tooltip
+    const existingBeacon = document.querySelector(`[data-tooltip-id="${tooltip.id}"]`);
+    if (existingBeacon) {
+      console.log('TourLayer: Beacon already exists for tooltip', tooltip.id);
+      return;
+    }
+
     // Find target element
     let element;
     try {
