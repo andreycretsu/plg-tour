@@ -18,8 +18,10 @@ export async function GET(request: NextRequest) {
 
     let user;
 
-    // Check if it's an API token (starts with tl_)
-    if (token.startsWith('tl_')) {
+    // Check if it's an API token (starts with tl_ or t1_) vs JWT (has dots)
+    const isApiToken = token.startsWith('tl_') || token.startsWith('t1_') || !token.includes('.');
+    
+    if (isApiToken && !token.includes('.')) {
       // Look up user by API token
       const result = await query(
         `SELECT id, email, name, api_token, created_at 

@@ -40,13 +40,13 @@
       ]
     },
     {
-      "matches": ["https://plg-tour.vercel.app/*", "http://localhost:3000/*"],
+      "matches": ["https://*.vercel.app/*", "http://localhost:3000/*"],
       "js": ["webapp-bridge.js"],
       "run_at": "document_end"
     }
   ],
   "externally_connectable": {
-    "matches": ["https://plg-tour.vercel.app/*", "http://localhost:3000/*"]
+    "matches": ["https://*.vercel.app/*", "http://localhost:3000/*"]
   },
   "web_accessible_resources": [
     {
