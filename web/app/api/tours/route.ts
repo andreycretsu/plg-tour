@@ -93,6 +93,10 @@ export async function POST(request: NextRequest) {
       buttonColor = '#3b82f6',
       buttonTextColor = '#ffffff',
       buttonBorderRadius = 8,
+      // Frequency fields
+      frequencyType = 'once',
+      frequencyCount = 1,
+      frequencyDays = 7,
     } = body;
 
     // Validation
@@ -103,19 +107,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create tour with workspace_id and styling
+    // Create tour with workspace_id, styling, and frequency
     const tourResult = await query(
       `INSERT INTO tours (
         user_id, workspace_id, name, url_pattern,
         card_bg_color, card_text_color, card_border_radius, card_padding, card_shadow,
-        button_color, button_text_color, button_border_radius
+        button_color, button_text_color, button_border_radius,
+        frequency_type, frequency_count, frequency_days
       ) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) 
        RETURNING *`,
       [
         payload.userId, workspaceId, name, urlPattern,
         cardBgColor, cardTextColor, cardBorderRadius, cardPadding, cardShadow,
-        buttonColor, buttonTextColor, buttonBorderRadius
+        buttonColor, buttonTextColor, buttonBorderRadius,
+        frequencyType, frequencyCount, frequencyDays
       ]
     );
 

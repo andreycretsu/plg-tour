@@ -234,9 +234,11 @@ async function switchToWebAppTab() {
     const localTabs = await chrome.tabs.query({ url: 'http://localhost:3000/*' });
     const allTabs = [...tabs, ...localTabs];
     
-    // Find a tab that looks like TourLayer (has /tours in URL)
+    // Find a tab that looks like TourLayer (includes tours, tooltips, or dashboard)
     const tourLayerTab = allTabs.find(tab => 
-      tab.url.includes('/tours') || tab.url.includes('/dashboard')
+      tab.url.includes('/tours') || 
+      tab.url.includes('/tooltips') || 
+      tab.url.includes('/dashboard')
     );
     
     if (tourLayerTab) {

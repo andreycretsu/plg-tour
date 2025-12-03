@@ -30,6 +30,12 @@ interface TourStyling {
   buttonBorderRadius: number;
 }
 
+interface TourFrequency {
+  type: 'once' | 'always' | 'count' | 'days';
+  count: number;
+  days: number;
+}
+
 const defaultStyling: TourStyling = {
   cardBgColor: '#ffffff',
   cardTextColor: '#1f2937',
@@ -41,13 +47,21 @@ const defaultStyling: TourStyling = {
   buttonBorderRadius: 8,
 };
 
+const defaultFrequency: TourFrequency = {
+  type: 'once',
+  count: 1,
+  days: 7,
+};
+
 export default function NewTourPage() {
   const router = useRouter();
   const [tourName, setTourName] = useState('New Product Tour');
   const [urlPattern, setUrlPattern] = useState('');
   const [steps, setSteps] = useState<Step[]>([]);
   const [styling, setStyling] = useState<TourStyling>(defaultStyling);
+  const [frequency, setFrequency] = useState<TourFrequency>(defaultFrequency);
   const [showStyling, setShowStyling] = useState(false);
+  const [showFrequency, setShowFrequency] = useState(false);
   const [loading, setLoading] = useState(false);
   const [extensionInstalled, setExtensionInstalled] = useState(false);
   const [pickingForStep, setPickingForStep] = useState<string | null>(null);
@@ -206,6 +220,10 @@ export default function NewTourPage() {
           buttonColor: styling.buttonColor,
           buttonTextColor: styling.buttonTextColor,
           buttonBorderRadius: styling.buttonBorderRadius,
+          // Frequency settings
+          frequencyType: frequency.type,
+          frequencyCount: frequency.count,
+          frequencyDays: frequency.days,
           steps: steps.map((step, index) => ({
             stepOrder: index,
             selector: step.selector,
@@ -502,6 +520,113 @@ export default function NewTourPage() {
             )}
           </div>
 
+          {/* Display Frequency */}
+          <div className="card p-6 mb-6">
+            <button
+              onClick={() => setShowFrequency(!showFrequency)}
+              className="w-full flex items-center justify-between text-left"
+            >
+              <h2 className="text-xl font-semibold text-gray-900">Display Frequency</h2>
+              <span className={`transform transition-transform ${showFrequency ? 'rotate-180' : ''}`}>
+                ▼
+              </span>
+            </button>
+            
+            {showFrequency && (
+              <div className="mt-4 space-y-4">
+                <p className="text-sm text-gray-500">Control how often users see this tour</p>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFrequency({...frequency, type: 'once'})}
+                    className={`p-4 rounded-lg border-2 text-left transition-all ${
+                      frequency.type === 'once'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900">Show Once</div>
+                    <div className="text-xs text-gray-500 mt-1">User sees it only once, ever</div>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setFrequency({...frequency, type: 'always'})}
+                    className={`p-4 rounded-lg border-2 text-left transition-all ${
+                      frequency.type === 'always'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900">Show Always</div>
+                    <div className="text-xs text-gray-500 mt-1">Show on every page visit</div>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setFrequency({...frequency, type: 'count'})}
+                    className={`p-4 rounded-lg border-2 text-left transition-all ${
+                      frequency.type === 'count'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900">Show X Times</div>
+                    <div className="text-xs text-gray-500 mt-1">Limit total number of views</div>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setFrequency({...frequency, type: 'days'})}
+                    className={`p-4 rounded-lg border-2 text-left transition-all ${
+                      frequency.type === 'days'
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium text-gray-900">Show Every X Days</div>
+                    <div className="text-xs text-gray-500 mt-1">Repeat after a cooldown period</div>
+                  </button>
+                </div>
+
+                {frequency.type === 'count' && (
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <label className="label">Maximum Times to Show</label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="number"
+                        min="1"
+                        max="100"
+                        className="input w-24"
+                        value={frequency.count}
+                        onChange={(e) => setFrequency({...frequency, count: parseInt(e.target.value) || 1})}
+                      />
+                      <span className="text-sm text-gray-600">times per user</span>
+                    </div>
+                  </div>
+                )}
+
+                {frequency.type === 'days' && (
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <label className="label">Show Again After</label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="number"
+                        min="1"
+                        max="365"
+                        className="input w-24"
+                        value={frequency.days}
+                        onChange={(e) => setFrequency({...frequency, days: parseInt(e.target.value) || 7})}
+                      />
+                      <span className="text-sm text-gray-600">days</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Steps */}
           <div className="card p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
@@ -699,36 +824,132 @@ export default function NewTourPage() {
         </div>
 
         {/* Preview Panel - Sticky Sidebar */}
-        <div className="w-80 flex-shrink-0">
+        <div className="flex-1 min-w-[400px] max-w-[500px]">
           <div className="sticky top-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+                <Eye size={18} />
+                Live Preview
+              </h2>
+            </div>
+
             {activeStep ? (
-              <PreviewPanel
-                step={{
-                  title: activeStep.title,
-                  content: activeStep.content,
-                  buttonText: activeStep.buttonText,
-                  placement: activeStep.placement,
-                  imageUrl: activeStep.imageUrl,
-                  selector: activeStep.selector,
-                }}
-                stepNumber={steps.findIndex(s => s.id === activeStep.id) + 1}
-                totalSteps={steps.length}
-                onPlacementChange={(placement) => updateStep(activeStep.id, 'placement', placement)}
-              />
-            ) : (
-              <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl p-6 text-white">
-                <div className="flex items-center gap-2 mb-4">
-                  <Eye size={18} />
-                  <h3 className="font-semibold">Live Preview</h3>
+              <div 
+                className="rounded-xl p-6 min-h-[400px] flex items-center justify-center"
+                style={{ backgroundColor: '#f3f4f6' }}
+              >
+                {/* Preview Layout - changes based on placement */}
+                <div 
+                  className="flex items-center justify-center gap-4"
+                  style={{
+                    flexDirection: activeStep.placement === 'top' ? 'column-reverse' : 
+                                   activeStep.placement === 'bottom' ? 'column' : 
+                                   activeStep.placement === 'left' ? 'row-reverse' : 'row'
+                  }}
+                >
+                  {/* Mock Element - Square */}
+                  <div className="relative flex-shrink-0">
+                    <div 
+                      className="bg-gray-300 rounded-lg flex items-center justify-center text-gray-500 font-medium text-sm"
+                      style={{ width: 100, height: 100 }}
+                    >
+                      Element
+                      {/* Pulse Indicator */}
+                      {activeStep.pulseEnabled && (
+                        <div 
+                          className="absolute w-4 h-4 bg-blue-500 rounded-full"
+                          style={{
+                            animation: 'pulse 2s infinite',
+                            ...(activeStep.placement === 'top' && { top: -8, left: '50%', marginLeft: -8 }),
+                            ...(activeStep.placement === 'bottom' && { bottom: -8, left: '50%', marginLeft: -8 }),
+                            ...(activeStep.placement === 'left' && { left: -8, top: '50%', marginTop: -8 }),
+                            ...(activeStep.placement === 'right' && { right: -8, top: '50%', marginTop: -8 }),
+                            ...(activeStep.placement === 'auto' && { right: -8, top: '50%', marginTop: -8 }),
+                          }}
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Tour Card Preview */}
+                  <div 
+                    className="flex-shrink-0"
+                    style={{
+                      width: 260,
+                      backgroundColor: styling.cardBgColor,
+                      color: styling.cardTextColor,
+                      borderRadius: styling.cardBorderRadius,
+                      padding: Math.min(styling.cardPadding, 16),
+                      boxShadow: getShadowValue(styling.cardShadow),
+                    }}
+                  >
+                    {activeStep.imageUrl && (
+                      <img 
+                        src={activeStep.imageUrl} 
+                        alt="Preview" 
+                        className="w-full h-20 object-cover mb-2"
+                        style={{ borderRadius: Math.max(0, styling.cardBorderRadius - 4) }}
+                      />
+                    )}
+                    <h3 className="font-semibold text-sm mb-1">
+                      {activeStep.title || 'Step Title'}
+                    </h3>
+                    <p className="text-xs opacity-80 mb-2">
+                      Step {steps.findIndex(s => s.id === activeStep.id) + 1} of {steps.length}
+                    </p>
+                    <p className="text-xs opacity-70 mb-3">
+                      {activeStep.content || 'Step content...'}
+                    </p>
+                    <div className="flex justify-between items-center">
+                      <button className="text-xs text-gray-400">Skip</button>
+                      <button
+                        style={{
+                          backgroundColor: styling.buttonColor,
+                          color: styling.buttonTextColor,
+                          borderRadius: styling.buttonBorderRadius,
+                          padding: '6px 12px',
+                          border: 'none',
+                          fontWeight: 500,
+                          fontSize: '12px',
+                        }}
+                      >
+                        {activeStep.buttonText || 'Next'}
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-slate-400 text-sm">
-                  Click on a step to see a live preview of how it will appear to users.
-                </p>
-                {steps.length === 0 && (
-                  <p className="text-slate-500 text-sm mt-4">
-                    Add your first step to get started.
-                  </p>
-                )}
+              </div>
+            ) : (
+              <div className="rounded-xl p-6 min-h-[300px] flex items-center justify-center" style={{ backgroundColor: '#f3f4f6' }}>
+                <div className="text-center text-gray-500">
+                  <Eye size={32} className="mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Click on a step to preview</p>
+                  {steps.length === 0 && (
+                    <p className="text-xs mt-2 text-gray-400">Add your first step to get started</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Placement Selector */}
+            {activeStep && (
+              <div className="mt-4 p-4 bg-white border border-gray-200 rounded-lg">
+                <p className="text-xs text-gray-500 mb-2">Tooltip Position:</p>
+                <div className="flex gap-2">
+                  {['top', 'right', 'bottom', 'left', 'auto'].map((placement) => (
+                    <button
+                      key={placement}
+                      onClick={() => updateStep(activeStep.id, 'placement', placement)}
+                      className={`flex-1 py-2 text-xs font-medium rounded capitalize transition-colors ${
+                        activeStep.placement === placement
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {placement}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>

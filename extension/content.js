@@ -102,11 +102,35 @@
         currentTour = tours[0];
         currentStepIndex = 0;
         
-        // Check if already seen
-        const seenKey = `tourlayer_seen_tour_${currentTour.id}`;
-        const seenResult = await chrome.storage.local.get([seenKey]);
+        // Check frequency settings
+        const frequencyType = currentTour.frequency_type || 'once';
+        const storageKey = `tourlayer_tour_${currentTour.id}`;
+        const result = await chrome.storage.local.get([storageKey]);
+        const data = result[storageKey] || { viewCount: 0, lastSeen: null };
+        const now = Date.now();
         
-        if (!seenResult[seenKey]) {
+        let shouldShow = false;
+        
+        switch (frequencyType) {
+          case 'once':
+            shouldShow = data.viewCount === 0;
+            break;
+          case 'always':
+            shouldShow = true;
+            break;
+          case 'count':
+            shouldShow = data.viewCount < (currentTour.frequency_count || 1);
+            break;
+          case 'days':
+            const cooldownMs = (currentTour.frequency_days || 7) * 24 * 60 * 60 * 1000;
+            const timeSince = data.lastSeen ? (now - data.lastSeen) : Infinity;
+            shouldShow = timeSince >= cooldownMs;
+            break;
+          default:
+            shouldShow = data.viewCount === 0;
+        }
+        
+        if (shouldShow) {
           showDebugBadge(`Tour: ${currentTour.name}`, '#22c55e');
           setTimeout(() => showStep(currentStepIndex), 500);
         }
@@ -1009,8 +1033,17 @@
     }
 
     if (currentTour && completed) {
-      const seenKey = `tourlayer_seen_tour_${currentTour.id}`;
-      chrome.storage.local.set({ [seenKey]: true });
+      // Update view tracking for frequency logic
+      const storageKey = `tourlayer_tour_${currentTour.id}`;
+      chrome.storage.local.get([storageKey], (result) => {
+        const data = result[storageKey] || { viewCount: 0, lastSeen: null };
+        chrome.storage.local.set({
+          [storageKey]: {
+            viewCount: data.viewCount + 1,
+            lastSeen: Date.now()
+          }
+        });
+      });
     }
 
     currentTour = null;

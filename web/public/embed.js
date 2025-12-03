@@ -113,14 +113,38 @@
         currentTour = tours[0];
         currentStepIndex = 0;
         
-        // Check if user has seen this tour
-        const seenKey = `tourlayer_seen_tour_${currentTour.id}`;
-        const hasSeen = localStorage.getItem(seenKey);
+        // Check frequency settings
+        const frequencyType = currentTour.frequency_type || 'once';
+        const storageKey = `tourlayer_tour_${currentTour.id}`;
+        const stored = localStorage.getItem(storageKey);
+        const data = stored ? JSON.parse(stored) : { viewCount: 0, lastSeen: null };
+        const now = Date.now();
         
-        if (!hasSeen) {
+        let shouldShow = false;
+        
+        switch (frequencyType) {
+          case 'once':
+            shouldShow = data.viewCount === 0;
+            break;
+          case 'always':
+            shouldShow = true;
+            break;
+          case 'count':
+            shouldShow = data.viewCount < (currentTour.frequency_count || 1);
+            break;
+          case 'days':
+            const cooldownMs = (currentTour.frequency_days || 7) * 24 * 60 * 60 * 1000;
+            const timeSince = data.lastSeen ? (now - data.lastSeen) : Infinity;
+            shouldShow = timeSince >= cooldownMs;
+            break;
+          default:
+            shouldShow = data.viewCount === 0;
+        }
+        
+        if (shouldShow) {
           setTimeout(() => showStep(currentStepIndex), 500);
         } else {
-          console.log('TourLayer: Tour already seen');
+          console.log('TourLayer: Tour skipped due to frequency settings');
         }
       }
     } catch (error) {
@@ -962,7 +986,14 @@
     }
 
     if (currentTour && completed) {
-      localStorage.setItem(`tourlayer_seen_tour_${currentTour.id}`, 'true');
+      // Update view tracking for frequency logic
+      const storageKey = `tourlayer_tour_${currentTour.id}`;
+      const stored = localStorage.getItem(storageKey);
+      const data = stored ? JSON.parse(stored) : { viewCount: 0, lastSeen: null };
+      localStorage.setItem(storageKey, JSON.stringify({
+        viewCount: data.viewCount + 1,
+        lastSeen: Date.now()
+      }));
     }
 
     currentTour = null;
@@ -1002,12 +1033,12 @@
   window.TourLayer = {
     reset: (id) => {
       if (id) {
-        localStorage.removeItem(`tourlayer_seen_tour_${id}`);
-        localStorage.removeItem(`tourlayer_seen_tooltip_${id}`);
+        localStorage.removeItem(`tourlayer_tour_${id}`);
+        localStorage.removeItem(`tourlayer_tooltip_${id}`);
       }
       console.log('TourLayer: Reset complete');
     },
-    version: '1.1.0'
+    version: '1.2.0'
   };
 
 })();
