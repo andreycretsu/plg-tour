@@ -825,7 +825,7 @@ export default function NewTourPage() {
 
         {/* Preview Panel - Sticky Sidebar */}
         <div className="flex-1 min-w-[400px]">
-          <div className="sticky top-6">
+          <div className="sticky top-0 h-screen py-6 flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
                 <Eye size={18} />
@@ -835,7 +835,7 @@ export default function NewTourPage() {
 
             {activeStep ? (
               <div 
-                className="rounded-xl p-6 min-h-[400px] flex items-center justify-center"
+                className="rounded-xl p-6 flex-1 flex items-center justify-center"
                 style={{ backgroundColor: '#f3f4f6' }}
               >
                 {/* Preview Layout - changes based on placement */}
@@ -920,7 +920,7 @@ export default function NewTourPage() {
                 </div>
               </div>
             ) : (
-              <div className="rounded-xl p-6 min-h-[300px] flex items-center justify-center" style={{ backgroundColor: '#f3f4f6' }}>
+              <div className="rounded-xl p-6 flex-1 flex items-center justify-center" style={{ backgroundColor: '#f3f4f6' }}>
                 <div className="text-center text-gray-500">
                   <Eye size={32} className="mx-auto mb-2 opacity-50" />
                   <p className="text-sm">Click on a step to preview</p>

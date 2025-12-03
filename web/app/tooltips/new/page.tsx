@@ -877,7 +877,7 @@ export default function NewTooltipPage() {
 
         {/* Right Column - Live Preview */}
         <div className="flex-1 min-w-[400px]">
-          <div className="sticky top-4">
+          <div className="sticky top-0 h-screen py-6 flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
                 <Eye size={18} />
@@ -893,7 +893,7 @@ export default function NewTooltipPage() {
 
             {showPreview && (
               <div 
-                className="rounded-xl p-6 min-h-[400px] flex items-center justify-center"
+                className="rounded-xl p-6 flex-1 flex items-center justify-center"
                 style={{ backgroundColor: '#f3f4f6' }}
               >
                 {/* Preview Layout - changes based on edge */}
@@ -970,45 +970,6 @@ export default function NewTooltipPage() {
                 </div>
               </div>
             )}
-
-            {/* Position Indicator */}
-            <div className="mt-4 p-4 bg-white border border-gray-200 rounded-lg">
-              <p className="text-xs text-gray-500 mb-2">Beacon Position:</p>
-              <div className="flex items-center gap-3">
-                <div className="w-16 h-16 bg-gray-100 border border-gray-300 rounded relative">
-                  <div 
-                    className="absolute w-2 h-2 bg-blue-500 rounded-full"
-                    style={{
-                      ...(iconEdge === 'top' && { 
-                        top: `${50 - iconOffset}%`, 
-                        left: `calc(50% + ${iconOffsetY * 0.5}px)`, 
-                        transform: 'translate(-50%, -50%)' 
-                      }),
-                      ...(iconEdge === 'bottom' && { 
-                        bottom: `${50 - iconOffset}%`, 
-                        left: `calc(50% + ${iconOffsetY * 0.5}px)`, 
-                        transform: 'translate(-50%, 50%)' 
-                      }),
-                      ...(iconEdge === 'left' && { 
-                        left: `${50 - iconOffset}%`, 
-                        top: `calc(50% + ${iconOffsetY * 0.5}px)`, 
-                        transform: 'translate(-50%, -50%)' 
-                      }),
-                      ...(iconEdge === 'right' && { 
-                        right: `${50 - iconOffset}%`, 
-                        top: `calc(50% + ${iconOffsetY * 0.5}px)`, 
-                        transform: 'translate(50%, -50%)' 
-                      }),
-                    }}
-                  />
-                </div>
-                <div className="text-xs text-gray-600 space-y-1">
-                  <p><strong className="text-gray-800">{iconEdge}</strong> edge</p>
-                  <p>Distance: <span className="font-mono">{iconOffset}px</span></p>
-                  <p>Along: <span className="font-mono">{iconOffsetY}px</span></p>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
