@@ -4,6 +4,18 @@ import { extractToken } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
+// CORS headers for cross-origin requests from extension
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Token',
+};
+
+// Handle preflight OPTIONS request
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 200, headers: corsHeaders });
+}
+
 // Helper to check if URL matches pattern (supports * wildcards)
 function urlMatchesPattern(url: string, pattern: string): boolean {
   // Normalize URLs - remove trailing slashes for comparison
@@ -38,7 +50,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (!apiToken) {
-      return NextResponse.json({ error: 'Missing API token' }, { status: 401 });
+      return NextResponse.json({ error: 'Missing API token' }, { status: 401, headers: corsHeaders });
     }
 
     // Verify API token and get user
@@ -48,7 +60,7 @@ export async function GET(request: NextRequest) {
     );
 
     if (userResult.rows.length === 0) {
-      return NextResponse.json({ error: 'Invalid API token' }, { status: 401 });
+      return NextResponse.json({ error: 'Invalid API token' }, { status: 401, headers: corsHeaders });
     }
 
     const userId = userResult.rows[0].id;
@@ -82,9 +94,9 @@ export async function GET(request: NextRequest) {
       tour.steps = stepsResult.rows;
     }
 
-    return NextResponse.json({ tours });
+    return NextResponse.json({ tours }, { headers: corsHeaders });
   } catch (error) {
     console.error('Public get tours error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500, headers: corsHeaders });
   }
 }
