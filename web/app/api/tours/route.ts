@@ -3,6 +3,8 @@ import { query } from '@/lib/db';
 import { extractToken, verifyToken } from '@/lib/auth';
 import { CreateTourRequest } from '@/lib/types';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/tours - List all tours for user
 export async function GET(request: NextRequest) {
   try {

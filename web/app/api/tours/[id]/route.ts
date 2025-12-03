@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { extractToken, verifyToken } from '@/lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 // GET /api/tours/:id - Get single tour with steps
 export async function GET(
   request: NextRequest,

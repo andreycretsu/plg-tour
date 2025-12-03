@@ -3,6 +3,8 @@ import { query } from '@/lib/db';
 import { hashPassword, generateToken, generateApiToken } from '@/lib/auth';
 import { SignupRequest } from '@/lib/types';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const body: SignupRequest = await request.json();
