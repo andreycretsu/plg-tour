@@ -3,12 +3,13 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Copy, Check, Key, RefreshCw } from 'lucide-react';
+import { Copy, Check, Key, RefreshCw, Code, Chrome, ExternalLink } from 'lucide-react';
 
 export default function SettingsPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'extension' | 'snippet'>('snippet');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -22,10 +23,18 @@ export default function SettingsPage() {
     setUser(JSON.parse(userData || '{}'));
   }, [router]);
 
-  const copyToken = () => {
-    navigator.clipboard.writeText(user?.apiToken || '');
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const copyToClipboard = (text: string, key: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(key);
+    setTimeout(() => setCopied(null), 2000);
+  };
+
+  const getEmbedSnippet = () => {
+    return `<!-- TourLayer - Product Tours -->
+<script 
+  src="https://plg-tour.vercel.app/embed.js" 
+  data-token="${user?.apiToken || 'YOUR_API_TOKEN'}">
+</script>`;
   };
 
   if (!user) {
@@ -41,58 +50,152 @@ export default function SettingsPage() {
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-          <p className="text-gray-600 mt-2">Manage your account and API access</p>
+          <p className="text-gray-600 mt-2">Manage your account and installation options</p>
         </div>
 
-        {/* API Token Section */}
+        {/* Installation Section */}
         <div className="card p-6 mb-6">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Key className="text-primary-600" size={24} />
-            </div>
-            <div className="flex-1">
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">API Token</h2>
-              <p className="text-gray-600 mb-4">
-                Use this token to connect the Chrome extension to your account.
-                Copy and paste it into the extension popup.
-              </p>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">🚀 Install TourLayer</h2>
+          <p className="text-gray-600 mb-6">
+            Choose how you want to show tours to your users. The embed snippet is recommended for production.
+          </p>
 
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
-                <div className="flex items-center justify-between gap-4">
-                  <code className="text-sm font-mono text-gray-900 break-all">
-                    {user.apiToken}
-                  </code>
+          {/* Tabs */}
+          <div className="flex gap-2 mb-6">
+            <button
+              onClick={() => setActiveTab('snippet')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+                activeTab === 'snippet'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <Code size={18} />
+              Embed Snippet
+              <span className="text-xs bg-green-500 text-white px-2 py-0.5 rounded-full">Recommended</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('extension')}
+              className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+                activeTab === 'extension'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <Chrome size={18} />
+              Chrome Extension
+            </button>
+          </div>
+
+          {/* Snippet Tab */}
+          {activeTab === 'snippet' && (
+            <div className="space-y-4">
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4 mb-4">
+                <h3 className="font-semibold text-green-900 mb-2">✅ Shows tours to ALL visitors</h3>
+                <p className="text-sm text-green-800">
+                  Add this snippet once to your website and all your tours will automatically appear to every visitor.
+                  No extension required for your users!
+                </p>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="label mb-0">Your Embed Code</label>
                   <button
-                    onClick={copyToken}
-                    className="btn btn-secondary flex items-center gap-2 flex-shrink-0"
+                    onClick={() => copyToClipboard(getEmbedSnippet(), 'snippet')}
+                    className="btn btn-secondary btn-sm flex items-center gap-2"
                   >
-                    {copied ? (
+                    {copied === 'snippet' ? (
                       <>
-                        <Check size={16} />
+                        <Check size={14} />
                         Copied!
                       </>
                     ) : (
                       <>
-                        <Copy size={16} />
-                        Copy
+                        <Copy size={14} />
+                        Copy Code
                       </>
                     )}
                   </button>
                 </div>
+                <div className="bg-slate-900 rounded-lg p-4 overflow-x-auto">
+                  <pre className="text-sm text-green-400 font-mono whitespace-pre-wrap">
+{getEmbedSnippet()}
+                  </pre>
+                </div>
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 className="font-semibold text-blue-900 mb-2">📌 How to use:</h3>
-                <ol className="list-decimal list-inside space-y-1 text-sm text-blue-800">
-                  <li>Install the TourLayer Chrome extension</li>
+                <h3 className="font-semibold text-blue-900 mb-2">📋 Installation Steps:</h3>
+                <ol className="list-decimal list-inside space-y-2 text-sm text-blue-800">
+                  <li>Copy the embed code above</li>
+                  <li>Paste it into your website's HTML, just before the closing <code className="bg-blue-100 px-1 rounded">&lt;/body&gt;</code> tag</li>
+                  <li>Deploy your changes</li>
+                  <li>Tours will automatically appear on matching URLs!</li>
+                </ol>
+              </div>
+
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <h3 className="font-semibold text-amber-900 mb-2">💡 Pro Tips:</h3>
+                <ul className="list-disc list-inside space-y-1 text-sm text-amber-800">
+                  <li>Tours are shown based on URL patterns you configure</li>
+                  <li>Users who complete a tour won't see it again</li>
+                  <li>Use <code className="bg-amber-100 px-1 rounded">TourLayer.reset(tourId)</code> in console to show a tour again</li>
+                  <li>The script loads asynchronously and won't slow down your site</li>
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* Extension Tab */}
+          {activeTab === 'extension' && (
+            <div className="space-y-4">
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
+                <h3 className="font-semibold text-purple-900 mb-2">🔧 For Building Tours</h3>
+                <p className="text-sm text-purple-800">
+                  The Chrome extension is used to BUILD tours with the visual element picker.
+                  It's for you and your team, not your end users.
+                </p>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="label mb-0">API Token</label>
+                  <button
+                    onClick={() => copyToClipboard(user.apiToken, 'token')}
+                    className="btn btn-secondary btn-sm flex items-center gap-2"
+                  >
+                    {copied === 'token' ? (
+                      <>
+                        <Check size={14} />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy size={14} />
+                        Copy Token
+                      </>
+                    )}
+                  </button>
+                </div>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                  <code className="text-sm font-mono text-gray-900 break-all">
+                    {user.apiToken}
+                  </code>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h3 className="font-semibold text-blue-900 mb-2">📋 Setup Steps:</h3>
+                <ol className="list-decimal list-inside space-y-2 text-sm text-blue-800">
+                  <li>Download the TourLayer Chrome extension</li>
                   <li>Click the extension icon in your browser toolbar</li>
-                  <li>Paste this API token into the input field</li>
-                  <li>Click "Save" to connect</li>
-                  <li>Your tours will now appear on matching websites!</li>
+                  <li>Paste your API token and click "Connect"</li>
+                  <li>Navigate to any website and use "Pick Element" to build tours</li>
                 </ol>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Account Section */}
@@ -140,7 +243,7 @@ export default function SettingsPage() {
             <div>
               <h3 className="font-semibold text-gray-900">Regenerate API Token</h3>
               <p className="text-sm text-gray-600">
-                This will invalidate your current token. You'll need to update your extension.
+                This will invalidate your current token. You'll need to update your embed code and extension.
               </p>
             </div>
             <button className="btn bg-red-600 text-white hover:bg-red-700 flex items-center gap-2">
@@ -153,4 +256,3 @@ export default function SettingsPage() {
     </DashboardLayout>
   );
 }
-

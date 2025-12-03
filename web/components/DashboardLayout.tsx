@@ -2,7 +2,7 @@
 
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, Target, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, Target, Settings, LogOut, BookOpen } from 'lucide-react';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -18,6 +18,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Tours', href: '/tours', icon: Target },
     { name: 'Settings', href: '/settings', icon: Settings },
+    { name: 'Docs', href: '/docs', icon: BookOpen },
   ];
 
   return (
