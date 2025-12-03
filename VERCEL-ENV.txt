@@ -1,6 +1,6 @@
-DATABASE_URL="postgresql://postgres.ugzpmodoyxenodkmjthx:%3Ffir_3Zvv%25Q%2BQ2w@aws-0-eu-west-3.pooler.supabase.com:6543/postgres?pgbouncer=true"
+DATABASE_URL="postgresql://postgres.ugzpmodoyxenodkmjthx:%3Ffir_3Zvv%25Q%2BQ2w@aws-1-eu-west-3.pooler.supabase.com:6543/postgres?pgbouncer=true"
 
-DIRECT_URL="postgresql://postgres.ugzpmodoyxenodkmjthx:%3Ffir_3Zvv%25Q%2BQ2w@aws-0-eu-west-3.pooler.supabase.com:5432/postgres"
+DIRECT_URL="postgresql://postgres.ugzpmodoyxenodkmjthx:%3Ffir_3Zvv%25Q%2BQ2w@aws-1-eu-west-3.pooler.supabase.com:5432/postgres"
 
 JWT_SECRET="dGVtcG9yYXJ5X3NlY3JldF9rZXlfY2hhbmdlX3RoaXNfbGF0ZXI="
 
