@@ -12,15 +12,24 @@
 
   // Initialize
   async function init() {
-    console.log('TourLayer: Initializing...');
+    console.log('TourLayer: Initializing on', window.location.href);
+    
+    // Don't run on TourLayer web app itself
+    if (window.location.hostname.includes('plg-tour') || 
+        window.location.hostname.includes('vercel.app') && window.location.pathname.includes('/tours')) {
+      console.log('TourLayer: Skipping on TourLayer app');
+      return;
+    }
     
     // Get API token from storage
     const result = await chrome.storage.local.get(['apiToken']);
     
     if (!result.apiToken) {
-      console.log('TourLayer: No API token configured');
+      console.log('TourLayer: No API token configured - please connect the extension first');
       return;
     }
+
+    console.log('TourLayer: API token found, fetching tours...');
 
     // Fetch tours for current URL
     await fetchAndShowTours(result.apiToken);
@@ -49,19 +58,28 @@
       const tours = data.tours || [];
 
       console.log('TourLayer: Found', tours.length, 'tours for this page');
+      
+      if (tours.length > 0) {
+        console.log('TourLayer: Tours data:', JSON.stringify(tours, null, 2));
+      }
 
       if (tours.length > 0 && tours[0].steps?.length > 0) {
         // Show first matching tour
         currentTour = tours[0];
         currentStepIndex = 0;
         
-        // Check if user has already seen this tour
-        const seenKey = `tourlayer_seen_${currentTour.id}`;
-        const seen = await chrome.storage.local.get([seenKey]);
+        console.log('TourLayer: Starting tour:', currentTour.name, 'with', currentTour.steps.length, 'steps');
         
-        if (!seen[seenKey]) {
-          showStep(currentStepIndex);
-        }
+        // Check if user has already seen this tour (skip check for now to always show)
+        // const seenKey = `tourlayer_seen_${currentTour.id}`;
+        // const seen = await chrome.storage.local.get([seenKey]);
+        // if (!seen[seenKey]) {
+        
+        // Always show for now (for testing)
+        showStep(currentStepIndex);
+        // }
+      } else if (tours.length > 0) {
+        console.log('TourLayer: Tour found but no steps:', tours[0]);
       }
     } catch (error) {
       console.error('TourLayer: Error fetching tours', error);
@@ -266,29 +284,96 @@
     }
 
     const step = currentTour.steps[index];
-    const element = document.querySelector(step.selector);
+    
+    // Check if selector is valid (not empty, not HTML)
+    const isValidSelector = step.selector && 
+                            step.selector.trim() !== '' && 
+                            !step.selector.startsWith('<');
+    
+    if (!isValidSelector) {
+      console.log('TourLayer: No valid selector, showing centered modal');
+      renderCenteredStep(step, index);
+      return;
+    }
+
+    let element = null;
+    try {
+      element = document.querySelector(step.selector);
+    } catch (e) {
+      console.warn('TourLayer: Invalid selector:', step.selector, e);
+    }
 
     if (!element) {
       console.warn('TourLayer: Element not found:', step.selector);
       // Try next step after a delay (element might load later)
       setTimeout(() => {
-        const retryElement = document.querySelector(step.selector);
+        let retryElement = null;
+        try {
+          retryElement = document.querySelector(step.selector);
+        } catch (e) {}
+        
         if (retryElement) {
           renderStep(step, retryElement, index);
         } else {
-          // Skip to next step
-          if (index < currentTour.steps.length - 1) {
-            currentStepIndex = index + 1;
-            showStep(currentStepIndex);
-          } else {
-            endTour();
-          }
+          // Show centered modal instead of skipping
+          renderCenteredStep(step, index);
         }
       }, 1000);
       return;
     }
 
     renderStep(step, element, index);
+  }
+
+  // Render centered modal (when no element target)
+  function renderCenteredStep(step, index) {
+    const container = createContainer();
+    container.innerHTML = '';
+
+    const totalSteps = currentTour.steps.length;
+    const isLastStep = index === totalSteps - 1;
+    const isFirstStep = index === 0;
+
+    // Create overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'tourlayer-overlay';
+    overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1;';
+    container.appendChild(overlay);
+
+    // Create centered tooltip
+    const tooltip = document.createElement('div');
+    tooltip.className = 'tourlayer-tooltip';
+    tooltip.style.cssText = `
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+    `;
+    
+    tooltip.innerHTML = `
+      <button class="tourlayer-close" data-action="close">&times;</button>
+      <div class="tourlayer-tooltip-header">
+        <div class="tourlayer-tooltip-title">${escapeHtml(step.title)}</div>
+        <div class="tourlayer-tooltip-step">Step ${index + 1} of ${totalSteps}</div>
+      </div>
+      <div class="tourlayer-tooltip-body">
+        ${step.image_url ? `<img src="${escapeHtml(step.image_url)}" class="tourlayer-tooltip-image" alt="">` : ''}
+        <div class="tourlayer-tooltip-content">${escapeHtml(step.content)}</div>
+      </div>
+      <div class="tourlayer-tooltip-footer">
+        <button class="tourlayer-btn tourlayer-btn-skip" data-action="skip">Skip tour</button>
+        <div style="display: flex; gap: 8px;">
+          ${!isFirstStep ? '<button class="tourlayer-btn tourlayer-btn-secondary" data-action="prev">Back</button>' : ''}
+          <button class="tourlayer-btn tourlayer-btn-primary" data-action="next">
+            ${isLastStep ? 'Finish' : step.button_text || 'Next'}
+          </button>
+        </div>
+      </div>
+    `;
+
+    container.appendChild(tooltip);
+    tooltip.addEventListener('click', handleTooltipClick);
   }
 
   // Render step UI
