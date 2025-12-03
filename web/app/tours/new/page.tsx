@@ -868,11 +868,11 @@ export default function NewTourPage() {
                   <div 
                     className="flex-shrink-0"
                     style={{
-                      width: 260,
+                      width: 280,
                       backgroundColor: styling.cardBgColor,
                       color: styling.cardTextColor,
                       borderRadius: styling.cardBorderRadius,
-                      padding: Math.min(styling.cardPadding, 16),
+                      padding: styling.cardPadding,
                       boxShadow: getShadowValue(styling.cardShadow),
                     }}
                   >

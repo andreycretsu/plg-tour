@@ -922,11 +922,11 @@ export default function NewTooltipPage() {
                   <div 
                     className="flex-shrink-0"
                     style={{
-                      width: Math.min(cardWidth, 280),
+                      width: Math.min(cardWidth, 320),
                       backgroundColor: cardBgColor,
                       color: cardTextColor,
                       borderRadius: cardBorderRadius,
-                      padding: Math.min(cardPadding, 16),
+                      padding: cardPadding,
                       boxShadow: getShadowValue(cardShadow),
                       textAlign: textAlign,
                     }}
