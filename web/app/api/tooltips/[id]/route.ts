@@ -68,21 +68,31 @@ export async function PUT(
       isActive,
       triggerType,
       dismissType,
+      // Beacon settings
       iconType,
-      iconPosition,
-      iconPadding,
+      iconEdge,
+      iconOffset,
+      iconOffsetY,
       iconSize,
       iconColor,
-      iconBgColor,
+      // Card content
       title,
       body: tooltipBody,
       imageUrl,
+      // Card styling
       cardWidth,
+      cardPadding,
+      cardBorderRadius,
+      cardShadow,
       textAlign,
       cardTextColor,
       cardBgColor,
+      // Button styling
       buttonText,
       buttonColor,
+      buttonTextColor,
+      buttonBorderRadius,
+      // Advanced
       zIndex,
       showOnce,
       delayMs,
@@ -97,33 +107,39 @@ export async function PUT(
         trigger_type = COALESCE($5, trigger_type),
         dismiss_type = COALESCE($6, dismiss_type),
         icon_type = COALESCE($7, icon_type),
-        icon_position = COALESCE($8, icon_position),
-        icon_padding = COALESCE($9, icon_padding),
-        icon_size = COALESCE($10, icon_size),
-        icon_color = COALESCE($11, icon_color),
-        icon_bg_color = COALESCE($12, icon_bg_color),
+        icon_edge = COALESCE($8, icon_edge),
+        icon_offset = COALESCE($9, icon_offset),
+        icon_offset_y = COALESCE($10, icon_offset_y),
+        icon_size = COALESCE($11, icon_size),
+        icon_color = COALESCE($12, icon_color),
         title = COALESCE($13, title),
         body = COALESCE($14, body),
         image_url = $15,
         card_width = COALESCE($16, card_width),
-        text_align = COALESCE($17, text_align),
-        card_text_color = COALESCE($18, card_text_color),
-        card_bg_color = COALESCE($19, card_bg_color),
-        button_text = COALESCE($20, button_text),
-        button_color = COALESCE($21, button_color),
-        z_index = COALESCE($22, z_index),
-        show_once = COALESCE($23, show_once),
-        delay_ms = COALESCE($24, delay_ms),
+        card_padding = COALESCE($17, card_padding),
+        card_border_radius = COALESCE($18, card_border_radius),
+        card_shadow = COALESCE($19, card_shadow),
+        text_align = COALESCE($20, text_align),
+        card_text_color = COALESCE($21, card_text_color),
+        card_bg_color = COALESCE($22, card_bg_color),
+        button_text = COALESCE($23, button_text),
+        button_color = COALESCE($24, button_color),
+        button_text_color = COALESCE($25, button_text_color),
+        button_border_radius = COALESCE($26, button_border_radius),
+        z_index = COALESCE($27, z_index),
+        show_once = COALESCE($28, show_once),
+        delay_ms = COALESCE($29, delay_ms),
         updated_at = NOW()
-      WHERE id = $25
+      WHERE id = $30
       RETURNING *`,
       [
         name, urlPattern, selector, isActive,
         triggerType, dismissType,
-        iconType, iconPosition, iconPadding, iconSize, iconColor, iconBgColor,
+        iconType, iconEdge, iconOffset, iconOffsetY, iconSize, iconColor,
         title, tooltipBody, imageUrl,
-        cardWidth, textAlign, cardTextColor, cardBgColor,
-        buttonText, buttonColor, zIndex, showOnce, delayMs,
+        cardWidth, cardPadding, cardBorderRadius, cardShadow, textAlign, cardTextColor, cardBgColor,
+        buttonText, buttonColor, buttonTextColor, buttonBorderRadius,
+        zIndex, showOnce, delayMs,
         tooltipId
       ]
     );
@@ -174,4 +190,3 @@ export async function DELETE(
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-
