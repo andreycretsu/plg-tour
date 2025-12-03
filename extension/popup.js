@@ -1,7 +1,7 @@
 // TourLayer Popup Script
 
 // Default API URL - can be overridden
-let API_URL = 'https://plg-tour-costu95f2-andrey-cretsus-projects.vercel.app';
+let API_URL = 'https://plg-tour.vercel.app';
 
 // DOM Elements
 const statusDot = document.getElementById('statusDot');

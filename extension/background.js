@@ -1,7 +1,7 @@
 // TourLayer Background Script - Handles API communication and picker
 
 let apiToken = null;
-let apiUrl = 'https://plg-tour-costu95f2-andrey-cretsus-projects.vercel.app';
+let apiUrl = 'https://plg-tour.vercel.app';
 let pickerCallback = null;
 
 // Load saved token on startup
