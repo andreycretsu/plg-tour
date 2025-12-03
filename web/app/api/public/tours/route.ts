@@ -6,14 +6,20 @@ export const dynamic = 'force-dynamic';
 
 // Helper to check if URL matches pattern (supports * wildcards)
 function urlMatchesPattern(url: string, pattern: string): boolean {
+  // Normalize URLs - remove trailing slashes for comparison
+  const normalizeUrl = (u: string) => u.replace(/\/+$/, '');
+  const normalizedUrl = normalizeUrl(url);
+  const normalizedPattern = normalizeUrl(pattern);
+  
   // Convert wildcard pattern to regex
-  const regexPattern = pattern
+  const regexPattern = normalizedPattern
     .replace(/[.+?^${}()|[\]\\]/g, '\\$&') // Escape special regex chars except *
     .replace(/\*/g, '.*'); // Convert * to .*
   
   try {
-    const regex = new RegExp(`^${regexPattern}$`, 'i');
-    return regex.test(url);
+    // Match with optional trailing slash
+    const regex = new RegExp(`^${regexPattern}\\/?.*$`, 'i');
+    return regex.test(normalizedUrl);
   } catch {
     return false;
   }

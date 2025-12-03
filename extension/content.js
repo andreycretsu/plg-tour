@@ -39,6 +39,10 @@
   async function fetchAndShowTours(apiToken) {
     try {
       const currentUrl = window.location.href;
+      console.log('TourLayer: Fetching tours for URL:', currentUrl);
+      console.log('TourLayer: Using API:', API_URL);
+      console.log('TourLayer: Token prefix:', apiToken.substring(0, 10) + '...');
+      
       const response = await fetch(
         `${API_URL}/api/public/tours?url=${encodeURIComponent(currentUrl)}`,
         {
@@ -49,8 +53,11 @@
         }
       );
 
+      console.log('TourLayer: API response status:', response.status);
+
       if (!response.ok) {
-        console.error('TourLayer: Failed to fetch tours', response.status);
+        const errorText = await response.text();
+        console.error('TourLayer: Failed to fetch tours', response.status, errorText);
         return;
       }
 
@@ -61,6 +68,8 @@
       
       if (tours.length > 0) {
         console.log('TourLayer: Tours data:', JSON.stringify(tours, null, 2));
+      } else {
+        console.log('TourLayer: No tours match this URL. Check your URL patterns in the dashboard.');
       }
 
       if (tours.length > 0 && tours[0].steps?.length > 0) {
