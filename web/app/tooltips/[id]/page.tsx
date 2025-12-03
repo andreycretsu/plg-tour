@@ -559,8 +559,8 @@ export default function EditTooltipPage() {
               <div className="relative">
                 <input
                   type="range"
-                  min="-20"
-                  max="40"
+                  min="-30"
+                  max="30"
                   value={iconOffset}
                   onChange={(e) => {
                     let val = parseInt(e.target.value);
@@ -570,11 +570,8 @@ export default function EditTooltipPage() {
                   }}
                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                 />
-                {/* Center indicator at 0 */}
-                <div 
-                  className="absolute top-1/2 -translate-y-1/2 w-0.5 h-4 bg-gray-400 pointer-events-none"
-                  style={{ left: `${((0 - (-20)) / (40 - (-20))) * 100}%` }}
-                />
+                {/* Center indicator dot at 0 */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-gray-400 rounded-full pointer-events-none" />
               </div>
             </div>
 
@@ -595,8 +592,8 @@ export default function EditTooltipPage() {
                   }}
                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                 />
-                {/* Center indicator */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-0.5 h-4 bg-gray-400 pointer-events-none" />
+                {/* Center indicator dot */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-gray-400 rounded-full pointer-events-none" />
               </div>
             </div>
 
