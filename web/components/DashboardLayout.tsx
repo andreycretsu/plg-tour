@@ -3,7 +3,7 @@
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, Target, Settings, LogOut, BookOpen, Building2, ChevronDown, Check } from 'lucide-react';
+import { LayoutDashboard, Target, Settings, LogOut, BookOpen, Building2, ChevronDown, Check, MessageCircle } from 'lucide-react';
 
 interface Workspace {
   id: number;
@@ -54,6 +54,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const nav = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Tours', href: '/tours', icon: Target },
+    { name: 'Tooltips', href: '/tooltips', icon: MessageCircle },
     { name: 'Settings', href: '/settings', icon: Settings },
     { name: 'Docs', href: '/docs', icon: BookOpen },
   ];
