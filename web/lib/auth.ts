@@ -42,7 +42,7 @@ export function generateApiToken(): string {
 }
 
 // Extract token from Authorization header
-export function extractToken(authHeader?: string): string | null {
+export function extractToken(authHeader: string | null | undefined): string | null {
   if (!authHeader) return null;
   const parts = authHeader.split(' ');
   if (parts.length === 2 && parts[0] === 'Bearer') {
