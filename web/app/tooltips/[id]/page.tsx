@@ -986,24 +986,10 @@ export default function EditTooltipPage() {
         {/* Right Column - Live Preview */}
         <div className="flex-1 min-w-[400px]">
           <div className="sticky top-0 h-screen py-6 flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-                <Eye size={18} />
-                Live Preview
-              </h2>
-              <button
-                onClick={() => setShowPreview(!showPreview)}
-                className="text-sm text-gray-500 hover:text-gray-700"
-              >
-                {showPreview ? 'Hide' : 'Show'}
-              </button>
-            </div>
-
-            {showPreview && (
-              <div 
-                className="rounded-xl p-6 flex-1 flex items-center justify-center"
-                style={{ backgroundColor: '#f3f4f6' }}
-              >
+            <div 
+              className="rounded-xl p-6 flex-1 flex items-center justify-center"
+              style={{ backgroundColor: '#f3f4f6' }}
+            >
                 {/* Preview Layout - changes based on edge */}
                 <div className={`flex items-center justify-center gap-4`}
                 style={{
@@ -1075,7 +1061,7 @@ export default function EditTooltipPage() {
                   </div>
                 </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

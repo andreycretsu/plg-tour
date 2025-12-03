@@ -826,13 +826,6 @@ export default function NewTourPage() {
         {/* Preview Panel - Sticky Sidebar */}
         <div className="flex-1 min-w-[400px]">
           <div className="sticky top-0 h-screen py-6 flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-                <Eye size={18} />
-                Live Preview
-              </h2>
-            </div>
-
             {activeStep ? (
               <div 
                 className="rounded-xl p-6 flex-1 flex items-center justify-center"
