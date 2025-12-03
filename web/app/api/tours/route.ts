@@ -5,7 +5,7 @@ import { CreateTourRequest } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/tours - List all tours for user
+// GET /api/tours - List all tours for workspace
 export async function GET(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization');
@@ -20,12 +20,27 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
+    // Get workspace_id from JWT or from user's membership
+    let workspaceId = payload.workspaceId;
+    
+    if (!workspaceId) {
+      // Fallback: get first workspace the user belongs to
+      const memberResult = await query(
+        `SELECT workspace_id FROM workspace_members WHERE user_id = $1 LIMIT 1`,
+        [payload.userId]
+      );
+      if (memberResult.rows.length > 0) {
+        workspaceId = memberResult.rows[0].workspace_id;
+      }
+    }
+
+    // Query tours - support both workspace_id and legacy user_id
     const result = await query(
-      `SELECT id, user_id, name, url_pattern, is_active, created_at, updated_at
+      `SELECT id, user_id, workspace_id, name, url_pattern, is_active, created_at, updated_at
        FROM tours 
-       WHERE user_id = $1 
+       WHERE workspace_id = $1 OR (workspace_id IS NULL AND user_id = $2)
        ORDER BY created_at DESC`,
-      [payload.userId]
+      [workspaceId, payload.userId]
     );
 
     return NextResponse.json(result.rows);
@@ -50,6 +65,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
+    // Get workspace_id from JWT or from user's membership
+    let workspaceId = payload.workspaceId;
+    
+    if (!workspaceId) {
+      // Fallback: get first workspace the user belongs to
+      const memberResult = await query(
+        `SELECT workspace_id FROM workspace_members WHERE user_id = $1 LIMIT 1`,
+        [payload.userId]
+      );
+      if (memberResult.rows.length > 0) {
+        workspaceId = memberResult.rows[0].workspace_id;
+      }
+    }
+
     const body: CreateTourRequest = await request.json();
     const { name, urlPattern, steps } = body;
 
@@ -61,12 +90,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create tour
+    // Create tour with workspace_id
     const tourResult = await query(
-      `INSERT INTO tours (user_id, name, url_pattern) 
-       VALUES ($1, $2, $3) 
-       RETURNING id, user_id, name, url_pattern, is_active, created_at, updated_at`,
-      [payload.userId, name, urlPattern]
+      `INSERT INTO tours (user_id, workspace_id, name, url_pattern) 
+       VALUES ($1, $2, $3, $4) 
+       RETURNING id, user_id, workspace_id, name, url_pattern, is_active, created_at, updated_at`,
+      [payload.userId, workspaceId, name, urlPattern]
     );
 
     const tour = tourResult.rows[0];
@@ -101,4 +130,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

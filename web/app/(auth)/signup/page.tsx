@@ -3,11 +3,13 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Building2 } from 'lucide-react';
 
 export default function SignupPage() {
   const router = useRouter();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [company, setCompany] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -21,7 +23,7 @@ export default function SignupPage() {
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, company }),
       });
 
       const data = await response.json();
@@ -30,9 +32,10 @@ export default function SignupPage() {
         throw new Error(data.error || 'Signup failed');
       }
 
-      // Store token
+      // Store token and workspace info
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('workspace', JSON.stringify(data.workspace));
 
       // Redirect to dashboard
       router.push('/dashboard');
@@ -44,15 +47,15 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">🎯 TourLayer</h1>
-          <p className="text-gray-600 mt-2">Create your account</p>
+          <p className="text-gray-600 mt-2">Create your workspace</p>
         </div>
 
         <div className="card p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
               <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm">
                 {error}
@@ -60,7 +63,7 @@ export default function SignupPage() {
             )}
 
             <div>
-              <label className="label">Name</label>
+              <label className="label">Your Name</label>
               <input
                 type="text"
                 className="input"
@@ -72,15 +75,33 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label className="label">Email</label>
+              <label className="label">Work Email</label>
               <input
                 type="email"
                 className="input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
+                placeholder="you@company.com"
                 required
               />
+            </div>
+
+            <div>
+              <label className="label flex items-center gap-2">
+                <Building2 size={14} />
+                Company / Workspace Name
+              </label>
+              <input
+                type="text"
+                className="input"
+                value={company}
+                onChange={(e) => setCompany(e.target.value)}
+                placeholder="Acme Inc."
+                required
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                This will be your workspace where you manage tours
+              </p>
             </div>
 
             <div>
@@ -101,7 +122,7 @@ export default function SignupPage() {
               className="btn btn-primary w-full"
               disabled={loading}
             >
-              {loading ? 'Creating account...' : 'Create Account'}
+              {loading ? 'Creating workspace...' : 'Create Workspace'}
             </button>
           </form>
 
@@ -116,4 +137,3 @@ export default function SignupPage() {
     </div>
   );
 }
-

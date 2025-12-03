@@ -7,6 +7,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this';
 export interface JWTPayload {
   userId: number;
   email: string;
+  workspaceId?: number;
 }
 
 // Hash password

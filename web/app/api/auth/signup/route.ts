@@ -1,14 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { hashPassword, generateToken, generateApiToken } from '@/lib/auth';
-import { SignupRequest } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
+// Generate a URL-friendly slug from company name
+function generateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 50) + '-' + Math.random().toString(36).slice(2, 8);
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const body: SignupRequest = await request.json();
-    const { email, password, name } = body;
+    const body = await request.json();
+    const { email, password, name, company } = body;
 
     // Validation
     if (!email || !password || !name) {
@@ -31,22 +39,47 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Hash password and generate API token
+    // Hash password and generate tokens
     const passwordHash = await hashPassword(password);
-    const apiToken = generateApiToken();
+    const userApiToken = generateApiToken(); // For backwards compatibility
+    const workspaceApiToken = generateApiToken(); // For workspace
 
     // Create user
-    const result = await query(
+    const userResult = await query(
       `INSERT INTO users (email, password_hash, name, api_token) 
        VALUES ($1, $2, $3, $4) 
        RETURNING id, email, name, api_token, created_at`,
-      [email, passwordHash, name, apiToken]
+      [email, passwordHash, name, userApiToken]
     );
 
-    const user = result.rows[0];
+    const user = userResult.rows[0];
 
-    // Generate JWT
-    const token = generateToken({ userId: user.id, email: user.email });
+    // Create workspace
+    const workspaceName = company || `${name}'s Workspace`;
+    const workspaceSlug = generateSlug(workspaceName);
+
+    const workspaceResult = await query(
+      `INSERT INTO workspaces (name, slug, api_token) 
+       VALUES ($1, $2, $3) 
+       RETURNING id, name, slug, api_token, created_at`,
+      [workspaceName, workspaceSlug, workspaceApiToken]
+    );
+
+    const workspace = workspaceResult.rows[0];
+
+    // Add user as workspace owner
+    await query(
+      `INSERT INTO workspace_members (workspace_id, user_id, role) 
+       VALUES ($1, $2, $3)`,
+      [workspace.id, user.id, 'owner']
+    );
+
+    // Generate JWT with workspace info
+    const token = generateToken({ 
+      userId: user.id, 
+      email: user.email,
+      workspaceId: workspace.id 
+    });
 
     return NextResponse.json({
       user: {
@@ -55,6 +88,13 @@ export async function POST(request: NextRequest) {
         name: user.name,
         apiToken: user.api_token,
         createdAt: user.created_at,
+      },
+      workspace: {
+        id: workspace.id,
+        name: workspace.name,
+        slug: workspace.slug,
+        apiToken: workspace.api_token,
+        createdAt: workspace.created_at,
       },
       token,
     });
@@ -66,4 +106,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

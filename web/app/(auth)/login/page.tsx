@@ -29,9 +29,11 @@ export default function LoginPage() {
         throw new Error(data.error || 'Login failed');
       }
 
-      // Store token
+      // Store token and workspace info
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('workspace', JSON.stringify(data.workspace));
+      localStorage.setItem('workspaces', JSON.stringify(data.workspaces || []));
 
       // Redirect to dashboard
       router.push('/dashboard');
@@ -43,11 +45,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">🎯 TourLayer</h1>
-          <p className="text-gray-600 mt-2">Sign in to your account</p>
+          <p className="text-gray-600 mt-2">Sign in to your workspace</p>
         </div>
 
         <div className="card p-8">
@@ -92,7 +94,7 @@ export default function LoginPage() {
           </form>
 
           <p className="text-center text-sm text-gray-600 mt-6">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link href="/signup" className="text-primary-600 hover:text-primary-700 font-medium">
               Sign up
             </Link>
@@ -102,4 +104,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

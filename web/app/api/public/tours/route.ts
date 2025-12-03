@@ -4,7 +4,7 @@ import { extractToken } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
-// CORS headers for cross-origin requests from extension
+// CORS headers for cross-origin requests from extension and embed
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, OPTIONS',
@@ -35,7 +35,7 @@ function urlMatchesPattern(url: string, pattern: string): boolean {
          normalizedUrl + '/' === normalizedPattern;
 }
 
-// PUBLIC ENDPOINT: GET tours by API token (for extension)
+// PUBLIC ENDPOINT: GET tours by API token (for extension and embed)
 export async function GET(request: NextRequest) {
   try {
     // Accept token from multiple sources
@@ -51,26 +51,64 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Missing API token' }, { status: 401, headers: corsHeaders });
     }
 
-    // Verify API token and get user
-    const userResult = await query(
-      'SELECT id FROM users WHERE api_token = $1',
+    // First try to find workspace by API token
+    const workspaceResult = await query(
+      'SELECT id FROM workspaces WHERE api_token = $1',
       [apiToken]
     );
 
-    if (userResult.rows.length === 0) {
-      return NextResponse.json({ error: 'Invalid API token' }, { status: 401, headers: corsHeaders });
+    let workspaceId = null;
+    let userId = null;
+
+    if (workspaceResult.rows.length > 0) {
+      // Token is a workspace API token
+      workspaceId = workspaceResult.rows[0].id;
+    } else {
+      // Fallback: try user API token (for backwards compatibility)
+      const userResult = await query(
+        'SELECT id FROM users WHERE api_token = $1',
+        [apiToken]
+      );
+
+      if (userResult.rows.length === 0) {
+        return NextResponse.json({ error: 'Invalid API token' }, { status: 401, headers: corsHeaders });
+      }
+
+      userId = userResult.rows[0].id;
+      
+      // Get user's workspace
+      const memberResult = await query(
+        'SELECT workspace_id FROM workspace_members WHERE user_id = $1 LIMIT 1',
+        [userId]
+      );
+      
+      if (memberResult.rows.length > 0) {
+        workspaceId = memberResult.rows[0].workspace_id;
+      }
     }
 
-    const userId = userResult.rows[0].id;
     const url = request.nextUrl.searchParams.get('url');
 
-    // Get active tours for this user
-    const toursResult = await query(
-      `SELECT t.id, t.name, t.url_pattern, t.is_active
-       FROM tours t
-       WHERE t.user_id = $1 AND t.is_active = true`,
-      [userId]
-    );
+    // Get active tours - prefer workspace_id, fallback to user_id
+    let toursResult;
+    if (workspaceId) {
+      toursResult = await query(
+        `SELECT t.id, t.name, t.url_pattern, t.is_active
+         FROM tours t
+         WHERE t.workspace_id = $1 AND t.is_active = true`,
+        [workspaceId]
+      );
+    } else if (userId) {
+      // Legacy: get tours by user_id
+      toursResult = await query(
+        `SELECT t.id, t.name, t.url_pattern, t.is_active
+         FROM tours t
+         WHERE t.user_id = $1 AND t.is_active = true`,
+        [userId]
+      );
+    } else {
+      return NextResponse.json({ tours: [] }, { headers: corsHeaders });
+    }
 
     let tours = toursResult.rows;
 
