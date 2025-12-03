@@ -511,9 +511,7 @@ export default function EditTooltipPage() {
                   onChange={(e) => setIconType(e.target.value as any)}
                 >
                   <option value="pulse">Pulse (Animated)</option>
-                  <option value="beacon">Static Beacon</option>
-                  <option value="dot">Simple Dot</option>
-                  <option value="none">No Beacon</option>
+                  <option value="beacon">Static Dot</option>
                 </select>
               </div>
 
@@ -525,28 +523,8 @@ export default function EditTooltipPage() {
                   max="32"
                   value={iconSize}
                   onChange={(e) => setIconSize(parseInt(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600 mb-2"
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                 />
-                <div className="flex gap-1">
-                  {[
-                    { label: 'S', value: 10 },
-                    { label: 'M', value: 16 },
-                    { label: 'L', value: 24 },
-                  ].map((preset) => (
-                    <button
-                      key={preset.label}
-                      type="button"
-                      onClick={() => setIconSize(preset.value)}
-                      className={`flex-1 py-1 rounded text-xs font-medium transition-colors ${
-                        iconSize === preset.value 
-                          ? 'bg-blue-600 text-white' 
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      {preset.label}
-                    </button>
-                  ))}
-                </div>
               </div>
             </div>
 
@@ -578,53 +556,65 @@ export default function EditTooltipPage() {
             {/* Distance Slider */}
             <div className="mb-4">
               <label className="label">Distance from Edge: {iconOffset}px</label>
-              <input
-                type="range"
-                min="-20"
-                max="40"
-                value={iconOffset}
-                onChange={(e) => setIconOffset(parseInt(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-              />
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>-20 (inside)</span>
-                <span>0 (edge)</span>
-                <span>+40 (outside)</span>
+              <div className="relative">
+                <input
+                  type="range"
+                  min="-20"
+                  max="40"
+                  value={iconOffset}
+                  onChange={(e) => {
+                    let val = parseInt(e.target.value);
+                    // Magnetic snap to 0 (edge)
+                    if (val >= -3 && val <= 3) val = 0;
+                    setIconOffset(val);
+                  }}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                />
+                {/* Center indicator at 0 */}
+                <div 
+                  className="absolute top-1/2 -translate-y-1/2 w-0.5 h-4 bg-gray-400 pointer-events-none"
+                  style={{ left: `${((0 - (-20)) / (40 - (-20))) * 100}%` }}
+                />
               </div>
             </div>
 
             {/* Y-axis Slider */}
             <div className="mb-4">
-              <label className="label">
-                Position Along Edge: {iconOffsetY}px 
-                <span className="text-gray-400 font-normal ml-1">
-                  ({iconEdge === 'left' || iconEdge === 'right' ? 'vertical' : 'horizontal'})
-                </span>
-              </label>
-              <input
-                type="range"
-                min="-50"
-                max="50"
-                value={iconOffsetY}
-                onChange={(e) => setIconOffsetY(parseInt(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-              />
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>{iconEdge === 'left' || iconEdge === 'right' ? '↑ Top' : '← Left'}</span>
-                <span>Center</span>
-                <span>{iconEdge === 'left' || iconEdge === 'right' ? '↓ Bottom' : 'Right →'}</span>
+              <label className="label">Position Along Edge: {iconOffsetY}px</label>
+              <div className="relative">
+                <input
+                  type="range"
+                  min="-50"
+                  max="50"
+                  value={iconOffsetY}
+                  onChange={(e) => {
+                    let val = parseInt(e.target.value);
+                    // Magnetic snap to center (0)
+                    if (val >= -5 && val <= 5) val = 0;
+                    setIconOffsetY(val);
+                  }}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                />
+                {/* Center indicator */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-0.5 h-4 bg-gray-400 pointer-events-none" />
               </div>
             </div>
 
             <div>
               <label className="label">Beacon Color</label>
-              <div className="flex gap-2">
-                <input
-                  type="color"
-                  value={iconColor}
-                  onChange={(e) => setIconColor(e.target.value)}
-                  className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
-                />
+              <div className="flex gap-2 items-center">
+                <div className="relative w-10 h-10 flex items-center justify-center">
+                  <div 
+                    className="w-6 h-6 rounded-full border-2 border-gray-200 shadow-sm"
+                    style={{ backgroundColor: iconColor }}
+                  />
+                  <input
+                    type="color"
+                    value={iconColor}
+                    onChange={(e) => setIconColor(e.target.value)}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                </div>
                 <input
                   type="text"
                   className="input flex-1"
