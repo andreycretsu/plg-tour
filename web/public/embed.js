@@ -2,8 +2,19 @@
  * TourLayer Embed Script
  * Add this to your website to show product tours and tooltips to all visitors
  * 
- * Usage:
+ * Usage (basic):
  * <script src="https://plg-tour.vercel.app/embed.js" data-token="YOUR_API_TOKEN"></script>
+ * 
+ * Usage (with user tracking - recommended for "show once" to work across devices):
+ * <script>
+ *   window.TourLayerConfig = {
+ *     token: 'YOUR_API_TOKEN',
+ *     userId: 'user_123',        // Required for cross-device tracking
+ *     userEmail: 'user@example.com', // Optional
+ *     userName: 'John Doe'       // Optional
+ *   };
+ * </script>
+ * <script src="https://plg-tour.vercel.app/embed.js"></script>
  */
 
 (function() {
@@ -29,31 +40,58 @@
   let openTooltipId = null;
   
   let apiToken = null;
+  
+  // User identification for server-side tracking
+  let userConfig = {
+    userId: null,
+    userEmail: null,
+    userName: null
+  };
+  
+  // Cache for server-side view data
+  let serverViewsCache = {
+    tours: {},
+    tooltips: {}
+  };
 
-  // Get API token from script tag
-  function getApiToken() {
-    // Method 1: Find script by src containing our domain or embed.js
+  // Get API token and user config
+  function getConfig() {
+    let token = null;
+    
+    // Method 1: Check for global config (preferred for user tracking)
+    if (window.TourLayerConfig) {
+      token = window.TourLayerConfig.token;
+      userConfig.userId = window.TourLayerConfig.userId || null;
+      userConfig.userEmail = window.TourLayerConfig.userEmail || null;
+      userConfig.userName = window.TourLayerConfig.userName || null;
+      
+      if (token) {
+        console.log('TourLayer: Config found in TourLayerConfig', userConfig.userId ? '(with user tracking)' : '(anonymous)');
+        return token;
+      }
+    }
+    
+    // Method 2: Find script by src containing our domain or embed.js
     const scripts = document.querySelectorAll('script');
     for (const script of scripts) {
       const src = script.getAttribute('src') || '';
       if (src.includes('plg-tour') || src.includes('embed.js') || src.includes('tourlayer')) {
-        const token = script.getAttribute('data-token');
+        token = script.getAttribute('data-token');
+        // Also check for user data in script attributes
+        userConfig.userId = script.getAttribute('data-user-id') || userConfig.userId;
+        userConfig.userEmail = script.getAttribute('data-user-email') || userConfig.userEmail;
+        userConfig.userName = script.getAttribute('data-user-name') || userConfig.userName;
+        
         if (token) {
-          console.log('TourLayer: Token found in script tag');
+          console.log('TourLayer: Token found in script tag', userConfig.userId ? '(with user tracking)' : '(anonymous)');
           return token;
         }
       }
     }
     
-    // Method 2: Check for global config
-    if (window.TourLayerConfig && window.TourLayerConfig.token) {
-      console.log('TourLayer: Token found in TourLayerConfig');
-      return window.TourLayerConfig.token;
-    }
-    
     // Method 3: Check current script
     if (document.currentScript) {
-      const token = document.currentScript.getAttribute('data-token');
+      token = document.currentScript.getAttribute('data-token');
       if (token) {
         console.log('TourLayer: Token found in currentScript');
         return token;
@@ -62,17 +100,143 @@
     
     return null;
   }
+  
+  // Fetch user views from server (for server-side tracking)
+  async function fetchUserViews(contentType, contentIds) {
+    if (!userConfig.userId || !contentIds.length) return {};
+    
+    try {
+      const response = await fetch(
+        `${API_URL}/api/public/views?type=${contentType}&ids=${contentIds.join(',')}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${apiToken}`,
+            'X-User-Id': userConfig.userId
+          }
+        }
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        return data.views || {};
+      }
+    } catch (error) {
+      console.warn('TourLayer: Failed to fetch user views', error);
+    }
+    
+    return {};
+  }
+  
+  // Record view to server
+  async function recordView(contentType, contentId) {
+    if (!userConfig.userId) {
+      // Fall back to localStorage for anonymous users
+      const storageKey = `tourlayer_${contentType}_${contentId}`;
+      const stored = localStorage.getItem(storageKey);
+      const data = stored ? JSON.parse(stored) : { viewCount: 0, lastSeen: null };
+      localStorage.setItem(storageKey, JSON.stringify({
+        viewCount: data.viewCount + 1,
+        lastSeen: Date.now()
+      }));
+      return;
+    }
+    
+    try {
+      await fetch(`${API_URL}/api/public/views`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiToken}`
+        },
+        body: JSON.stringify({
+          userId: userConfig.userId,
+          userEmail: userConfig.userEmail,
+          userName: userConfig.userName,
+          contentType,
+          contentId,
+          metadata: {
+            url: window.location.href,
+            userAgent: navigator.userAgent
+          }
+        })
+      });
+      
+      // Update local cache
+      if (contentType === 'tour') {
+        serverViewsCache.tours[contentId] = serverViewsCache.tours[contentId] || { viewCount: 0 };
+        serverViewsCache.tours[contentId].viewCount++;
+      } else {
+        serverViewsCache.tooltips[contentId] = serverViewsCache.tooltips[contentId] || { viewCount: 0 };
+        serverViewsCache.tooltips[contentId].viewCount++;
+      }
+    } catch (error) {
+      console.warn('TourLayer: Failed to record view', error);
+    }
+  }
+  
+  // Check if content should be shown based on frequency settings
+  function shouldShowContent(content, contentType) {
+    const frequencyType = content.frequency_type || (content.show_once ? 'once' : 'always');
+    
+    // Server-side tracking (when userId is provided)
+    if (userConfig.userId) {
+      const cache = contentType === 'tour' ? serverViewsCache.tours : serverViewsCache.tooltips;
+      const viewData = cache[content.id] || { viewCount: 0, lastSeen: null };
+      
+      switch (frequencyType) {
+        case 'once':
+          return viewData.viewCount === 0;
+        case 'always':
+          return true;
+        case 'count':
+          return viewData.viewCount < (content.frequency_count || 1);
+        case 'days':
+          if (!viewData.lastSeen) return true;
+          const cooldownMs = (content.frequency_days || 7) * 24 * 60 * 60 * 1000;
+          const timeSince = Date.now() - new Date(viewData.lastSeen).getTime();
+          return timeSince >= cooldownMs;
+        default:
+          return viewData.viewCount === 0;
+      }
+    }
+    
+    // Fall back to localStorage for anonymous users
+    const storageKey = `tourlayer_${contentType}_${content.id}`;
+    const stored = localStorage.getItem(storageKey);
+    const data = stored ? JSON.parse(stored) : { viewCount: 0, lastSeen: null };
+    const now = Date.now();
+    
+    switch (frequencyType) {
+      case 'once':
+        return data.viewCount === 0;
+      case 'always':
+        return true;
+      case 'count':
+        return data.viewCount < (content.frequency_count || 1);
+      case 'days':
+        const cooldownMs = (content.frequency_days || 7) * 24 * 60 * 60 * 1000;
+        const timeSince = data.lastSeen ? (now - data.lastSeen) : Infinity;
+        return timeSince >= cooldownMs;
+      default:
+        return data.viewCount === 0;
+    }
+  }
 
   // Initialize
   async function init() {
     console.log('TourLayer: Initializing embed on', window.location.href);
     
-    apiToken = getApiToken();
+    apiToken = getConfig();
     
     if (!apiToken) {
       console.warn('TourLayer: No API token found. Add data-token="YOUR_TOKEN" to the script tag.');
       console.warn('TourLayer: Example: <script src="https://plg-tour.vercel.app/embed.js" data-token="tl_xxx"></script>');
       return;
+    }
+
+    if (!userConfig.userId) {
+      console.warn('TourLayer: No userId configured. "Show once" will only work per browser, not per user.');
+      console.warn('TourLayer: For cross-device tracking, set window.TourLayerConfig.userId before loading the script.');
     }
 
     console.log('TourLayer: Token found, fetching content...');
@@ -107,8 +271,8 @@
         return;
       }
 
-      const data = await response.json();
-      const tours = data.tours || [];
+      const toursData = await response.json();
+      const tours = toursData.tours || [];
 
       console.log('TourLayer: Found', tours.length, 'tours');
 
@@ -116,35 +280,14 @@
         currentTour = tours[0];
         currentStepIndex = 0;
         
-        // Check frequency settings
-        const frequencyType = currentTour.frequency_type || 'once';
-        const storageKey = `tourlayer_tour_${currentTour.id}`;
-        const stored = localStorage.getItem(storageKey);
-        const data = stored ? JSON.parse(stored) : { viewCount: 0, lastSeen: null };
-        const now = Date.now();
-        
-        let shouldShow = false;
-        
-        switch (frequencyType) {
-          case 'once':
-            shouldShow = data.viewCount === 0;
-            break;
-          case 'always':
-            shouldShow = true;
-            break;
-          case 'count':
-            shouldShow = data.viewCount < (currentTour.frequency_count || 1);
-            break;
-          case 'days':
-            const cooldownMs = (currentTour.frequency_days || 7) * 24 * 60 * 60 * 1000;
-            const timeSince = data.lastSeen ? (now - data.lastSeen) : Infinity;
-            shouldShow = timeSince >= cooldownMs;
-            break;
-          default:
-            shouldShow = data.viewCount === 0;
+        // Fetch user views from server if userId is configured
+        if (userConfig.userId) {
+          const tourIds = tours.map(t => t.id);
+          serverViewsCache.tours = await fetchUserViews('tour', tourIds);
         }
         
-        if (shouldShow) {
+        // Check if tour should be shown
+        if (shouldShowContent(currentTour, 'tour')) {
           setTimeout(() => showStep(currentStepIndex), 500);
         } else {
           console.log('TourLayer: Tour skipped due to frequency settings');
@@ -178,13 +321,20 @@
         return;
       }
 
-      const data = await response.json();
-      const tooltips = data.tooltips || [];
+      const tooltipsData = await response.json();
+      const tooltips = tooltipsData.tooltips || [];
 
       console.log('TourLayer: Found', tooltips.length, 'tooltips');
 
       if (tooltips.length > 0) {
         activeTooltips = tooltips;
+        
+        // Fetch user views from server if userId is configured
+        if (userConfig.userId) {
+          const tooltipIds = tooltips.map(t => t.id);
+          serverViewsCache.tooltips = await fetchUserViews('tooltip', tooltipIds);
+        }
+        
         initTooltips();
       }
     } catch (error) {
@@ -213,34 +363,7 @@
 
     // Render beacons for each tooltip based on frequency settings
     activeTooltips.forEach(tooltip => {
-      const frequencyType = tooltip.frequency_type || (tooltip.show_once ? 'once' : 'always');
-      const storageKey = `tourlayer_tooltip_${tooltip.id}`;
-      const stored = localStorage.getItem(storageKey);
-      const data = stored ? JSON.parse(stored) : { viewCount: 0, lastSeen: null };
-      const now = Date.now();
-      
-      let shouldShow = false;
-      
-      switch (frequencyType) {
-        case 'once':
-          shouldShow = data.viewCount === 0;
-          break;
-        case 'always':
-          shouldShow = true;
-          break;
-        case 'count':
-          shouldShow = data.viewCount < (tooltip.frequency_count || 1);
-          break;
-        case 'days':
-          const cooldownMs = (tooltip.frequency_days || 7) * 24 * 60 * 60 * 1000;
-          const timeSince = data.lastSeen ? (now - data.lastSeen) : Infinity;
-          shouldShow = timeSince >= cooldownMs;
-          break;
-        default:
-          shouldShow = data.viewCount === 0;
-      }
-      
-      if (shouldShow) {
+      if (shouldShowContent(tooltip, 'tooltip')) {
         createBeacon(tooltip);
       }
     });
@@ -484,14 +607,8 @@
     const beacon = tooltipContainer?.querySelector(`.tl-beacon[data-tooltip-id="${tooltip.id}"]`);
     if (beacon) beacon.remove();
     
-    // Update view tracking for frequency logic
-    const storageKey = `tourlayer_tooltip_${tooltip.id}`;
-    const stored = localStorage.getItem(storageKey);
-    const data = stored ? JSON.parse(stored) : { viewCount: 0, lastSeen: null };
-    localStorage.setItem(storageKey, JSON.stringify({
-      viewCount: data.viewCount + 1,
-      lastSeen: Date.now()
-    }));
+    // Record view (server-side if userId configured, otherwise localStorage)
+    recordView('tooltip', tooltip.id);
   }
 
   function getTooltipStyles() {
@@ -996,14 +1113,8 @@
     }
 
     if (currentTour && completed) {
-      // Update view tracking for frequency logic
-      const storageKey = `tourlayer_tour_${currentTour.id}`;
-      const stored = localStorage.getItem(storageKey);
-      const data = stored ? JSON.parse(stored) : { viewCount: 0, lastSeen: null };
-      localStorage.setItem(storageKey, JSON.stringify({
-        viewCount: data.viewCount + 1,
-        lastSeen: Date.now()
-      }));
+      // Record view (server-side if userId configured, otherwise localStorage)
+      recordView('tour', currentTour.id);
     }
 
     currentTour = null;
@@ -1040,15 +1151,47 @@
   }).observe(document.body, { subtree: true, childList: true });
 
   // Expose API
+  // Expose API for runtime control
   window.TourLayer = {
+    // Identify user (can be called after initial load)
+    identify: (userId, userEmail, userName) => {
+      userConfig.userId = userId;
+      userConfig.userEmail = userEmail || null;
+      userConfig.userName = userName || null;
+      console.log('TourLayer: User identified', userId);
+    },
+    
+    // Get current user
+    getUser: () => ({ ...userConfig }),
+    
+    // Reset view tracking
     reset: (id) => {
       if (id) {
         localStorage.removeItem(`tourlayer_tour_${id}`);
         localStorage.removeItem(`tourlayer_tooltip_${id}`);
       }
+      // Clear server cache
+      serverViewsCache = { tours: {}, tooltips: {} };
       console.log('TourLayer: Reset complete');
     },
-    version: '1.2.0'
+    
+    // Refresh content (re-fetch and re-render)
+    refresh: async () => {
+      // Clear existing
+      if (tooltipContainer) tooltipContainer.innerHTML = '';
+      if (tourContainer) tourContainer.innerHTML = '';
+      activeTooltips = [];
+      currentTour = null;
+      
+      // Re-fetch
+      await Promise.all([
+        fetchAndShowTours(),
+        fetchAndShowTooltips()
+      ]);
+      console.log('TourLayer: Refreshed');
+    },
+    
+    version: '2.0.0'
   };
 
 })();
