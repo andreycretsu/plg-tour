@@ -23,21 +23,17 @@
     "scripting"
   ],
   "host_permissions": [
-    "<all_urls>"
+    "https://*/*",
+    "http://*/*"
   ],
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
+      "matches": ["https://*/*", "http://*/*"],
       "js": ["content.js"],
-      "run_at": "document_idle",
-      "exclude_matches": [
-        "chrome://*/*",
-        "chrome-extension://*/*",
-        "about:*"
-      ]
+      "run_at": "document_idle"
     },
     {
       "matches": ["https://*.vercel.app/*", "http://localhost:3000/*"],
@@ -51,7 +47,7 @@
   "web_accessible_resources": [
     {
       "resources": ["picker.js", "content.js"],
-      "matches": ["<all_urls>"]
+      "matches": ["https://*/*", "http://*/*"]
     }
   ]
 }
