@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Building2 } from 'lucide-react';
+import { Building2, Globe } from 'lucide-react';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -13,6 +13,15 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Generate slug from company name
+  const workspaceSlug = useMemo(() => {
+    return company
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 30) || 'your-workspace';
+  }, [company]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,16 +71,44 @@ export default function SignupPage() {
               </div>
             )}
 
+            {/* Company Name with URL Preview - Like Fibery */}
             <div>
-              <label className="label">Your Name</label>
+              <label className="label flex items-center gap-2">
+                <Building2 size={14} />
+                Company Name
+              </label>
               <input
                 type="text"
-                className="input"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="John Doe"
+                className="input text-lg font-medium"
+                value={company}
+                onChange={(e) => setCompany(e.target.value)}
+                placeholder="Acme Inc."
                 required
               />
+            </div>
+
+            {/* Auto-generated URL preview */}
+            <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
+              <div className="flex-1 px-4 py-3">
+                <span className="text-gray-900 font-medium">{workspaceSlug}</span>
+              </div>
+              <div className="px-4 py-3 bg-gray-100 text-gray-500 text-sm border-l border-gray-200">
+                .tourlayer.io
+              </div>
+            </div>
+
+            <div className="border-t border-gray-100 pt-5">
+              <div>
+                <label className="label">Your Name</label>
+                <input
+                  type="text"
+                  className="input"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="John Doe"
+                  required
+                />
+              </div>
             </div>
 
             <div>
@@ -84,24 +121,6 @@ export default function SignupPage() {
                 placeholder="you@company.com"
                 required
               />
-            </div>
-
-            <div>
-              <label className="label flex items-center gap-2">
-                <Building2 size={14} />
-                Company / Workspace Name
-              </label>
-              <input
-                type="text"
-                className="input"
-                value={company}
-                onChange={(e) => setCompany(e.target.value)}
-                placeholder="Acme Inc."
-                required
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                This will be your workspace where you manage tours
-              </p>
             </div>
 
             <div>
@@ -119,10 +138,10 @@ export default function SignupPage() {
 
             <button
               type="submit"
-              className="btn btn-primary w-full"
+              className="btn btn-primary w-full text-lg py-3"
               disabled={loading}
             >
-              {loading ? 'Creating workspace...' : 'Create Workspace'}
+              {loading ? 'Creating workspace...' : 'Continue'}
             </button>
           </form>
 
