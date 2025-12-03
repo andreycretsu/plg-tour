@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import ImageUpload from '@/components/ImageUpload';
-import { Save, Crosshair, AlertCircle, CheckCircle, ArrowLeft, MousePointer, Hand, Eye, Trash2, Loader2 } from 'lucide-react';
+import ColorPicker from '@/components/ColorPicker';
+import { Save, Crosshair, AlertCircle, CheckCircle, ArrowLeft, MousePointer, Hand, Trash2, Loader2 } from 'lucide-react';
 
 export default function EditTooltipPage() {
   const router = useRouter();
@@ -599,26 +600,7 @@ export default function EditTooltipPage() {
 
             <div>
               <label className="label">Beacon Color</label>
-              <div className="flex gap-2 items-center">
-                <div className="relative w-10 h-10 flex items-center justify-center">
-                  <div 
-                    className="w-6 h-6 rounded-full border-2 border-gray-200 shadow-sm"
-                    style={{ backgroundColor: iconColor }}
-                  />
-                  <input
-                    type="color"
-                    value={iconColor}
-                    onChange={(e) => setIconColor(e.target.value)}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  />
-                </div>
-                <input
-                  type="text"
-                  className="input flex-1"
-                  value={iconColor}
-                  onChange={(e) => setIconColor(e.target.value)}
-                />
-              </div>
+              <ColorPicker value={iconColor} onChange={setIconColor} />
             </div>
           </div>
 
@@ -734,38 +716,12 @@ export default function EditTooltipPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="label">Background Color</label>
-                <div className="flex gap-2">
-                  <input
-                    type="color"
-                    value={cardBgColor}
-                    onChange={(e) => setCardBgColor(e.target.value)}
-                    className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
-                  />
-                  <input
-                    type="text"
-                    className="input flex-1"
-                    value={cardBgColor}
-                    onChange={(e) => setCardBgColor(e.target.value)}
-                  />
-                </div>
+                <ColorPicker value={cardBgColor} onChange={setCardBgColor} />
               </div>
 
               <div>
                 <label className="label">Text Color</label>
-                <div className="flex gap-2">
-                  <input
-                    type="color"
-                    value={cardTextColor}
-                    onChange={(e) => setCardTextColor(e.target.value)}
-                    className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
-                  />
-                  <input
-                    type="text"
-                    className="input flex-1"
-                    value={cardTextColor}
-                    onChange={(e) => setCardTextColor(e.target.value)}
-                  />
-                </div>
+                <ColorPicker value={cardTextColor} onChange={setCardTextColor} />
               </div>
             </div>
           </div>
@@ -800,38 +756,12 @@ export default function EditTooltipPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="label">Button Background</label>
-                <div className="flex gap-2">
-                  <input
-                    type="color"
-                    value={buttonColor}
-                    onChange={(e) => setButtonColor(e.target.value)}
-                    className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
-                  />
-                  <input
-                    type="text"
-                    className="input flex-1"
-                    value={buttonColor}
-                    onChange={(e) => setButtonColor(e.target.value)}
-                  />
-                </div>
+                <ColorPicker value={buttonColor} onChange={setButtonColor} />
               </div>
 
               <div>
                 <label className="label">Button Text Color</label>
-                <div className="flex gap-2">
-                  <input
-                    type="color"
-                    value={buttonTextColor}
-                    onChange={(e) => setButtonTextColor(e.target.value)}
-                    className="w-12 h-10 rounded border border-gray-300 cursor-pointer"
-                  />
-                  <input
-                    type="text"
-                    className="input flex-1"
-                    value={buttonTextColor}
-                    onChange={(e) => setButtonTextColor(e.target.value)}
-                  />
-                </div>
+                <ColorPicker value={buttonTextColor} onChange={setButtonTextColor} />
               </div>
             </div>
           </div>
@@ -980,22 +910,10 @@ export default function EditTooltipPage() {
           </div>
         </div>
 
-        {/* Right Column - Live Preview */}
+        {/* Right Column - Preview */}
         <div className="flex-1 min-w-[400px]">
-          <div className="sticky top-0 h-screen py-6 flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
-                <Eye size={18} />
-                Live Preview
-              </h2>
-              <button
-                onClick={() => setShowPreview(!showPreview)}
-                className="text-sm text-gray-500 hover:text-gray-700"
-              >
-                {showPreview ? 'Hide' : 'Show'}
-              </button>
-            </div>
-
+          <div className="sticky top-0 h-screen py-6">
+            {/* Preview Area */}
             {showPreview && (
               <div 
                 className="rounded-xl p-6 flex-1 flex items-center justify-center"

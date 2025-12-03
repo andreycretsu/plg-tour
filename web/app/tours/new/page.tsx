@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { PreviewPanel } from '@/components/StepPreview';
+import ColorPicker from '@/components/ColorPicker';
 import { Plus, Trash2, GripVertical, Save, Crosshair, AlertCircle, CheckCircle, Eye, Layers } from 'lucide-react';
 import ImageUpload from '@/components/ImageUpload';
 
@@ -363,38 +364,18 @@ export default function NewTourPage() {
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <label className="label text-xs">Background Color</label>
-                    <div className="flex gap-2">
-                      <input
-                        type="color"
-                        value={styling.cardBgColor}
-                        onChange={(e) => setStyling({...styling, cardBgColor: e.target.value})}
-                        className="w-10 h-9 rounded border border-gray-300 cursor-pointer"
-                      />
-                      <input
-                        type="text"
-                        className="input text-sm flex-1"
-                        value={styling.cardBgColor}
-                        onChange={(e) => setStyling({...styling, cardBgColor: e.target.value})}
-                      />
-                    </div>
+                    <ColorPicker 
+                      value={styling.cardBgColor} 
+                      onChange={(color) => setStyling({...styling, cardBgColor: color})} 
+                    />
                   </div>
 
                   <div>
                     <label className="label text-xs">Text Color</label>
-                    <div className="flex gap-2">
-                      <input
-                        type="color"
-                        value={styling.cardTextColor}
-                        onChange={(e) => setStyling({...styling, cardTextColor: e.target.value})}
-                        className="w-10 h-9 rounded border border-gray-300 cursor-pointer"
-                      />
-                      <input
-                        type="text"
-                        className="input text-sm flex-1"
-                        value={styling.cardTextColor}
-                        onChange={(e) => setStyling({...styling, cardTextColor: e.target.value})}
-                      />
-                    </div>
+                    <ColorPicker 
+                      value={styling.cardTextColor} 
+                      onChange={(color) => setStyling({...styling, cardTextColor: color})} 
+                    />
                   </div>
 
                   <div>
@@ -440,38 +421,18 @@ export default function NewTourPage() {
                   <div className="grid grid-cols-3 gap-4">
                     <div>
                       <label className="label text-xs">Button Background</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="color"
-                          value={styling.buttonColor}
-                          onChange={(e) => setStyling({...styling, buttonColor: e.target.value})}
-                          className="w-10 h-9 rounded border border-gray-300 cursor-pointer"
-                        />
-                        <input
-                          type="text"
-                          className="input text-sm flex-1"
-                          value={styling.buttonColor}
-                          onChange={(e) => setStyling({...styling, buttonColor: e.target.value})}
-                        />
-                      </div>
+                      <ColorPicker 
+                        value={styling.buttonColor} 
+                        onChange={(color) => setStyling({...styling, buttonColor: color})} 
+                      />
                     </div>
 
                     <div>
                       <label className="label text-xs">Button Text Color</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="color"
-                          value={styling.buttonTextColor}
-                          onChange={(e) => setStyling({...styling, buttonTextColor: e.target.value})}
-                          className="w-10 h-9 rounded border border-gray-300 cursor-pointer"
-                        />
-                        <input
-                          type="text"
-                          className="input text-sm flex-1"
-                          value={styling.buttonTextColor}
-                          onChange={(e) => setStyling({...styling, buttonTextColor: e.target.value})}
-                        />
-                      </div>
+                      <ColorPicker 
+                        value={styling.buttonTextColor} 
+                        onChange={(color) => setStyling({...styling, buttonTextColor: color})} 
+                      />
                     </div>
 
                     <div>
