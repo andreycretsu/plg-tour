@@ -247,6 +247,7 @@
       }
       
       if (tooltip.trigger_type === 'hover') {
+        // Hover on beacon
         beacon.addEventListener('mouseenter', () => showTooltipCard(tooltip, element));
         beacon.addEventListener('mouseleave', () => {
           setTimeout(() => {
@@ -255,7 +256,20 @@
             }
           }, 200);
         });
+        
+        // ALSO hover on the target element itself
+        element.addEventListener('mouseenter', () => showTooltipCard(tooltip, element));
+        element.addEventListener('mouseleave', () => {
+          setTimeout(() => {
+            const card = tooltipContainer?.querySelector('.tl-card:hover');
+            const beaconHovered = beacon.matches(':hover');
+            if (!card && !beaconHovered) {
+              hideTooltipCard(tooltip.id);
+            }
+          }, 200);
+        });
       } else {
+        // Click on beacon
         beacon.addEventListener('click', (e) => {
           e.stopPropagation();
           if (openTooltipId === tooltip.id) {
