@@ -773,6 +773,18 @@
     const isLastStep = index === totalSteps - 1;
     const isFirstStep = index === 0;
 
+    // Get tour styling with defaults
+    const styling = {
+      cardBgColor: currentTour.card_bg_color || '#ffffff',
+      cardTextColor: currentTour.card_text_color || '#1f2937',
+      cardBorderRadius: currentTour.card_border_radius || 12,
+      cardPadding: currentTour.card_padding || 20,
+      cardShadow: currentTour.card_shadow || '0 4px 20px rgba(0,0,0,0.15)',
+      buttonColor: currentTour.button_color || '#3b82f6',
+      buttonTextColor: currentTour.button_text_color || '#ffffff',
+      buttonBorderRadius: currentTour.button_border_radius || 8,
+    };
+
     const overlay = document.createElement('div');
     overlay.className = 'tourlayer-overlay';
     overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1;';
@@ -786,23 +798,27 @@
       left: 50%;
       transform: translate(-50%, -50%);
       z-index: 2;
+      background: ${styling.cardBgColor};
+      border-radius: ${styling.cardBorderRadius}px;
+      box-shadow: ${styling.cardShadow};
+      overflow: hidden;
     `;
     
     tooltip.innerHTML = `
       <button class="tourlayer-close" data-action="close">&times;</button>
-      <div class="tourlayer-tooltip-header">
+      <div class="tourlayer-tooltip-header" style="background: ${styling.buttonColor};">
         <div class="tourlayer-tooltip-title">${escapeHtml(step.title)}</div>
         <div class="tourlayer-tooltip-step">Step ${index + 1} of ${totalSteps}</div>
       </div>
-      <div class="tourlayer-tooltip-body">
-        ${step.image_url ? `<img src="${escapeHtml(step.image_url)}" class="tourlayer-tooltip-image" alt="">` : ''}
+      <div class="tourlayer-tooltip-body" style="padding: ${styling.cardPadding}px; color: ${styling.cardTextColor};">
+        ${step.image_url ? `<img src="${escapeHtml(step.image_url)}" class="tourlayer-tooltip-image" style="border-radius: ${Math.max(0, styling.cardBorderRadius - 4)}px;" alt="">` : ''}
         <div class="tourlayer-tooltip-content">${escapeHtml(step.content)}</div>
       </div>
       <div class="tourlayer-tooltip-footer">
         <button class="tourlayer-btn tourlayer-btn-skip" data-action="skip">Skip tour</button>
         <div style="display: flex; gap: 8px;">
           ${!isFirstStep ? '<button class="tourlayer-btn tourlayer-btn-secondary" data-action="prev">Back</button>' : ''}
-          <button class="tourlayer-btn tourlayer-btn-primary" data-action="next">
+          <button class="tourlayer-btn tourlayer-btn-primary" style="background: ${styling.buttonColor}; color: ${styling.buttonTextColor}; border-radius: ${styling.buttonBorderRadius}px;" data-action="next">
             ${isLastStep ? 'Finish' : step.button_text || 'Next'}
           </button>
         </div>
@@ -817,6 +833,18 @@
     const zIndex = step.z_index || 2147483647;
     const container = createContainer(zIndex);
     container.innerHTML = '';
+
+    // Get tour styling with defaults
+    const styling = {
+      cardBgColor: currentTour.card_bg_color || '#ffffff',
+      cardTextColor: currentTour.card_text_color || '#1f2937',
+      cardBorderRadius: currentTour.card_border_radius || 12,
+      cardPadding: currentTour.card_padding || 20,
+      cardShadow: currentTour.card_shadow || '0 4px 20px rgba(0,0,0,0.15)',
+      buttonColor: currentTour.button_color || '#3b82f6',
+      buttonTextColor: currentTour.button_text_color || '#ffffff',
+      buttonBorderRadius: currentTour.button_border_radius || 8,
+    };
 
     element.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
@@ -835,6 +863,11 @@
 
       const tooltip = document.createElement('div');
       tooltip.className = 'tourlayer-tooltip';
+      tooltip.style.cssText = `
+        background: ${styling.cardBgColor};
+        border-radius: ${styling.cardBorderRadius}px;
+        box-shadow: ${styling.cardShadow};
+      `;
       
       const totalSteps = currentTour.steps.length;
       const isLastStep = index === totalSteps - 1;
@@ -842,19 +875,19 @@
 
       tooltip.innerHTML = `
         <button class="tourlayer-close" data-action="close">&times;</button>
-        <div class="tourlayer-tooltip-header">
+        <div class="tourlayer-tooltip-header" style="background: ${styling.buttonColor};">
           <div class="tourlayer-tooltip-title">${escapeHtml(step.title)}</div>
           <div class="tourlayer-tooltip-step">Step ${index + 1} of ${totalSteps}</div>
         </div>
-        <div class="tourlayer-tooltip-body">
-          ${step.image_url ? `<img src="${escapeHtml(step.image_url)}" class="tourlayer-tooltip-image" alt="">` : ''}
+        <div class="tourlayer-tooltip-body" style="padding: ${styling.cardPadding}px; color: ${styling.cardTextColor};">
+          ${step.image_url ? `<img src="${escapeHtml(step.image_url)}" class="tourlayer-tooltip-image" style="border-radius: ${Math.max(0, styling.cardBorderRadius - 4)}px;" alt="">` : ''}
           <div class="tourlayer-tooltip-content">${escapeHtml(step.content)}</div>
         </div>
         <div class="tourlayer-tooltip-footer">
           <button class="tourlayer-btn tourlayer-btn-skip" data-action="skip">Skip tour</button>
           <div style="display: flex; gap: 8px;">
             ${!isFirstStep ? '<button class="tourlayer-btn tourlayer-btn-secondary" data-action="prev">Back</button>' : ''}
-            <button class="tourlayer-btn tourlayer-btn-primary" data-action="next">
+            <button class="tourlayer-btn tourlayer-btn-primary" style="background: ${styling.buttonColor}; color: ${styling.buttonTextColor}; border-radius: ${styling.buttonBorderRadius}px;" data-action="next">
               ${isLastStep ? 'Finish' : step.button_text || 'Next'}
             </button>
           </div>
