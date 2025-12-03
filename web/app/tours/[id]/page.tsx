@@ -115,7 +115,7 @@ export default function EditTourPage() {
         setUrlPattern(tour.url_pattern);
         setIsActive(tour.is_active);
         setSteps(tour.steps.map(s => ({
-          id: s.id,
+          id: String(s.id),
           selector: s.selector,
           title: s.title,
           content: s.content,
@@ -221,7 +221,7 @@ export default function EditTourPage() {
           urlPattern: urlPattern,
           isActive: isActive,
           steps: steps.map((step, index) => ({
-            id: step.id.startsWith('new-step-') ? undefined : step.id,
+            id: String(step.id).startsWith('new-step-') ? undefined : step.id,
             stepOrder: index,
             selector: step.selector,
             title: step.title,
