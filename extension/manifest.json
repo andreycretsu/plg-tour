@@ -1,38 +1,47 @@
 {
   "manifest_version": 3,
-  "name": "TourLayer - Tour Connector",
+  "name": "TourLayer",
   "version": "2.0.0",
-  "description": "Connect to your TourLayer account and display tours on any website",
-  "permissions": [
-    "storage",
-    "activeTab"
-  ],
-  "host_permissions": [
-    "<all_urls>"
-  ],
+  "description": "Create interactive product tours on any website. Visual element picker & tour player.",
+  "icons": {
+    "16": "icon16.svg",
+    "48": "icon48.svg",
+    "128": "icon128.svg"
+  },
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icon16.svg",
       "48": "icon48.svg",
       "128": "icon128.svg"
-    }
+    },
+    "default_title": "TourLayer - Product Tours"
   },
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "background": {
     "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "run_at": "document_idle",
-      "all_frames": false
+      "matches": ["https://plg-tour.vercel.app/*", "http://localhost:3000/*"],
+      "js": ["webapp-bridge.js"],
+      "run_at": "document_end"
     }
   ],
-  "icons": {
-    "16": "icon16.svg",
-    "48": "icon48.svg",
-    "128": "icon128.svg"
-  }
+  "externally_connectable": {
+    "matches": ["https://plg-tour.vercel.app/*", "http://localhost:3000/*"]
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["picker.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }
-

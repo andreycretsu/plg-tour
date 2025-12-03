@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Plus, Trash2, GripVertical, Save } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Save, Crosshair, AlertCircle, CheckCircle } from 'lucide-react';
 
 interface Step {
   id: string;
@@ -22,6 +22,56 @@ export default function NewTourPage() {
   const [urlPattern, setUrlPattern] = useState('');
   const [steps, setSteps] = useState<Step[]>([]);
   const [loading, setLoading] = useState(false);
+  const [extensionInstalled, setExtensionInstalled] = useState(false);
+  const [pickingForStep, setPickingForStep] = useState<string | null>(null);
+  const [pickerStatus, setPickerStatus] = useState<'idle' | 'waiting' | 'success'>('idle');
+
+  // Check if extension is installed
+  useEffect(() => {
+    const checkExtension = () => {
+      window.postMessage({ source: 'tourlayer-webapp', type: 'PING' }, '*');
+    };
+
+    const handleMessage = (event: MessageEvent) => {
+      if (event.source !== window) return;
+      if (!event.data || event.data.source !== 'tourlayer-extension') return;
+
+      console.log('Received from extension:', event.data);
+
+      switch (event.data.type) {
+        case 'PONG':
+        case 'EXTENSION_READY':
+          setExtensionInstalled(true);
+          break;
+        case 'ELEMENT_PICKED':
+          // Handle picked element
+          if (pickingForStep && event.data.selector) {
+            updateStep(pickingForStep, 'selector', event.data.selector);
+            setPickerStatus('success');
+            setTimeout(() => {
+              setPickerStatus('idle');
+              setPickingForStep(null);
+            }, 2000);
+          }
+          break;
+        case 'PICKER_CANCELLED':
+          setPickerStatus('idle');
+          setPickingForStep(null);
+          break;
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    
+    // Check on mount and periodically
+    checkExtension();
+    const interval = setInterval(checkExtension, 3000);
+
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      clearInterval(interval);
+    };
+  }, [pickingForStep]);
 
   const addStep = () => {
     const newStep: Step = {
@@ -37,14 +87,31 @@ export default function NewTourPage() {
     setSteps([...steps, newStep]);
   };
 
-  const updateStep = (id: string, field: keyof Step, value: any) => {
-    setSteps(steps.map(step => 
+  const updateStep = useCallback((id: string, field: keyof Step, value: any) => {
+    setSteps(currentSteps => currentSteps.map(step => 
       step.id === id ? { ...step, [field]: value } : step
     ));
-  };
+  }, []);
 
   const deleteStep = (id: string) => {
     setSteps(steps.filter(step => step.id !== id));
+  };
+
+  const startPicker = (stepId: string) => {
+    if (!extensionInstalled) {
+      alert('Please install the TourLayer Chrome extension first!');
+      return;
+    }
+    
+    setPickingForStep(stepId);
+    setPickerStatus('waiting');
+    
+    // Tell extension to start picker
+    window.postMessage({ 
+      source: 'tourlayer-webapp', 
+      type: 'START_PICKER',
+      stepId 
+    }, '*');
   };
 
   const saveTour = async () => {
@@ -106,6 +173,54 @@ export default function NewTourPage() {
           <h1 className="text-3xl font-bold text-gray-900">Create New Tour</h1>
           <p className="text-gray-600 mt-2">Build an interactive product tour</p>
         </div>
+
+        {/* Extension Status */}
+        <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${
+          extensionInstalled 
+            ? 'bg-green-50 border border-green-200' 
+            : 'bg-yellow-50 border border-yellow-200'
+        }`}>
+          {extensionInstalled ? (
+            <>
+              <CheckCircle className="text-green-600" size={20} />
+              <div>
+                <p className="font-medium text-green-800">Extension Connected</p>
+                <p className="text-sm text-green-600">You can use the visual element picker!</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <AlertCircle className="text-yellow-600" size={20} />
+              <div>
+                <p className="font-medium text-yellow-800">Extension Not Detected</p>
+                <p className="text-sm text-yellow-600">
+                  Install the TourLayer extension to use the visual element picker. 
+                  <a href="/extension" className="underline ml-1">Download →</a>
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Picker Status */}
+        {pickerStatus === 'waiting' && (
+          <div className="mb-6 p-4 rounded-lg bg-blue-50 border border-blue-200 flex items-center gap-3">
+            <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
+            <div>
+              <p className="font-medium text-blue-800">Element Picker Active</p>
+              <p className="text-sm text-blue-600">
+                Switch to your target website tab and click on any element. Press ESC to cancel.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {pickerStatus === 'success' && (
+          <div className="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 flex items-center gap-3">
+            <CheckCircle className="text-green-600" size={20} />
+            <p className="font-medium text-green-800">Element selected successfully!</p>
+          </div>
+        )}
 
         {/* Tour Details */}
         <div className="card p-6 mb-6">
@@ -172,13 +287,28 @@ export default function NewTourPage() {
                       <div className="grid grid-cols-2 gap-3">
                         <div>
                           <label className="label text-xs">Element Selector (CSS)</label>
-                          <input
-                            type="text"
-                            className="input text-sm"
-                            value={step.selector}
-                            onChange={(e) => updateStep(step.id, 'selector', e.target.value)}
-                            placeholder="#button-id or .class-name"
-                          />
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              className="input text-sm flex-1"
+                              value={step.selector}
+                              onChange={(e) => updateStep(step.id, 'selector', e.target.value)}
+                              placeholder="#button-id or .class-name"
+                            />
+                            <button
+                              onClick={() => startPicker(step.id)}
+                              disabled={!extensionInstalled || pickerStatus === 'waiting'}
+                              className={`px-3 py-2 rounded-lg flex items-center gap-1 text-sm font-medium transition-colors ${
+                                extensionInstalled 
+                                  ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                              }`}
+                              title={extensionInstalled ? 'Pick element from page' : 'Install extension to use picker'}
+                            >
+                              <Crosshair size={16} />
+                              Pick
+                            </button>
+                          </div>
                         </div>
                         <div>
                           <label className="label text-xs">Placement</label>
@@ -289,4 +419,3 @@ export default function NewTourPage() {
     </DashboardLayout>
   );
 }
-

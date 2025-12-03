@@ -1,0 +1,310 @@
+// Element Picker - Visual selector tool
+(function() {
+  // Prevent multiple injections
+  if (window.__tourLayerPickerActive) {
+    return;
+  }
+  window.__tourLayerPickerActive = true;
+
+  let overlay = null;
+  let highlightBox = null;
+  let selectorDisplay = null;
+  let currentElement = null;
+
+  // Generate a unique CSS selector for an element
+  function generateSelector(element) {
+    if (!element || element === document.body || element === document.documentElement) {
+      return 'body';
+    }
+
+    // Priority 1: ID (most reliable)
+    if (element.id && !element.id.match(/^\d/) && !element.id.includes(':')) {
+      return `#${CSS.escape(element.id)}`;
+    }
+
+    // Priority 2: data-testid or data-cy (test attributes)
+    const testId = element.getAttribute('data-testid') || 
+                   element.getAttribute('data-cy') || 
+                   element.getAttribute('data-test');
+    if (testId) {
+      return `[data-testid="${testId}"]`;
+    }
+
+    // Priority 3: data-bs-original-title or other meaningful data attributes
+    const bsTitle = element.getAttribute('data-bs-original-title');
+    if (bsTitle) {
+      return `[data-bs-original-title="${bsTitle}"]`;
+    }
+
+    // Priority 4: name attribute (for form elements)
+    if (element.name && ['input', 'select', 'textarea', 'button'].includes(element.tagName.toLowerCase())) {
+      return `${element.tagName.toLowerCase()}[name="${element.name}"]`;
+    }
+
+    // Priority 5: Unique class combination
+    if (element.className && typeof element.className === 'string') {
+      const classes = element.className.trim().split(/\s+/).filter(c => {
+        // Filter out dynamic/utility classes
+        return c && 
+               !c.match(/^(tw-|hover:|focus:|active:|lg:|md:|sm:|xs:)/) &&
+               !c.match(/^\d/) &&
+               c.length < 30;
+      });
+      
+      if (classes.length > 0) {
+        const selector = '.' + classes.slice(0, 3).map(c => CSS.escape(c)).join('.');
+        const matches = document.querySelectorAll(selector);
+        if (matches.length === 1) {
+          return selector;
+        }
+      }
+    }
+
+    // Priority 6: Tag + aria-label
+    const ariaLabel = element.getAttribute('aria-label');
+    if (ariaLabel) {
+      return `${element.tagName.toLowerCase()}[aria-label="${ariaLabel}"]`;
+    }
+
+    // Priority 7: Tag + title
+    const title = element.getAttribute('title');
+    if (title) {
+      return `${element.tagName.toLowerCase()}[title="${title}"]`;
+    }
+
+    // Priority 8: Build path from parent
+    const path = [];
+    let el = element;
+    
+    while (el && el !== document.body && path.length < 4) {
+      let selector = el.tagName.toLowerCase();
+      
+      if (el.id && !el.id.match(/^\d/) && !el.id.includes(':')) {
+        selector = `#${CSS.escape(el.id)}`;
+        path.unshift(selector);
+        break;
+      }
+      
+      // Add nth-child if needed
+      const parent = el.parentElement;
+      if (parent) {
+        const siblings = Array.from(parent.children).filter(c => c.tagName === el.tagName);
+        if (siblings.length > 1) {
+          const index = siblings.indexOf(el) + 1;
+          selector += `:nth-child(${index})`;
+        }
+      }
+      
+      path.unshift(selector);
+      el = parent;
+    }
+    
+    return path.join(' > ');
+  }
+
+  // Create picker UI
+  function createPickerUI() {
+    // Create overlay
+    overlay = document.createElement('div');
+    overlay.id = 'tourlayer-picker-overlay';
+    overlay.innerHTML = `
+      <style>
+        #tourlayer-picker-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          z-index: 2147483646;
+          cursor: crosshair;
+        }
+        #tourlayer-highlight-box {
+          position: fixed;
+          pointer-events: none;
+          border: 2px solid #3b82f6;
+          background: rgba(59, 130, 246, 0.1);
+          z-index: 2147483647;
+          transition: all 0.1s ease;
+        }
+        #tourlayer-picker-toolbar {
+          position: fixed;
+          bottom: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: #1e293b;
+          color: white;
+          padding: 16px 24px;
+          border-radius: 12px;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          font-size: 14px;
+          z-index: 2147483647;
+          box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          min-width: 400px;
+          max-width: 600px;
+        }
+        #tourlayer-picker-toolbar h3 {
+          margin: 0;
+          font-size: 16px;
+          font-weight: 600;
+          color: #3b82f6;
+        }
+        #tourlayer-selector-display {
+          background: #0f172a;
+          padding: 10px 14px;
+          border-radius: 6px;
+          font-family: 'Monaco', 'Menlo', monospace;
+          font-size: 13px;
+          color: #22c55e;
+          word-break: break-all;
+          min-height: 20px;
+        }
+        #tourlayer-picker-buttons {
+          display: flex;
+          gap: 10px;
+          justify-content: flex-end;
+        }
+        #tourlayer-picker-buttons button {
+          padding: 8px 16px;
+          border-radius: 6px;
+          border: none;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        #tourlayer-btn-cancel {
+          background: #475569;
+          color: white;
+        }
+        #tourlayer-btn-cancel:hover {
+          background: #64748b;
+        }
+        #tourlayer-btn-select {
+          background: #3b82f6;
+          color: white;
+        }
+        #tourlayer-btn-select:hover {
+          background: #2563eb;
+        }
+        #tourlayer-btn-select:disabled {
+          background: #1e40af;
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+        #tourlayer-picker-hint {
+          font-size: 12px;
+          color: #94a3b8;
+        }
+      </style>
+      <div id="tourlayer-highlight-box"></div>
+      <div id="tourlayer-picker-toolbar">
+        <h3>🎯 TourLayer Element Picker</h3>
+        <p id="tourlayer-picker-hint">Hover over any element and click to select it</p>
+        <div id="tourlayer-selector-display">Move mouse over an element...</div>
+        <div id="tourlayer-picker-buttons">
+          <button id="tourlayer-btn-cancel">Cancel (Esc)</button>
+          <button id="tourlayer-btn-select" disabled>Select Element</button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    
+    highlightBox = document.getElementById('tourlayer-highlight-box');
+    selectorDisplay = document.getElementById('tourlayer-selector-display');
+    
+    // Event listeners
+    overlay.addEventListener('mousemove', handleMouseMove);
+    overlay.addEventListener('click', handleClick);
+    document.getElementById('tourlayer-btn-cancel').addEventListener('click', cleanup);
+    document.getElementById('tourlayer-btn-select').addEventListener('click', confirmSelection);
+    document.addEventListener('keydown', handleKeyDown);
+  }
+
+  function handleMouseMove(e) {
+    // Get element under cursor (need to temporarily hide overlay)
+    overlay.style.pointerEvents = 'none';
+    const element = document.elementFromPoint(e.clientX, e.clientY);
+    overlay.style.pointerEvents = 'auto';
+    
+    if (element && 
+        element !== overlay && 
+        !element.id?.startsWith('tourlayer-') &&
+        !element.closest('#tourlayer-picker-overlay')) {
+      currentElement = element;
+      
+      // Update highlight box
+      const rect = element.getBoundingClientRect();
+      highlightBox.style.left = rect.left + 'px';
+      highlightBox.style.top = rect.top + 'px';
+      highlightBox.style.width = rect.width + 'px';
+      highlightBox.style.height = rect.height + 'px';
+      highlightBox.style.display = 'block';
+      
+      // Update selector display
+      const selector = generateSelector(element);
+      selectorDisplay.textContent = selector;
+      
+      // Enable select button
+      document.getElementById('tourlayer-btn-select').disabled = false;
+    }
+  }
+
+  function handleClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (currentElement) {
+      confirmSelection();
+    }
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Escape') {
+      cleanup();
+    } else if (e.key === 'Enter' && currentElement) {
+      confirmSelection();
+    }
+  }
+
+  function confirmSelection() {
+    if (!currentElement) return;
+    
+    const selector = generateSelector(currentElement);
+    const rect = currentElement.getBoundingClientRect();
+    
+    // Send selector back to extension/web app
+    chrome.runtime.sendMessage({
+      type: 'ELEMENT_SELECTED',
+      selector: selector,
+      tagName: currentElement.tagName.toLowerCase(),
+      text: currentElement.textContent?.slice(0, 50) || '',
+      rect: {
+        x: rect.x,
+        y: rect.y,
+        width: rect.width,
+        height: rect.height
+      }
+    });
+    
+    cleanup();
+  }
+
+  function cleanup() {
+    window.__tourLayerPickerActive = false;
+    document.removeEventListener('keydown', handleKeyDown);
+    if (overlay) {
+      overlay.remove();
+    }
+    
+    // Notify that picker was closed
+    chrome.runtime.sendMessage({ type: 'PICKER_CLOSED' });
+  }
+
+  // Initialize
+  createPickerUI();
+})();
+
