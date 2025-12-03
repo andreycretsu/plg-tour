@@ -10,14 +10,47 @@
   let currentStepIndex = 0;
   let tourContainer = null;
 
+  // Show debug badge (temporary - remove in production)
+  function showDebugBadge(status, color = '#3b82f6') {
+    const badge = document.createElement('div');
+    badge.id = 'tourlayer-debug-badge';
+    badge.style.cssText = `
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: ${color};
+      color: white;
+      padding: 8px 12px;
+      border-radius: 20px;
+      font-family: system-ui, sans-serif;
+      font-size: 12px;
+      z-index: 2147483647;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    `;
+    badge.textContent = `🎯 TourLayer: ${status}`;
+    
+    // Remove existing badge
+    const existing = document.getElementById('tourlayer-debug-badge');
+    if (existing) existing.remove();
+    
+    document.body.appendChild(badge);
+    
+    // Auto-hide after 5 seconds unless it's an error
+    if (!color.includes('ef4444')) {
+      setTimeout(() => badge.remove(), 5000);
+    }
+  }
+
   // Initialize
   async function init() {
     console.log('TourLayer: Initializing on', window.location.href);
+    showDebugBadge('Loading...', '#6366f1');
     
     // Don't run on TourLayer web app itself
     if (window.location.hostname.includes('plg-tour') || 
         window.location.hostname.includes('vercel.app') && window.location.pathname.includes('/tours')) {
       console.log('TourLayer: Skipping on TourLayer app');
+      showDebugBadge('Skipped (TourLayer app)', '#64748b');
       return;
     }
     
@@ -26,10 +59,12 @@
     
     if (!result.apiToken) {
       console.log('TourLayer: No API token configured - please connect the extension first');
+      showDebugBadge('No API token! Connect in popup', '#ef4444');
       return;
     }
 
     console.log('TourLayer: API token found, fetching tours...');
+    showDebugBadge('Fetching tours...', '#3b82f6');
 
     // Fetch tours for current URL
     await fetchAndShowTours(result.apiToken);
@@ -78,20 +113,21 @@
         currentStepIndex = 0;
         
         console.log('TourLayer: Starting tour:', currentTour.name, 'with', currentTour.steps.length, 'steps');
-        
-        // Check if user has already seen this tour (skip check for now to always show)
-        // const seenKey = `tourlayer_seen_${currentTour.id}`;
-        // const seen = await chrome.storage.local.get([seenKey]);
-        // if (!seen[seenKey]) {
+        showDebugBadge(`Starting: ${currentTour.name}`, '#22c55e');
         
         // Always show for now (for testing)
-        showStep(currentStepIndex);
-        // }
+        setTimeout(() => {
+          showStep(currentStepIndex);
+        }, 500);
       } else if (tours.length > 0) {
         console.log('TourLayer: Tour found but no steps:', tours[0]);
+        showDebugBadge('Tour has no steps', '#f59e0b');
+      } else {
+        showDebugBadge('No tours for this URL', '#64748b');
       }
     } catch (error) {
       console.error('TourLayer: Error fetching tours', error);
+      showDebugBadge('Error: ' + error.message, '#ef4444');
     }
   }
 
