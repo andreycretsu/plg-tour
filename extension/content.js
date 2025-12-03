@@ -234,9 +234,10 @@
     setTimeout(() => {
       const rect = element.getBoundingClientRect();
       
-      // Get size based on icon_size
-      const sizes = { small: 12, medium: 16, large: 24 };
-      const size = sizes[tooltip.icon_size] || 16;
+      // Get size - supports both numeric and legacy string values
+      const sizeMap = { small: 10, medium: 16, large: 24 };
+      const rawSize = tooltip.icon_size;
+      const size = typeof rawSize === 'number' ? rawSize : (sizeMap[rawSize] || 16);
       
       // Calculate beacon position using edge + offset + Y offset
       const beaconPos = getBeaconPositionEdge(rect, tooltip.icon_edge || 'right', tooltip.icon_offset || 0, size, tooltip.icon_offset_y || 0);
@@ -307,10 +308,12 @@
       tooltipContainer.appendChild(beacon);
       
       // Update position on scroll/resize
-      const sizes = { small: 12, medium: 16, large: 24 };
+      const sizeMapForUpdate = { small: 10, medium: 16, large: 24 };
+      const rawSizeForUpdate = tooltip.icon_size;
+      const sizeForUpdate = typeof rawSizeForUpdate === 'number' ? rawSizeForUpdate : (sizeMapForUpdate[rawSizeForUpdate] || 16);
       const updatePosition = () => {
         const newRect = element.getBoundingClientRect();
-        const newPos = getBeaconPositionEdge(newRect, tooltip.icon_edge || 'right', tooltip.icon_offset || 0, sizes[tooltip.icon_size] || 16, tooltip.icon_offset_y || 0);
+        const newPos = getBeaconPositionEdge(newRect, tooltip.icon_edge || 'right', tooltip.icon_offset || 0, sizeForUpdate, tooltip.icon_offset_y || 0);
         beacon.style.top = `${newPos.top}px`;
         beacon.style.left = `${newPos.left}px`;
       };

@@ -33,7 +33,7 @@ export default function EditTooltipPage() {
   const [iconEdge, setIconEdge] = useState<'top' | 'right' | 'bottom' | 'left'>('right');
   const [iconOffset, setIconOffset] = useState(0);
   const [iconOffsetY, setIconOffsetY] = useState(0);
-  const [iconSize, setIconSize] = useState<'small' | 'medium' | 'large'>('medium');
+  const [iconSize, setIconSize] = useState(16); // Size in pixels
   const [iconColor, setIconColor] = useState('#3b82f6');
   
   // Card settings
@@ -84,7 +84,10 @@ export default function EditTooltipPage() {
         setIconEdge(t.icon_edge || 'right');
         setIconOffset(t.icon_offset || 0);
         setIconOffsetY(t.icon_offset_y || 0);
-        setIconSize(t.icon_size || 'medium');
+        // Handle both numeric and legacy string sizes
+        const sizeMap: Record<string, number> = { small: 10, medium: 16, large: 24 };
+        const rawSize = t.icon_size;
+        setIconSize(typeof rawSize === 'number' ? rawSize : sizeMap[rawSize] || 16);
         setIconColor(t.icon_color || '#3b82f6');
         setTitle(t.title || '');
         setBody(t.body || '');
@@ -275,12 +278,10 @@ export default function EditTooltipPage() {
     }
   };
 
-  // Get beacon position for preview
-  const getBeaconPreviewStyle = () => {
-    const sizes = { small: 12, medium: 16, large: 24 };
-    const size = sizes[iconSize];
-    const offset = iconOffset;
-    const offsetY = iconOffsetY;
+  // Get beacon position for preview - properly centered
+  const getBeaconPreviewStyle = (): React.CSSProperties => {
+    const size = iconSize;
+    const halfSize = size / 2;
     
     const base: React.CSSProperties = {
       position: 'absolute',
@@ -291,16 +292,37 @@ export default function EditTooltipPage() {
       animation: iconType === 'pulse' ? 'pulse 2s infinite' : undefined,
     };
 
+    // Position beacon on the edge with offsets
     switch (iconEdge) {
       case 'top':
-        return { ...base, top: offset - size/2, left: `calc(50% + ${offsetY}px)`, transform: 'translateX(-50%)' };
+        return { 
+          ...base, 
+          top: -halfSize - iconOffset, 
+          left: '50%',
+          marginLeft: -halfSize + iconOffsetY,
+        };
       case 'bottom':
-        return { ...base, bottom: offset - size/2, left: `calc(50% + ${offsetY}px)`, transform: 'translateX(-50%)' };
+        return { 
+          ...base, 
+          bottom: -halfSize - iconOffset, 
+          left: '50%',
+          marginLeft: -halfSize + iconOffsetY,
+        };
       case 'left':
-        return { ...base, left: offset - size/2, top: `calc(50% + ${offsetY}px)`, transform: 'translateY(-50%)' };
+        return { 
+          ...base, 
+          left: -halfSize - iconOffset, 
+          top: '50%',
+          marginTop: -halfSize + iconOffsetY,
+        };
       case 'right':
       default:
-        return { ...base, right: offset - size/2, top: `calc(50% + ${offsetY}px)`, transform: 'translateY(-50%)' };
+        return { 
+          ...base, 
+          right: -halfSize - iconOffset, 
+          top: '50%',
+          marginTop: -halfSize + iconOffsetY,
+        };
     }
   };
 
@@ -496,20 +518,32 @@ export default function EditTooltipPage() {
               </div>
 
               <div>
-                <label className="label">Size</label>
+                <label className="label">Size: {iconSize}px</label>
+                <input
+                  type="range"
+                  min="8"
+                  max="32"
+                  value={iconSize}
+                  onChange={(e) => setIconSize(parseInt(e.target.value))}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600 mb-2"
+                />
                 <div className="flex gap-1">
-                  {['small', 'medium', 'large'].map((size) => (
+                  {[
+                    { label: 'S', value: 10 },
+                    { label: 'M', value: 16 },
+                    { label: 'L', value: 24 },
+                  ].map((preset) => (
                     <button
-                      key={size}
+                      key={preset.label}
                       type="button"
-                      onClick={() => setIconSize(size as any)}
-                      className={`flex-1 py-2 rounded-lg capitalize text-sm transition-colors ${
-                        iconSize === size 
+                      onClick={() => setIconSize(preset.value)}
+                      className={`flex-1 py-1 rounded text-xs font-medium transition-colors ${
+                        iconSize === preset.value 
                           ? 'bg-blue-600 text-white' 
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
                     >
-                      {size}
+                      {preset.label}
                     </button>
                   ))}
                 </div>
@@ -960,7 +994,7 @@ export default function EditTooltipPage() {
         </div>
 
         {/* Right Column - Live Preview */}
-        <div className="w-96 flex-shrink-0">
+        <div className="flex-1 min-w-[400px] max-w-[500px]">
           <div className="sticky top-4">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
@@ -977,33 +1011,41 @@ export default function EditTooltipPage() {
 
             {showPreview && (
               <div 
-                className="rounded-xl p-8 min-h-[500px] flex items-center justify-center"
+                className="rounded-xl p-6 min-h-[400px] flex items-center justify-center"
                 style={{ backgroundColor: '#f3f4f6' }}
               >
-                {/* Preview Container */}
-                <div className="relative">
-                  {/* Mock Element */}
-                  <div 
-                    className="bg-gray-300 rounded-lg flex items-center justify-center text-gray-600 font-medium relative"
-                    style={{ width: 200, height: 80 }}
-                  >
-                    <span>Element</span>
-                    
-                    {/* Beacon */}
-                    {iconType !== 'none' && (
-                      <div style={getBeaconPreviewStyle()} />
-                    )}
+                {/* Preview Layout - changes based on edge */}
+                <div className={`flex items-center justify-center gap-4`}
+                style={{
+                  flexDirection: iconEdge === 'top' ? 'column-reverse' : 
+                                 iconEdge === 'bottom' ? 'column' : 
+                                 iconEdge === 'left' ? 'row-reverse' : 'row'
+                }}>
+                  
+                  {/* Mock Element - Square */}
+                  <div className="relative flex-shrink-0">
+                    <div 
+                      className="bg-gray-300 rounded-lg flex items-center justify-center text-gray-500 font-medium text-sm"
+                      style={{ width: 100, height: 100 }}
+                    >
+                      Element
+                      
+                      {/* Beacon */}
+                      {iconType !== 'none' && (
+                        <div style={getBeaconPreviewStyle()} />
+                      )}
+                    </div>
                   </div>
 
                   {/* Tooltip Card Preview */}
                   <div 
-                    className="mt-4"
+                    className="flex-shrink-0"
                     style={{
-                      width: Math.min(cardWidth, 340),
+                      width: Math.min(cardWidth, 280),
                       backgroundColor: cardBgColor,
                       color: cardTextColor,
                       borderRadius: cardBorderRadius,
-                      padding: cardPadding,
+                      padding: Math.min(cardPadding, 16),
                       boxShadow: getShadowValue(cardShadow),
                       textAlign: textAlign,
                     }}
@@ -1012,14 +1054,14 @@ export default function EditTooltipPage() {
                       <img 
                         src={imageUrl} 
                         alt="Preview" 
-                        className="w-full h-32 object-cover rounded-lg mb-3"
+                        className="w-full h-24 object-cover mb-3"
                         style={{ borderRadius: Math.max(0, cardBorderRadius - 4) }}
                       />
                     )}
-                    <h3 className="font-semibold text-base mb-2">
+                    <h3 className="font-semibold text-sm mb-1">
                       {title || 'Tooltip Title'}
                     </h3>
-                    <p className="text-sm opacity-80 mb-4">
+                    <p className="text-xs opacity-80 mb-3">
                       {body || 'Tooltip description goes here...'}
                     </p>
                     {buttonText && (
@@ -1028,12 +1070,12 @@ export default function EditTooltipPage() {
                           backgroundColor: buttonColor,
                           color: buttonTextColor,
                           borderRadius: buttonBorderRadius,
-                          padding: '8px 16px',
+                          padding: '6px 12px',
                           width: textAlign === 'center' ? '100%' : 'auto',
                           display: textAlign === 'center' ? 'block' : 'inline-block',
                           border: 'none',
                           fontWeight: 500,
-                          fontSize: '14px',
+                          fontSize: '12px',
                           cursor: 'pointer',
                         }}
                       >

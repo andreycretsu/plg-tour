@@ -236,8 +236,10 @@
     const delay = tooltip.delay_ms || 0;
     setTimeout(() => {
       const rect = element.getBoundingClientRect();
-      const sizes = { small: 12, medium: 16, large: 24 };
-      const size = sizes[tooltip.icon_size] || 16;
+      // Support both numeric and legacy string sizes
+      const sizeMap = { small: 10, medium: 16, large: 24 };
+      const rawSize = tooltip.icon_size;
+      const size = typeof rawSize === 'number' ? rawSize : (sizeMap[rawSize] || 16);
       
       // Use new edge-based positioning with Y offset
       const beaconPos = getBeaconPositionEdge(rect, tooltip.icon_edge || 'right', tooltip.icon_offset || 0, size, tooltip.icon_offset_y || 0);

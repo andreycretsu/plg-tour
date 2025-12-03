@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
       iconEdge = 'right',
       iconOffset = 0,
       iconOffsetY = 0,
-      iconSize = 'medium',
+      iconSize = 16, // Size in pixels
       iconColor = '#3b82f6',
       // Card content
       title,
