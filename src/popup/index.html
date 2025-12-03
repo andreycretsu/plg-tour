@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TourLayer</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      
+      body {
+        width: 320px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        padding: 20px;
+        background: #fafafa;
+      }
+
+      h1 {
+        font-size: 20px;
+        margin-bottom: 16px;
+        color: #111827;
+      }
+
+      .btn {
+        width: 100%;
+        padding: 12px 16px;
+        border: none;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+
+      .btn-primary {
+        background: #3b82f6;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #2563eb;
+      }
+
+      .btn-secondary {
+        background: white;
+        color: #374151;
+        border: 1px solid #e5e7eb;
+      }
+
+      .btn-secondary:hover {
+        background: #f9fafb;
+      }
+
+      .divider {
+        height: 1px;
+        background: #e5e7eb;
+        margin: 16px 0;
+      }
+
+      .info {
+        font-size: 12px;
+        color: #6b7280;
+        text-align: center;
+        margin-top: 16px;
+        line-height: 1.5;
+      }
+
+      .tours-list {
+        max-height: 200px;
+        overflow-y: auto;
+        margin-top: 12px;
+      }
+
+      .tour-item {
+        padding: 10px;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .tour-item:hover {
+        border-color: #3b82f6;
+        background: #f0f9ff;
+      }
+
+      .tour-name {
+        font-size: 13px;
+        font-weight: 500;
+        color: #111827;
+        margin-bottom: 4px;
+      }
+
+      .tour-meta {
+        font-size: 11px;
+        color: #9ca3af;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🎯 TourLayer</h1>
+    
+    <button id="openEditor" class="btn btn-primary">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+      Create New Tour
+    </button>
+
+    <button id="viewTours" class="btn btn-secondary">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+      </svg>
+      View All Tours
+    </button>
+
+    <div class="divider"></div>
+
+    <div id="toursContainer" style="display: none;">
+      <h2 style="font-size: 14px; margin-bottom: 8px; color: #374151;">Saved Tours</h2>
+      <div id="toursList" class="tours-list"></div>
+    </div>
+
+    <div class="info">
+      Navigate to any website and click "Create New Tour" to start building interactive product tours.
+    </div>
+
+    <script type="module" src="../popup.js"></script>
+  </body>
+</html>
+
