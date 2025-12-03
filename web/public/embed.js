@@ -214,10 +214,11 @@
     const delay = tooltip.delay_ms || 0;
     setTimeout(() => {
       const rect = element.getBoundingClientRect();
-      const beaconPos = getBeaconPosition(rect, tooltip.icon_position, tooltip.icon_padding);
-      
       const sizes = { small: 12, medium: 16, large: 24 };
       const size = sizes[tooltip.icon_size] || 16;
+      
+      // Use new edge-based positioning
+      const beaconPos = getBeaconPositionEdge(rect, tooltip.icon_edge || 'right', tooltip.icon_offset || 0, size);
       
       const beacon = document.createElement('div');
       beacon.className = 'tl-beacon';
@@ -241,7 +242,6 @@
           background: ${tooltip.icon_color || '#3b82f6'};
           border-radius: 50%;
           ${tooltip.icon_type === 'pulse' ? 'animation: tl-pulse 2s infinite;' : ''}
-          ${tooltip.icon_bg_color ? `box-shadow: 0 0 0 4px ${tooltip.icon_bg_color};` : ''}
         `;
         beacon.appendChild(dot);
       }
@@ -285,7 +285,7 @@
       // Update position on scroll/resize
       const updatePosition = () => {
         const newRect = element.getBoundingClientRect();
-        const newPos = getBeaconPosition(newRect, tooltip.icon_position, tooltip.icon_padding);
+        const newPos = getBeaconPositionEdge(newRect, tooltip.icon_edge || 'right', tooltip.icon_offset || 0, size);
         beacon.style.top = `${newPos.top}px`;
         beacon.style.left = `${newPos.left}px`;
       };
@@ -296,18 +296,34 @@
     }, delay);
   }
 
-  function getBeaconPosition(rect, position, padding = 12) {
-    const positions = {
-      'top-left': { top: rect.top - padding, left: rect.left - padding },
-      'top': { top: rect.top - padding, left: rect.left + rect.width / 2 },
-      'top-right': { top: rect.top - padding, left: rect.right + padding },
-      'right': { top: rect.top + rect.height / 2, left: rect.right + padding },
-      'bottom-right': { top: rect.bottom + padding, left: rect.right + padding },
-      'bottom': { top: rect.bottom + padding, left: rect.left + rect.width / 2 },
-      'bottom-left': { top: rect.bottom + padding, left: rect.left - padding },
-      'left': { top: rect.top + rect.height / 2, left: rect.left - padding },
-    };
-    return positions[position] || positions['right'];
+  // Edge-based positioning: beacon on element edge with offset
+  // offset: 0 = on edge, positive = outside, negative = inside
+  function getBeaconPositionEdge(rect, edge, offset = 0, size = 16) {
+    const halfSize = size / 2;
+    
+    switch (edge) {
+      case 'top':
+        return { 
+          top: rect.top - halfSize - offset, 
+          left: rect.left + rect.width / 2 - halfSize 
+        };
+      case 'bottom':
+        return { 
+          top: rect.bottom - halfSize + offset, 
+          left: rect.left + rect.width / 2 - halfSize 
+        };
+      case 'left':
+        return { 
+          top: rect.top + rect.height / 2 - halfSize, 
+          left: rect.left - halfSize - offset 
+        };
+      case 'right':
+      default:
+        return { 
+          top: rect.top + rect.height / 2 - halfSize, 
+          left: rect.right - halfSize + offset 
+        };
+    }
   }
 
   function showTooltipCard(tooltip, element) {
@@ -316,15 +332,26 @@
     
     const rect = element.getBoundingClientRect();
     
+    // Get styling values with defaults
+    const cardWidth = tooltip.card_width || 320;
+    const cardPadding = tooltip.card_padding || 20;
+    const cardBorderRadius = tooltip.card_border_radius || 12;
+    const cardShadow = tooltip.card_shadow || '0 4px 20px rgba(0,0,0,0.15)';
+    const cardBgColor = tooltip.card_bg_color || '#ffffff';
+    const cardTextColor = tooltip.card_text_color || '#1f2937';
+    const buttonColor = tooltip.button_color || '#3b82f6';
+    const buttonTextColor = tooltip.button_text_color || '#ffffff';
+    const buttonBorderRadius = tooltip.button_border_radius || 8;
+    
     const card = document.createElement('div');
     card.className = 'tl-card';
     card.dataset.tooltipId = tooltip.id;
     card.style.cssText = `
       position: fixed;
-      width: ${tooltip.card_width || 320}px;
-      background: ${tooltip.card_bg_color || '#ffffff'};
-      border-radius: 12px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+      width: ${cardWidth}px;
+      background: ${cardBgColor};
+      border-radius: ${cardBorderRadius}px;
+      box-shadow: ${cardShadow};
       z-index: ${(tooltip.z_index || 2147483647) + 1};
       overflow: hidden;
       text-align: ${tooltip.text_align || 'left'};
@@ -333,20 +360,17 @@
     
     card.innerHTML = `
       <button class="tl-card-close" data-action="close">&times;</button>
-      ${tooltip.image_url ? `<img src="${escapeHtml(tooltip.image_url)}" class="tl-card-image" alt="">` : ''}
-      <div class="tl-card-content" style="color: ${tooltip.card_text_color || '#1f2937'}">
+      ${tooltip.image_url ? `<img src="${escapeHtml(tooltip.image_url)}" class="tl-card-image" style="border-radius: ${Math.max(0, cardBorderRadius - 4)}px ${Math.max(0, cardBorderRadius - 4)}px 0 0;" alt="">` : ''}
+      <div class="tl-card-content" style="color: ${cardTextColor}; padding: ${cardPadding}px;">
         <h3 class="tl-card-title">${escapeHtml(tooltip.title)}</h3>
         ${tooltip.body ? `<p class="tl-card-body">${escapeHtml(tooltip.body)}</p>` : ''}
-      </div>
-      <div class="tl-card-footer">
-        <button class="tl-card-btn" style="background: ${tooltip.button_color || '#3b82f6'}" data-action="dismiss">
+        <button class="tl-card-btn" style="background: ${buttonColor}; color: ${buttonTextColor}; border-radius: ${buttonBorderRadius}px; margin-top: 12px; padding: 10px 20px; border: none; cursor: pointer; font-weight: 500; width: ${tooltip.text_align === 'center' ? '100%' : 'auto'};" data-action="dismiss">
           ${escapeHtml(tooltip.button_text || 'Got it')}
         </button>
       </div>
     `;
     
-    // Position card
-    const cardWidth = tooltip.card_width || 320;
+    // Position card below element
     let top = rect.bottom + 16;
     let left = rect.left + rect.width / 2 - cardWidth / 2;
     left = Math.max(16, Math.min(left, window.innerWidth - cardWidth - 16));

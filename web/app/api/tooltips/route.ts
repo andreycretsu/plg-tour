@@ -82,21 +82,30 @@ export async function POST(request: NextRequest) {
       selector,
       triggerType = 'click',
       dismissType = 'button',
+      // Beacon settings
       iconType = 'pulse',
-      iconPosition = 'right',
-      iconPadding = 12,
+      iconEdge = 'right',
+      iconOffset = 0,
       iconSize = 'medium',
       iconColor = '#3b82f6',
-      iconBgColor = '#ffffff',
+      // Card content
       title,
       body: tooltipBody,
       imageUrl,
+      // Card styling
       cardWidth = 320,
+      cardPadding = 20,
+      cardBorderRadius = 12,
+      cardShadow = '0 4px 20px rgba(0,0,0,0.15)',
       textAlign = 'left',
       cardTextColor = '#1f2937',
       cardBgColor = '#ffffff',
+      // Button styling
       buttonText = 'Got it',
       buttonColor = '#3b82f6',
+      buttonTextColor = '#ffffff',
+      buttonBorderRadius = 8,
+      // Advanced
       zIndex = 2147483647,
       showOnce = true,
       delayMs = 0,
@@ -114,17 +123,21 @@ export async function POST(request: NextRequest) {
       `INSERT INTO tooltips (
         workspace_id, user_id, name, url_pattern, selector,
         trigger_type, dismiss_type,
-        icon_type, icon_position, icon_padding, icon_size, icon_color, icon_bg_color,
-        title, body, image_url, card_width, text_align, card_text_color, card_bg_color,
-        button_text, button_color, z_index, show_once, delay_ms
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
+        icon_type, icon_edge, icon_offset, icon_size, icon_color,
+        title, body, image_url,
+        card_width, card_padding, card_border_radius, card_shadow, text_align, card_text_color, card_bg_color,
+        button_text, button_color, button_text_color, button_border_radius,
+        z_index, show_once, delay_ms
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29)
       RETURNING *`,
       [
         workspaceId, payload.userId, name, urlPattern, selector,
         triggerType, dismissType,
-        iconType, iconPosition, iconPadding, iconSize, iconColor, iconBgColor,
-        title, tooltipBody, imageUrl, cardWidth, textAlign, cardTextColor, cardBgColor,
-        buttonText, buttonColor, zIndex, showOnce, delayMs
+        iconType, iconEdge, iconOffset, iconSize, iconColor,
+        title, tooltipBody, imageUrl,
+        cardWidth, cardPadding, cardBorderRadius, cardShadow, textAlign, cardTextColor, cardBgColor,
+        buttonText, buttonColor, buttonTextColor, buttonBorderRadius,
+        zIndex, showOnce, delayMs
       ]
     );
 
@@ -134,4 +147,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

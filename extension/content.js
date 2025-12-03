@@ -206,12 +206,12 @@
     setTimeout(() => {
       const rect = element.getBoundingClientRect();
       
-      // Calculate beacon position
-      const beaconPos = getBeaconPosition(rect, tooltip.icon_position, tooltip.icon_padding);
-      
       // Get size based on icon_size
       const sizes = { small: 12, medium: 16, large: 24 };
       const size = sizes[tooltip.icon_size] || 16;
+      
+      // Calculate beacon position using edge + offset
+      const beaconPos = getBeaconPositionEdge(rect, tooltip.icon_edge || 'right', tooltip.icon_offset || 0, size);
       
       // Create beacon element
       const beacon = document.createElement('div');
@@ -237,7 +237,6 @@
           background: ${tooltip.icon_color || '#3b82f6'};
           border-radius: 50%;
           ${tooltip.icon_type === 'pulse' ? `animation: tourlayer-pulse 2s infinite;` : ''}
-          ${tooltip.icon_bg_color ? `box-shadow: 0 0 0 4px ${tooltip.icon_bg_color};` : ''}
         `;
         beacon.appendChild(dot);
       }
@@ -280,9 +279,10 @@
       tooltipContainer.appendChild(beacon);
       
       // Update position on scroll/resize
+      const sizes = { small: 12, medium: 16, large: 24 };
       const updatePosition = () => {
         const newRect = element.getBoundingClientRect();
-        const newPos = getBeaconPosition(newRect, tooltip.icon_position, tooltip.icon_padding);
+        const newPos = getBeaconPositionEdge(newRect, tooltip.icon_edge || 'right', tooltip.icon_offset || 0, sizes[tooltip.icon_size] || 16);
         beacon.style.top = `${newPos.top}px`;
         beacon.style.left = `${newPos.left}px`;
       };
@@ -293,19 +293,34 @@
     }, delay);
   }
 
-  function getBeaconPosition(rect, position, padding = 12) {
-    const p = padding;
-    const positions = {
-      'top-left': { top: rect.top - p, left: rect.left - p },
-      'top': { top: rect.top - p, left: rect.left + rect.width / 2 },
-      'top-right': { top: rect.top - p, left: rect.right + p },
-      'right': { top: rect.top + rect.height / 2, left: rect.right + p },
-      'bottom-right': { top: rect.bottom + p, left: rect.right + p },
-      'bottom': { top: rect.bottom + p, left: rect.left + rect.width / 2 },
-      'bottom-left': { top: rect.bottom + p, left: rect.left - p },
-      'left': { top: rect.top + rect.height / 2, left: rect.left - p },
-    };
-    return positions[position] || positions['right'];
+  // New edge-based positioning: beacon is positioned on the edge with offset
+  // offset: 0 = right on edge, positive = outside, negative = inside
+  function getBeaconPositionEdge(rect, edge, offset = 0, size = 16) {
+    const halfSize = size / 2;
+    
+    switch (edge) {
+      case 'top':
+        return { 
+          top: rect.top - halfSize - offset, 
+          left: rect.left + rect.width / 2 - halfSize 
+        };
+      case 'bottom':
+        return { 
+          top: rect.bottom - halfSize + offset, 
+          left: rect.left + rect.width / 2 - halfSize 
+        };
+      case 'left':
+        return { 
+          top: rect.top + rect.height / 2 - halfSize, 
+          left: rect.left - halfSize - offset 
+        };
+      case 'right':
+      default:
+        return { 
+          top: rect.top + rect.height / 2 - halfSize, 
+          left: rect.right - halfSize + offset 
+        };
+    }
   }
 
   function showTooltipCard(tooltip, element) {
@@ -315,16 +330,27 @@
     openTooltipId = tooltip.id;
     const rect = element.getBoundingClientRect();
     
+    // Get styling values with defaults
+    const cardWidth = tooltip.card_width || 320;
+    const cardPadding = tooltip.card_padding || 20;
+    const cardBorderRadius = tooltip.card_border_radius || 12;
+    const cardShadow = tooltip.card_shadow || '0 4px 20px rgba(0,0,0,0.15)';
+    const cardBgColor = tooltip.card_bg_color || '#ffffff';
+    const cardTextColor = tooltip.card_text_color || '#1f2937';
+    const buttonColor = tooltip.button_color || '#3b82f6';
+    const buttonTextColor = tooltip.button_text_color || '#ffffff';
+    const buttonBorderRadius = tooltip.button_border_radius || 8;
+    
     // Create card
     const card = document.createElement('div');
     card.className = 'tourlayer-card';
     card.dataset.tooltipId = tooltip.id;
     card.style.cssText = `
       position: fixed;
-      width: ${tooltip.card_width || 320}px;
-      background: ${tooltip.card_bg_color || '#ffffff'};
-      border-radius: 12px;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+      width: ${cardWidth}px;
+      background: ${cardBgColor};
+      border-radius: ${cardBorderRadius}px;
+      box-shadow: ${cardShadow};
       z-index: ${(tooltip.z_index || 2147483647) + 1};
       overflow: hidden;
       text-align: ${tooltip.text_align || 'left'};
@@ -332,13 +358,11 @@
     
     card.innerHTML = `
       <button class="tourlayer-card-close" data-action="close">&times;</button>
-      ${tooltip.image_url ? `<img src="${escapeHtml(tooltip.image_url)}" class="tourlayer-card-image" alt="">` : ''}
-      <div class="tourlayer-card-content" style="color: ${tooltip.card_text_color || '#1f2937'}">
+      ${tooltip.image_url ? `<img src="${escapeHtml(tooltip.image_url)}" class="tourlayer-card-image" style="border-radius: ${Math.max(0, cardBorderRadius - 4)}px ${Math.max(0, cardBorderRadius - 4)}px 0 0;" alt="">` : ''}
+      <div class="tourlayer-card-content" style="color: ${cardTextColor}; padding: ${cardPadding}px;">
         <h3 class="tourlayer-card-title">${escapeHtml(tooltip.title)}</h3>
         ${tooltip.body ? `<p class="tourlayer-card-body">${escapeHtml(tooltip.body)}</p>` : ''}
-      </div>
-      <div class="tourlayer-card-footer">
-        <button class="tourlayer-card-btn" style="background: ${tooltip.button_color || '#3b82f6'}" data-action="dismiss">
+        <button class="tourlayer-card-btn" style="background: ${buttonColor}; color: ${buttonTextColor}; border-radius: ${buttonBorderRadius}px; margin-top: 12px; padding: 10px 20px; border: none; cursor: pointer; font-weight: 500; width: ${tooltip.text_align === 'center' ? '100%' : 'auto'};" data-action="dismiss">
           ${escapeHtml(tooltip.button_text || 'Got it')}
         </button>
       </div>
