@@ -19,11 +19,35 @@ interface Step {
   zIndex: number;
 }
 
+interface TourStyling {
+  cardBgColor: string;
+  cardTextColor: string;
+  cardBorderRadius: number;
+  cardPadding: number;
+  cardShadow: string;
+  buttonColor: string;
+  buttonTextColor: string;
+  buttonBorderRadius: number;
+}
+
+const defaultStyling: TourStyling = {
+  cardBgColor: '#ffffff',
+  cardTextColor: '#1f2937',
+  cardBorderRadius: 12,
+  cardPadding: 20,
+  cardShadow: 'medium',
+  buttonColor: '#3b82f6',
+  buttonTextColor: '#ffffff',
+  buttonBorderRadius: 8,
+};
+
 export default function NewTourPage() {
   const router = useRouter();
   const [tourName, setTourName] = useState('New Product Tour');
   const [urlPattern, setUrlPattern] = useState('');
   const [steps, setSteps] = useState<Step[]>([]);
+  const [styling, setStyling] = useState<TourStyling>(defaultStyling);
+  const [showStyling, setShowStyling] = useState(false);
   const [loading, setLoading] = useState(false);
   const [extensionInstalled, setExtensionInstalled] = useState(false);
   const [pickingForStep, setPickingForStep] = useState<string | null>(null);
@@ -106,6 +130,17 @@ export default function NewTourPage() {
     }
   };
 
+  const getShadowValue = (shadow: string) => {
+    const shadows: Record<string, string> = {
+      'none': 'none',
+      'small': '0 2px 8px rgba(0,0,0,0.1)',
+      'medium': '0 4px 20px rgba(0,0,0,0.15)',
+      'large': '0 8px 30px rgba(0,0,0,0.2)',
+      'extra': '0 12px 40px rgba(0,0,0,0.25)',
+    };
+    return shadows[shadow] || shadows.medium;
+  };
+
   const startPicker = (stepId: string) => {
     if (!extensionInstalled) {
       alert('Please install the TourLayer Chrome extension first!');
@@ -162,6 +197,15 @@ export default function NewTourPage() {
         body: JSON.stringify({
           name: tourName,
           urlPattern: urlPattern,
+          // Tour-level styling
+          cardBgColor: styling.cardBgColor,
+          cardTextColor: styling.cardTextColor,
+          cardBorderRadius: styling.cardBorderRadius,
+          cardPadding: styling.cardPadding,
+          cardShadow: getShadowValue(styling.cardShadow),
+          buttonColor: styling.buttonColor,
+          buttonTextColor: styling.buttonTextColor,
+          buttonBorderRadius: styling.buttonBorderRadius,
           steps: steps.map((step, index) => ({
             stepOrder: index,
             selector: step.selector,
@@ -279,6 +323,183 @@ export default function NewTourPage() {
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* Card Styling (Collapsible) */}
+          <div className="card p-6 mb-6">
+            <button
+              onClick={() => setShowStyling(!showStyling)}
+              className="w-full flex items-center justify-between text-left"
+            >
+              <h2 className="text-xl font-semibold text-gray-900">Card Styling</h2>
+              <span className={`transform transition-transform ${showStyling ? 'rotate-180' : ''}`}>
+                ▼
+              </span>
+            </button>
+            
+            {showStyling && (
+              <div className="mt-4 space-y-4">
+                <p className="text-sm text-gray-500">Customize how tour cards appear to users</p>
+                
+                {/* Card Appearance */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="label text-xs">Background Color</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="color"
+                        value={styling.cardBgColor}
+                        onChange={(e) => setStyling({...styling, cardBgColor: e.target.value})}
+                        className="w-10 h-9 rounded border border-gray-300 cursor-pointer"
+                      />
+                      <input
+                        type="text"
+                        className="input text-sm flex-1"
+                        value={styling.cardBgColor}
+                        onChange={(e) => setStyling({...styling, cardBgColor: e.target.value})}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="label text-xs">Text Color</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="color"
+                        value={styling.cardTextColor}
+                        onChange={(e) => setStyling({...styling, cardTextColor: e.target.value})}
+                        className="w-10 h-9 rounded border border-gray-300 cursor-pointer"
+                      />
+                      <input
+                        type="text"
+                        className="input text-sm flex-1"
+                        value={styling.cardTextColor}
+                        onChange={(e) => setStyling({...styling, cardTextColor: e.target.value})}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="label text-xs">Shadow</label>
+                    <select
+                      className="input text-sm"
+                      value={styling.cardShadow}
+                      onChange={(e) => setStyling({...styling, cardShadow: e.target.value})}
+                    >
+                      <option value="none">None</option>
+                      <option value="small">Small</option>
+                      <option value="medium">Medium</option>
+                      <option value="large">Large</option>
+                      <option value="extra">Extra Large</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="label text-xs">Corner Radius (px)</label>
+                    <input
+                      type="number"
+                      className="input text-sm"
+                      value={styling.cardBorderRadius}
+                      onChange={(e) => setStyling({...styling, cardBorderRadius: parseInt(e.target.value) || 12})}
+                    />
+                  </div>
+                  <div>
+                    <label className="label text-xs">Padding (px)</label>
+                    <input
+                      type="number"
+                      className="input text-sm"
+                      value={styling.cardPadding}
+                      onChange={(e) => setStyling({...styling, cardPadding: parseInt(e.target.value) || 20})}
+                    />
+                  </div>
+                </div>
+
+                {/* Button Styling */}
+                <div className="pt-3 border-t border-gray-200">
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">Button Styling</h3>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="label text-xs">Button Background</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="color"
+                          value={styling.buttonColor}
+                          onChange={(e) => setStyling({...styling, buttonColor: e.target.value})}
+                          className="w-10 h-9 rounded border border-gray-300 cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          className="input text-sm flex-1"
+                          value={styling.buttonColor}
+                          onChange={(e) => setStyling({...styling, buttonColor: e.target.value})}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="label text-xs">Button Text Color</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="color"
+                          value={styling.buttonTextColor}
+                          onChange={(e) => setStyling({...styling, buttonTextColor: e.target.value})}
+                          className="w-10 h-9 rounded border border-gray-300 cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          className="input text-sm flex-1"
+                          value={styling.buttonTextColor}
+                          onChange={(e) => setStyling({...styling, buttonTextColor: e.target.value})}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="label text-xs">Button Radius (px)</label>
+                      <input
+                        type="number"
+                        className="input text-sm"
+                        value={styling.buttonBorderRadius}
+                        onChange={(e) => setStyling({...styling, buttonBorderRadius: parseInt(e.target.value) || 8})}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Preview */}
+                <div className="pt-3 border-t border-gray-200">
+                  <p className="text-xs text-gray-500 mb-2">Preview</p>
+                  <div 
+                    className="p-4 rounded-lg inline-block"
+                    style={{
+                      backgroundColor: styling.cardBgColor,
+                      color: styling.cardTextColor,
+                      borderRadius: styling.cardBorderRadius,
+                      padding: styling.cardPadding,
+                      boxShadow: getShadowValue(styling.cardShadow),
+                    }}
+                  >
+                    <h4 className="font-semibold mb-1">Sample Title</h4>
+                    <p className="text-sm opacity-80 mb-3">This is how your tour card will look.</p>
+                    <button
+                      style={{
+                        backgroundColor: styling.buttonColor,
+                        color: styling.buttonTextColor,
+                        borderRadius: styling.buttonBorderRadius,
+                        padding: '8px 16px',
+                        border: 'none',
+                        fontWeight: 500,
+                        fontSize: '14px',
+                      }}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Steps */}
