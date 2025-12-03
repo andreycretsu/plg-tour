@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, Trash2, GripVertical, Save, Crosshair, AlertCircle, CheckCircle, ArrowLeft, Loader2 } from 'lucide-react';
+import ImageUpload from '@/components/ImageUpload';
 
 interface Step {
   id: string;
@@ -477,27 +478,23 @@ export default function EditTourPage() {
                         />
                       </div>
 
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="label text-xs">Image URL (Optional)</label>
-                          <input
-                            type="text"
-                            className="input text-sm"
-                            value={step.imageUrl}
-                            onChange={(e) => updateStep(step.id, 'imageUrl', e.target.value)}
-                            placeholder="https://..."
-                          />
-                        </div>
-                        <div>
-                          <label className="label text-xs">Button Text</label>
-                          <input
-                            type="text"
-                            className="input text-sm"
-                            value={step.buttonText}
-                            onChange={(e) => updateStep(step.id, 'buttonText', e.target.value)}
-                            placeholder="Next"
-                          />
-                        </div>
+                      <div>
+                        <label className="label text-xs">Image (Optional)</label>
+                        <ImageUpload
+                          value={step.imageUrl}
+                          onChange={(url) => updateStep(step.id, 'imageUrl', url)}
+                        />
+                      </div>
+
+                      <div className="w-1/2">
+                        <label className="label text-xs">Button Text</label>
+                        <input
+                          type="text"
+                          className="input text-sm"
+                          value={step.buttonText}
+                          onChange={(e) => updateStep(step.id, 'buttonText', e.target.value)}
+                          placeholder="Next"
+                        />
                       </div>
 
                       <div className="flex items-center gap-2">
