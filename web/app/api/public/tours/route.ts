@@ -18,23 +18,21 @@ export async function OPTIONS() {
 
 // Helper to check if URL matches pattern (supports * wildcards)
 function urlMatchesPattern(url: string, pattern: string): boolean {
-  // Normalize URLs - remove trailing slashes for comparison
-  const normalizeUrl = (u: string) => u.replace(/\/+$/, '');
-  const normalizedUrl = normalizeUrl(url);
-  const normalizedPattern = normalizeUrl(pattern);
+  // Normalize both URLs - remove trailing slashes and protocol variations
+  const normalize = (u: string) => u.replace(/\/+$/, '').toLowerCase();
+  const normalizedUrl = normalize(url);
+  const normalizedPattern = normalize(pattern);
   
-  // Convert wildcard pattern to regex
-  const regexPattern = normalizedPattern
-    .replace(/[.+?^${}()|[\]\\]/g, '\\$&') // Escape special regex chars except *
-    .replace(/\*/g, '.*'); // Convert * to .*
-  
-  try {
-    // Match with optional trailing slash
-    const regex = new RegExp(`^${regexPattern}\\/?.*$`, 'i');
-    return regex.test(normalizedUrl);
-  } catch {
-    return false;
+  // If pattern ends with *, it's a prefix match
+  if (normalizedPattern.endsWith('*')) {
+    const prefix = normalizedPattern.slice(0, -1); // Remove the *
+    return normalizedUrl.startsWith(prefix) || normalizedUrl + '/' === prefix;
   }
+  
+  // Otherwise, do exact match (with optional trailing slash)
+  return normalizedUrl === normalizedPattern || 
+         normalizedUrl === normalizedPattern + '/' ||
+         normalizedUrl + '/' === normalizedPattern;
 }
 
 // PUBLIC ENDPOINT: GET tours by API token (for extension)
