@@ -54,6 +54,16 @@
     tooltips: {}
   };
 
+  // Detect browser language
+  function getBrowserLanguage() {
+    const lang = navigator.language || navigator.userLanguage || 'en';
+    // Extract just the language code (e.g., 'en-US' -> 'en')
+    const code = lang.split('-')[0].toLowerCase();
+    // Map to supported languages
+    const supported = ['en', 'uk', 'pl', 'es', 'pt', 'de', 'ru', 'fr', 'it', 'ja', 'zh'];
+    return supported.includes(code) ? code : 'en';
+  }
+
   // Get API token and user config
   function getConfig() {
     let token = null;
@@ -255,9 +265,10 @@
   async function fetchAndShowTours() {
     try {
       const currentUrl = window.location.href;
+      const lang = getBrowserLanguage();
       
       const response = await fetch(
-        `${API_URL}/api/public/tours?url=${encodeURIComponent(currentUrl)}`,
+        `${API_URL}/api/public/tours?url=${encodeURIComponent(currentUrl)}&lang=${lang}`,
         {
           headers: {
             'Authorization': `Bearer ${apiToken}`,
@@ -305,9 +316,10 @@
   async function fetchAndShowTooltips() {
     try {
       const currentUrl = window.location.href;
+      const lang = getBrowserLanguage();
       
       const response = await fetch(
-        `${API_URL}/api/public/tooltips?url=${encodeURIComponent(currentUrl)}`,
+        `${API_URL}/api/public/tooltips?url=${encodeURIComponent(currentUrl)}&lang=${lang}`,
         {
           headers: {
             'Authorization': `Bearer ${apiToken}`,

@@ -88,6 +88,7 @@ export async function GET(request: NextRequest) {
     }
 
     const url = request.nextUrl.searchParams.get('url');
+    const lang = request.nextUrl.searchParams.get('lang') || 'en';
 
     // Get active tours - prefer workspace_id, fallback to user_id
     let toursResult;
@@ -128,6 +129,37 @@ export async function GET(request: NextRequest) {
         [tour.id]
       );
       tour.steps = stepsResult.rows;
+
+      // Apply translations for steps if language is not English
+      if (lang && lang !== 'en' && tour.steps.length > 0) {
+        const stepIds = tour.steps.map((s: any) => s.id);
+        const translationsResult = await query(
+          `SELECT content_id, title, body, button_text 
+           FROM translations 
+           WHERE content_type = 'tour_step' 
+           AND content_id = ANY($1) 
+           AND language_code = $2`,
+          [stepIds, lang]
+        );
+
+        const translationsMap = new Map();
+        translationsResult.rows.forEach(t => {
+          translationsMap.set(t.content_id, t);
+        });
+
+        tour.steps = tour.steps.map((step: any) => {
+          const translation = translationsMap.get(step.id);
+          if (translation) {
+            return {
+              ...step,
+              title: translation.title || step.title,
+              content: translation.body || step.content,
+              button_text: translation.button_text || step.button_text,
+            };
+          }
+          return step;
+        });
+      }
     }
 
     return NextResponse.json({ tours }, { headers: corsHeaders });

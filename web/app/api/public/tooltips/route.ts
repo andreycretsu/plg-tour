@@ -80,6 +80,7 @@ export async function GET(request: NextRequest) {
     }
 
     const url = request.nextUrl.searchParams.get('url');
+    const lang = request.nextUrl.searchParams.get('lang') || 'en';
 
     // Get active tooltips
     let tooltipsResult;
@@ -102,6 +103,39 @@ export async function GET(request: NextRequest) {
     // Filter by URL pattern if URL provided
     if (url) {
       tooltips = tooltips.filter(tooltip => urlMatchesPattern(url, tooltip.url_pattern));
+    }
+
+    // Apply translations if language is not the source language
+    if (lang && lang !== 'en') {
+      const tooltipIds = tooltips.map(t => t.id);
+      if (tooltipIds.length > 0) {
+        const translationsResult = await query(
+          `SELECT content_id, title, body, button_text 
+           FROM translations 
+           WHERE content_type = 'tooltip' 
+           AND content_id = ANY($1) 
+           AND language_code = $2`,
+          [tooltipIds, lang]
+        );
+
+        const translationsMap = new Map();
+        translationsResult.rows.forEach(t => {
+          translationsMap.set(t.content_id, t);
+        });
+
+        tooltips = tooltips.map(tooltip => {
+          const translation = translationsMap.get(tooltip.id);
+          if (translation) {
+            return {
+              ...tooltip,
+              title: translation.title || tooltip.title,
+              body: translation.body || tooltip.body,
+              button_text: translation.button_text || tooltip.button_text,
+            };
+          }
+          return tooltip;
+        });
+      }
     }
 
     return NextResponse.json({ tooltips }, { headers: corsHeaders });
