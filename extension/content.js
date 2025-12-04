@@ -26,7 +26,8 @@
   let userConfig = {
     userId: null,
     userEmail: null,
-    userName: null
+    userName: null,
+    userLocale: null
   };
   
   // Cache for server-side view data
@@ -35,14 +36,42 @@
     tooltips: {}
   };
   
+  // Get user's language (userLocale config > browser detection > English default)
+  function getUserLanguage() {
+    const supported = ['en', 'uk', 'pl', 'es', 'pt', 'de', 'ru', 'fr', 'it', 'ja', 'zh', 'hu', 'sk'];
+    
+    // 1. Check if userLocale is explicitly set in config
+    if (userConfig.userLocale) {
+      // Handle both formats: 'de' and 'de-DE'
+      const locale = userConfig.userLocale.split('-')[0].toLowerCase();
+      if (supported.includes(locale)) {
+        console.log('TourLayer Extension: Using configured locale:', locale);
+        return locale;
+      }
+    }
+    
+    // 2. Fall back to browser language detection
+    const browserLang = navigator.language || navigator.userLanguage || 'en';
+    const code = browserLang.split('-')[0].toLowerCase();
+    
+    // 3. Return supported language or default to English
+    const finalLang = supported.includes(code) ? code : 'en';
+    console.log('TourLayer Extension: Detected language:', finalLang, '(from:', browserLang, ')');
+    return finalLang;
+  }
+  
   // Get user config from page (if set by website)
   function getUserConfig() {
     if (window.TourLayerConfig) {
       userConfig.userId = window.TourLayerConfig.userId || null;
       userConfig.userEmail = window.TourLayerConfig.userEmail || null;
       userConfig.userName = window.TourLayerConfig.userName || null;
+      userConfig.userLocale = window.TourLayerConfig.userLocale || null;
       if (userConfig.userId) {
         console.log('TourLayer Extension: User identified from TourLayerConfig:', userConfig.userId);
+      }
+      if (userConfig.userLocale) {
+        console.log('TourLayer Extension: Locale from TourLayerConfig:', userConfig.userLocale);
       }
     }
   }
@@ -206,8 +235,9 @@
   async function fetchAndShowTours(apiToken) {
     try {
       const currentUrl = window.location.href;
+      const lang = getUserLanguage();
       const response = await fetch(
-        `${API_URL}/api/public/tours?url=${encodeURIComponent(currentUrl)}`,
+        `${API_URL}/api/public/tours?url=${encodeURIComponent(currentUrl)}&lang=${lang}`,
         {
           headers: {
             'Authorization': `Bearer ${apiToken}`,
@@ -277,8 +307,9 @@
   async function fetchAndShowTooltips(apiToken) {
     try {
       const currentUrl = window.location.href;
+      const lang = getUserLanguage();
       const response = await fetch(
-        `${API_URL}/api/public/tooltips?url=${encodeURIComponent(currentUrl)}`,
+        `${API_URL}/api/public/tooltips?url=${encodeURIComponent(currentUrl)}&lang=${lang}`,
         {
           headers: {
             'Authorization': `Bearer ${apiToken}`,
