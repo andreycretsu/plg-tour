@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Stepper, StepContent } from '@/components/ui/stepper';
 import { VariableInput, VariableTextarea } from '@/components/ui/variable-input';
+import { StatusBadge } from '@/components/ui/status-badge';
 
 // Define wizard steps
 const WIZARD_STEPS = [
@@ -631,6 +632,11 @@ export default function EditTooltipPage() {
   return (
     <FullScreenModal
       title="Edit Tooltip"
+      headerExtra={
+        <StatusBadge variant={extensionInstalled ? 'success' : 'fail'}>
+          {extensionInstalled ? 'Extension ready' : 'Extension not connected'}
+        </StatusBadge>
+      }
       onClose={() => router.push('/tooltips')}
       actions={
         <div className="flex items-center gap-2">
@@ -671,22 +677,6 @@ export default function EditTooltipPage() {
       <div className="flex h-full">
         {/* Left Sidebar - Stepper */}
         <div className="w-52 border-r border-gray-200 bg-gray-50/50 p-4 overflow-y-auto shrink-0">
-          {/* Extension Status */}
-          <div className={`mb-4 p-2 rounded-lg flex items-center gap-2 ${
-            extensionInstalled 
-              ? 'bg-green-50 border border-green-200' 
-              : 'bg-yellow-50 border border-yellow-200'
-          }`}>
-            {extensionInstalled ? (
-              <CheckCircle className="text-green-600 shrink-0" size={14} />
-            ) : (
-              <AlertCircle className="text-yellow-600 shrink-0" size={14} />
-            )}
-            <p className={`text-xs ${extensionInstalled ? 'text-green-700' : 'text-yellow-700'}`}>
-              {extensionInstalled ? 'Extension ready' : 'Install extension'}
-            </p>
-          </div>
-
           {/* Vertical Stepper */}
           <Stepper
             steps={WIZARD_STEPS}
