@@ -127,13 +127,12 @@ export default function TooltipsPage() {
               Single-step hints with pulsating beacons
             </p>
           </div>
-          <Link
-            href="/tooltips/new"
-            className="btn btn-primary flex items-center gap-2"
-          >
-            <Plus size={18} />
-            New Tooltip
-          </Link>
+          <Button asChild>
+            <Link href="/tooltips/new">
+              <Plus size={18} />
+              New Tooltip
+            </Link>
+          </Button>
         </div>
 
         {/* Info Banner */}

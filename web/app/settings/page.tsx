@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Copy, Check, RefreshCw, Code, Chrome, Building2, Users, UserPlus, Trash2, Crown, Shield, User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface WorkspaceMember {
   id: number;
@@ -241,9 +242,10 @@ export default function SettingsPage() {
                       <label className="label mb-0">With User Tracking</label>
                       <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full">Recommended</span>
                     </div>
-                    <button
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => copyToClipboard(getEmbedSnippet(true), 'snippet-user')}
-                      className="btn btn-secondary btn-sm flex items-center gap-2"
                     >
                       {copied === 'snippet-user' ? (
                         <>
@@ -256,7 +258,7 @@ export default function SettingsPage() {
                           Copy Code
                         </>
                       )}
-                    </button>
+                    </Button>
                   </div>
                   <div className="bg-slate-900 rounded-lg p-4 overflow-x-auto">
                     <pre className="text-sm text-green-400 font-mono whitespace-pre-wrap">
@@ -274,9 +276,10 @@ export default function SettingsPage() {
                     <div className="flex items-center gap-2">
                       <label className="label mb-0">Basic (Anonymous)</label>
                     </div>
-                    <button
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => copyToClipboard(getEmbedSnippet(false), 'snippet-basic')}
-                      className="btn btn-secondary btn-sm flex items-center gap-2"
                     >
                       {copied === 'snippet-basic' ? (
                         <>
@@ -289,7 +292,7 @@ export default function SettingsPage() {
                           Copy Code
                         </>
                       )}
-                    </button>
+                    </Button>
                   </div>
                   <div className="bg-slate-900 rounded-lg p-4 overflow-x-auto">
                     <pre className="text-sm text-green-400 font-mono whitespace-pre-wrap">
@@ -328,9 +331,10 @@ export default function SettingsPage() {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <label className="label mb-0">Workspace API Token</label>
-                    <button
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => copyToClipboard(workspace?.apiToken || user.apiToken, 'token')}
-                      className="btn btn-secondary btn-sm flex items-center gap-2"
                     >
                       {copied === 'token' ? (
                         <>
@@ -343,7 +347,7 @@ export default function SettingsPage() {
                           Copy Token
                         </>
                       )}
-                    </button>
+                    </Button>
                   </div>
                   <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                     <code className="text-sm font-mono text-gray-900 break-all">
@@ -453,13 +457,12 @@ export default function SettingsPage() {
                       <option value="member">Member</option>
                       <option value="admin">Admin</option>
                     </select>
-                    <button
+                    <Button
                       type="submit"
-                      className="btn btn-primary"
                       disabled={inviting}
                     >
                       {inviting ? 'Sending...' : 'Invite'}
-                    </button>
+                    </Button>
                   </div>
                 </form>
               )}

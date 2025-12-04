@@ -109,10 +109,12 @@ export default function ToursPage() {
             <h1 className="text-3xl font-bold text-gray-900">Tours</h1>
             <p className="text-gray-600 mt-2">Manage your product tours</p>
           </div>
-          <Link href="/tours/new" className="btn btn-primary flex items-center gap-2">
-            <Plus size={20} />
-            Create Tour
-          </Link>
+          <Button asChild>
+            <Link href="/tours/new">
+              <Plus size={20} />
+              Create Tour
+            </Link>
+          </Button>
         </div>
 
         {/* Search */}

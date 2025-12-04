@@ -10,6 +10,7 @@ import { Save, Crosshair, AlertCircle, CheckCircle, MousePointer, Hand, Trash2, 
 
 // Shadcn UI components
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Field, FieldLabel, FieldGroup, FieldDescription } from '@/components/ui/field';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
@@ -579,30 +580,30 @@ export default function EditTooltipPage() {
       onClose={() => router.push('/tooltips')}
       actions={
         <div className="flex items-center gap-2">
-          <button
+          <Button
+            variant="outline"
             onClick={duplicateTooltip}
             disabled={duplicating}
-            className="btn btn-secondary flex items-center gap-2"
           >
             <Copy size={16} />
             {duplicating ? 'Duplicating...' : 'Duplicate'}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
             onClick={deleteTooltip}
             disabled={deleting}
-            className="btn btn-secondary text-red-600 hover:bg-red-50 flex items-center gap-2"
+            className="text-red-600 hover:bg-red-50"
           >
             <Trash2 size={16} />
             {deleting ? 'Deleting...' : 'Delete'}
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={saveTooltip}
             disabled={saving}
-            className="btn-primary flex items-center gap-2"
           >
             <Save size={18} />
             {saving ? 'Saving...' : 'Save Changes'}
-          </button>
+          </Button>
         </div>
       }
     >
@@ -741,11 +742,11 @@ export default function EditTooltipPage() {
                     <Languages size={20} className="text-blue-600" />
                     <h2 className="text-base font-semibold text-gray-900">Translations</h2>
                   </div>
-                  <button
-                    type="button"
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={handleAutoTranslate}
                     disabled={translating || !title}
-                    className="btn btn-secondary btn-sm flex items-center gap-2"
                   >
                     {translating ? (
                       <>
@@ -758,7 +759,7 @@ export default function EditTooltipPage() {
                         Auto-translate All
                       </>
                     )}
-                  </button>
+                  </Button>
                 </div>
                 
                 <p className="text-sm text-gray-500 mb-4">
@@ -841,8 +842,9 @@ export default function EditTooltipPage() {
                               defaultValue={translations[lang.code]?.buttonText || ''}
                               id={`trans-btn-${lang.code}`}
                             />
-                            <button
-                              type="button"
+                            <Button
+                              size="sm"
+                              className="w-full"
                               onClick={() => {
                                 const titleEl = document.getElementById(`trans-title-${lang.code}`) as HTMLInputElement;
                                 const bodyEl = document.getElementById(`trans-body-${lang.code}`) as HTMLTextAreaElement;
@@ -853,10 +855,9 @@ export default function EditTooltipPage() {
                                   buttonText: btnEl?.value || ''
                                 });
                               }}
-                              className="btn btn-primary btn-sm w-full"
                             >
                               Save
-                            </button>
+                            </Button>
                           </div>
                         )}
                       </div>
@@ -1539,20 +1540,19 @@ export default function EditTooltipPage() {
 
           {/* Actions */}
           <div className="flex items-center justify-between mb-8">
-            <button
+            <Button
+              variant="outline"
               onClick={() => router.push('/tooltips')}
-              className="btn btn-secondary"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={saveTooltip}
               disabled={saving}
-              className="btn btn-primary flex items-center gap-2"
             >
               <Save size={18} />
               {saving ? 'Saving...' : 'Save Changes'}
-            </button>
+            </Button>
           </div>
         </div>
 

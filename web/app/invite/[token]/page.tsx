@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 
 interface InviteInfo {
   workspaceName: string;
@@ -94,9 +95,11 @@ export default function InvitePage({ params }: { params: { token: string } }) {
           <div className="text-6xl mb-4">😞</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Invite Not Found</h1>
           <p className="text-gray-600 mb-6">{error}</p>
-          <Link href="/login" className="btn btn-primary">
-            Go to Login
-          </Link>
+          <Button asChild>
+            <Link href="/login">
+              Go to Login
+            </Link>
+          </Button>
         </div>
       </div>
     );
@@ -170,13 +173,13 @@ export default function InvitePage({ params }: { params: { token: string } }) {
                 />
               </div>
 
-              <button
+              <Button
                 type="submit"
-                className="btn btn-primary w-full"
+                className="w-full"
                 disabled={accepting}
               >
                 {accepting ? 'Joining...' : 'Create Account & Join'}
-              </button>
+              </Button>
             </form>
           ) : (
             <form onSubmit={handleAccept} className="space-y-4">
@@ -184,13 +187,13 @@ export default function InvitePage({ params }: { params: { token: string } }) {
                 You already have an account. Click below to join this workspace.
               </p>
 
-              <button
+              <Button
                 type="submit"
-                className="btn btn-primary w-full"
+                className="w-full"
                 disabled={accepting}
               >
                 {accepting ? 'Joining...' : 'Join Workspace'}
-              </button>
+              </Button>
             </form>
           )}
 

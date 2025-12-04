@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import FullScreenModal from '@/components/FullScreenModal';
 import { Plus, Trash2, GripVertical, Save, Crosshair, AlertCircle, CheckCircle, Loader2, Settings, FileText, Languages, RefreshCw, Copy } from 'lucide-react';
 import ImageUpload from '@/components/ImageUpload';
+import { Button } from '@/components/ui/button';
 
 interface Step {
   id: string;
@@ -418,12 +419,12 @@ export default function EditTourPage() {
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-red-800 mb-2">Error Loading Tour</h2>
           <p className="text-red-600 mb-4">{error}</p>
-          <button
+          <Button
+            variant="outline"
             onClick={() => router.push('/tours')}
-            className="btn btn-secondary"
           >
             Back to Tours
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -435,30 +436,30 @@ export default function EditTourPage() {
       onClose={() => router.push('/tours')}
       actions={
         <div className="flex items-center gap-2">
-          <button
+          <Button
+            variant="outline"
             onClick={duplicateTour}
             disabled={duplicating}
-            className="btn btn-secondary flex items-center gap-2"
           >
             <Copy size={16} />
             {duplicating ? 'Duplicating...' : 'Duplicate'}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
             onClick={deleteTour}
             disabled={deleting}
-            className="btn btn-secondary text-red-600 hover:bg-red-50 flex items-center gap-2"
+            className="text-red-600 hover:bg-red-50"
           >
             <Trash2 size={16} />
             {deleting ? 'Deleting...' : 'Delete'}
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={saveTour}
             disabled={saving}
-            className="btn-primary flex items-center gap-2"
           >
             <Save size={18} />
             {saving ? 'Saving...' : 'Save Changes'}
-          </button>
+          </Button>
         </div>
       }
     >
@@ -591,13 +592,10 @@ export default function EditTourPage() {
             <h2 className="text-xl font-semibold text-gray-900">
               Tour Steps ({steps.length})
             </h2>
-            <button
-              onClick={addStep}
-              className="btn btn-primary flex items-center gap-2"
-            >
+            <Button onClick={addStep}>
               <Plus size={18} />
               Add Step
-            </button>
+            </Button>
           </div>
 
           {steps.length === 0 ? (
@@ -732,11 +730,11 @@ export default function EditTourPage() {
                   <Languages size={20} className="text-blue-600" />
                   <h2 className="text-xl font-semibold text-gray-900">Translations</h2>
                 </div>
-                <button
-                  type="button"
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={handleAutoTranslate}
                   disabled={translating || !steps.length}
-                  className="btn btn-secondary btn-sm flex items-center gap-2"
                 >
                   {translating ? (
                     <>
@@ -749,7 +747,7 @@ export default function EditTourPage() {
                       Auto-translate All
                     </>
                   )}
-                </button>
+                </Button>
               </div>
               
               <p className="text-sm text-gray-500 mb-4">
@@ -832,8 +830,9 @@ export default function EditTourPage() {
                             defaultValue={translations[lang.code]?.buttonText || ''}
                             id={`trans-btn-${lang.code}`}
                           />
-                          <button
-                            type="button"
+                          <Button
+                            size="sm"
+                            className="w-full"
                             onClick={() => {
                               const titleEl = document.getElementById(`trans-title-${lang.code}`) as HTMLInputElement;
                               const bodyEl = document.getElementById(`trans-body-${lang.code}`) as HTMLTextAreaElement;
@@ -844,10 +843,9 @@ export default function EditTourPage() {
                                 buttonText: btnEl?.value || ''
                               });
                             }}
-                            className="btn btn-primary btn-sm w-full"
                           >
                             Save
-                          </button>
+                          </Button>
                         </div>
                       )}
                     </div>

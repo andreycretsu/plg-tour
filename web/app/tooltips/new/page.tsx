@@ -10,6 +10,7 @@ import { Save, Crosshair, AlertCircle, CheckCircle, MousePointer, Hand, Language
 
 // Shadcn UI components
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Field, FieldLabel, FieldGroup, FieldDescription } from '@/components/ui/field';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
@@ -364,14 +365,13 @@ export default function NewTooltipPage() {
       title="New Tooltip"
       onClose={() => router.push('/tooltips')}
       actions={
-        <button
+        <Button
           onClick={saveTooltip}
           disabled={loading || !name || !urlPattern || !selector || !title}
-          className="btn-primary flex items-center gap-2"
         >
           <Save size={18} />
           {loading ? 'Saving...' : 'Save Tooltip'}
-        </button>
+        </Button>
       }
     >
       <style jsx global>{`

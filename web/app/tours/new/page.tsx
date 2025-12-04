@@ -7,6 +7,7 @@ import { PreviewPanel } from '@/components/StepPreview';
 import ColorPicker from '@/components/ColorPicker';
 import { Plus, Trash2, GripVertical, Save, Crosshair, AlertCircle, CheckCircle, Eye, Layers, Settings, FileText, Languages } from 'lucide-react';
 import ImageUpload from '@/components/ImageUpload';
+import { Button } from '@/components/ui/button';
 
 interface Step {
   id: string;
@@ -257,14 +258,13 @@ export default function NewTourPage() {
       title="Create New Tour"
       onClose={() => router.push('/tours')}
       actions={
-        <button
+        <Button
           onClick={saveTour}
           disabled={loading || steps.length === 0 || !tourName || !urlPattern}
-          className="btn-primary flex items-center gap-2"
         >
           <Save size={18} />
           {loading ? 'Saving...' : 'Save Tour'}
-        </button>
+        </Button>
       }
     >
       <div className="flex gap-6 p-6 h-full">
@@ -646,13 +646,10 @@ export default function NewTourPage() {
               <h2 className="text-xl font-semibold text-gray-900">
                 Tour Steps ({steps.length})
               </h2>
-              <button
-                onClick={addStep}
-                className="btn btn-primary flex items-center gap-2"
-              >
+              <Button onClick={addStep}>
                 <Plus size={18} />
                 Add Step
-              </button>
+              </Button>
             </div>
 
             {steps.length === 0 ? (
@@ -819,20 +816,19 @@ export default function NewTourPage() {
 
           {/* Actions */}
           <div className="flex items-center justify-between">
-            <button
+            <Button
+              variant="outline"
               onClick={() => router.push('/tours')}
-              className="btn btn-secondary"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={saveTour}
               disabled={loading}
-              className="btn btn-primary flex items-center gap-2"
             >
               <Save size={18} />
               {loading ? 'Saving...' : 'Save Tour'}
-            </button>
+            </Button>
           </div>
         </div>
 

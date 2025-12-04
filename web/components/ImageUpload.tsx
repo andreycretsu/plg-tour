@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { Upload, Link, X, Loader2, Image as ImageIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface ImageUploadProps {
   value: string;
@@ -204,14 +205,14 @@ export default function ImageUpload({ value, onChange, placeholder }: ImageUploa
             placeholder={placeholder || "https://example.com/image.png"}
             onKeyDown={(e) => e.key === 'Enter' && handleUrlSubmit()}
           />
-          <button
-            type="button"
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleUrlSubmit}
-            className="btn btn-secondary btn-sm"
             disabled={!urlInput.trim()}
           >
             Add
-          </button>
+          </Button>
         </div>
       )}
 
