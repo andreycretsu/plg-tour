@@ -68,6 +68,45 @@ export async function POST(request: NextRequest) {
   }
 }
 
+// PUT /api/translations - Update a single translation
+export async function PUT(request: NextRequest) {
+  try {
+    const cookieToken = request.cookies.get('token')?.value;
+    const authHeader = request.headers.get('authorization');
+    const headerToken = extractToken(authHeader);
+    const token = cookieToken || headerToken;
+
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const payload = verifyToken(token);
+    if (!payload) {
+      return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { contentType, contentId, languageCode, title, body: content, buttonText } = body;
+
+    if (!contentType || !contentId || !languageCode) {
+      return NextResponse.json({ error: 'contentType, contentId, and languageCode are required' }, { status: 400 });
+    }
+
+    await query(
+      `INSERT INTO translations (content_type, content_id, language_code, title, body, button_text)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       ON CONFLICT (content_type, content_id, language_code) 
+       DO UPDATE SET title = $4, body = $5, button_text = $6, updated_at = CURRENT_TIMESTAMP`,
+      [contentType, contentId, languageCode, title || '', content || '', buttonText || '']
+    );
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Update translation error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
 // GET /api/translations - Get translations for content
 export async function GET(request: NextRequest) {
   try {

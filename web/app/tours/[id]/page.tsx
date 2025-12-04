@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Plus, Trash2, GripVertical, Save, Crosshair, AlertCircle, CheckCircle, ArrowLeft, Loader2 } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Save, Crosshair, AlertCircle, CheckCircle, ArrowLeft, Loader2, Settings, FileText, Languages, RefreshCw } from 'lucide-react';
 import ImageUpload from '@/components/ImageUpload';
 
 interface Step {
@@ -50,6 +50,27 @@ export default function EditTourPage() {
   const [pickingForStep, setPickingForStep] = useState<string | null>(null);
   const [pickerStatus, setPickerStatus] = useState<'idle' | 'waiting' | 'success'>('idle');
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'content' | 'customisation'>('content');
+  
+  // Translations
+  const [previewLang, setPreviewLang] = useState('en');
+  const [translations, setTranslations] = useState<Record<string, Record<string, any>>>({});
+  const [translating, setTranslating] = useState(false);
+  const [editingLang, setEditingLang] = useState<string | null>(null);
+  
+  const LANGUAGES = [
+    { code: 'en', name: 'English', native: 'English' },
+    { code: 'uk', name: 'Ukrainian', native: 'Українська' },
+    { code: 'pl', name: 'Polish', native: 'Polski' },
+    { code: 'es', name: 'Spanish', native: 'Español' },
+    { code: 'pt', name: 'Portuguese', native: 'Português' },
+    { code: 'de', name: 'German', native: 'Deutsch' },
+    { code: 'ru', name: 'Russian', native: 'Русский' },
+    { code: 'fr', name: 'French', native: 'Français' },
+    { code: 'it', name: 'Italian', native: 'Italiano' },
+    { code: 'ja', name: 'Japanese', native: '日本語' },
+    { code: 'zh', name: 'Chinese', native: '中文' },
+  ];
 
   // Check if extension is installed
   useEffect(() => {
@@ -133,6 +154,110 @@ export default function EditTourPage() {
 
     loadTour();
   }, [tourId]);
+
+  // Load translations
+  useEffect(() => {
+    const loadTranslations = async () => {
+      if (!tourId) return;
+      try {
+        const response = await fetch(`/api/translations?contentType=tour&contentId=${tourId}`);
+        if (response.ok) {
+          const data = await response.json();
+          // Group translations by language
+          const grouped: Record<string, Record<string, any>> = {};
+          data.translations?.forEach((t: any) => {
+            if (!grouped[t.language_code]) {
+              grouped[t.language_code] = {};
+            }
+            grouped[t.language_code][t.field_name] = t.translated_text;
+          });
+          setTranslations(grouped);
+        }
+      } catch (err) {
+        console.error('Failed to load translations:', err);
+      }
+    };
+    loadTranslations();
+  }, [tourId]);
+
+  const handleAutoTranslate = async () => {
+    if (!steps.length || !steps[0]?.title) {
+      alert('Please add at least one step with a title first');
+      return;
+    }
+    
+    setTranslating(true);
+    try {
+      const response = await fetch('/api/translations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contentType: 'tour',
+          contentId: tourId,
+          sourceContent: {
+            title: steps[0]?.title || '',
+            body: steps[0]?.content || '',
+            buttonText: steps[0]?.buttonText || 'Next',
+          },
+        }),
+      });
+      
+      if (!response.ok) throw new Error('Translation failed');
+      
+      const data = await response.json();
+      // Reload translations
+      const transResponse = await fetch(`/api/translations?contentType=tour&contentId=${tourId}`);
+      if (transResponse.ok) {
+        const transData = await transResponse.json();
+        const grouped: Record<string, Record<string, any>> = {};
+        transData.translations?.forEach((t: any) => {
+          if (!grouped[t.language_code]) {
+            grouped[t.language_code] = {};
+          }
+          grouped[t.language_code][t.field_name] = t.translated_text;
+        });
+        setTranslations(grouped);
+      }
+      
+      alert('Successfully translated to all languages!');
+    } catch (err) {
+      console.error('Translation error:', err);
+      alert('Failed to translate. Please try again.');
+    } finally {
+      setTranslating(false);
+    }
+  };
+
+  const saveTranslation = async (langCode: string, content: { title: string; body: string; buttonText: string }) => {
+    try {
+      // Save each field
+      for (const [field, value] of Object.entries(content)) {
+        if (!value) continue;
+        await fetch('/api/translations', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contentType: 'tour',
+            contentId: tourId,
+            languageCode: langCode,
+            fieldName: field,
+            translatedText: value,
+          }),
+        });
+      }
+      
+      // Update local state
+      setTranslations(prev => ({
+        ...prev,
+        [langCode]: content,
+      }));
+      setEditingLang(null);
+      alert('Translation saved!');
+    } catch (err) {
+      console.error('Save translation error:', err);
+      alert('Failed to save translation');
+    }
+  };
 
   const addStep = () => {
     const newStep: Step = {
@@ -332,7 +457,36 @@ export default function EditTourPage() {
           </div>
         )}
 
-        {/* Tour Details */}
+        {/* Tabs */}
+        <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-lg">
+          <button
+            onClick={() => setActiveTab('content')}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all ${
+              activeTab === 'content'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <FileText size={18} />
+            Content
+          </button>
+          <button
+            onClick={() => setActiveTab('customisation')}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all ${
+              activeTab === 'customisation'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            <Settings size={18} />
+            Customisation
+          </button>
+        </div>
+
+        {/* CONTENT TAB */}
+        {activeTab === 'content' && (
+          <>
+            {/* Tour Details */}
         <div className="card p-6 mb-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Tour Details</h2>
           
@@ -516,6 +670,149 @@ export default function EditTourPage() {
             </div>
           )}
         </div>
+
+            {/* Translations */}
+            <div className="card p-6 mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Languages size={20} className="text-blue-600" />
+                  <h2 className="text-xl font-semibold text-gray-900">Translations</h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAutoTranslate}
+                  disabled={translating || !steps.length}
+                  className="btn btn-secondary btn-sm flex items-center gap-2"
+                >
+                  {translating ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      Translating...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw size={14} />
+                      Auto-translate All
+                    </>
+                  )}
+                </button>
+              </div>
+              
+              <p className="text-sm text-gray-500 mb-4">
+                Auto-translate the first step's content to multiple languages. Visitors will see content in their browser's language.
+              </p>
+
+              {/* Preview Language Selector */}
+              <div className="mb-4">
+                <label className="label">Preview Language</label>
+                <select
+                  value={previewLang}
+                  onChange={(e) => setPreviewLang(e.target.value)}
+                  className="input"
+                >
+                  {LANGUAGES.map(lang => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.native} ({lang.name}) {translations[lang.code] ? '✓' : lang.code === 'en' ? '(source)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Translation Status Grid */}
+              <div className="grid grid-cols-3 gap-2">
+                {LANGUAGES.filter(l => l.code !== 'en').map(lang => {
+                  const hasTranslation = !!translations[lang.code];
+                  const isEditing = editingLang === lang.code;
+                  
+                  return (
+                    <div
+                      key={lang.code}
+                      className={`p-3 rounded-lg border ${
+                        hasTranslation 
+                          ? 'border-green-200 bg-green-50' 
+                          : 'border-gray-200 bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium">{lang.native}</span>
+                        {hasTranslation && <CheckCircle size={14} className="text-green-500" />}
+                      </div>
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setPreviewLang(lang.code)}
+                          className="text-xs text-blue-600 hover:underline"
+                        >
+                          Preview
+                        </button>
+                        <span className="text-gray-300">|</span>
+                        <button
+                          type="button"
+                          onClick={() => setEditingLang(isEditing ? null : lang.code)}
+                          className="text-xs text-blue-600 hover:underline"
+                        >
+                          {isEditing ? 'Cancel' : 'Edit'}
+                        </button>
+                      </div>
+                      
+                      {/* Inline Edit Form */}
+                      {isEditing && (
+                        <div className="mt-3 space-y-2 border-t border-gray-200 pt-3">
+                          <input
+                            type="text"
+                            placeholder="Translated title"
+                            className="input text-sm"
+                            defaultValue={translations[lang.code]?.title || ''}
+                            id={`trans-title-${lang.code}`}
+                          />
+                          <textarea
+                            placeholder="Translated body"
+                            className="input text-sm min-h-[60px]"
+                            defaultValue={translations[lang.code]?.body || ''}
+                            id={`trans-body-${lang.code}`}
+                          />
+                          <input
+                            type="text"
+                            placeholder="Button text"
+                            className="input text-sm"
+                            defaultValue={translations[lang.code]?.buttonText || ''}
+                            id={`trans-btn-${lang.code}`}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const titleEl = document.getElementById(`trans-title-${lang.code}`) as HTMLInputElement;
+                              const bodyEl = document.getElementById(`trans-body-${lang.code}`) as HTMLTextAreaElement;
+                              const btnEl = document.getElementById(`trans-btn-${lang.code}`) as HTMLInputElement;
+                              saveTranslation(lang.code, {
+                                title: titleEl?.value || '',
+                                body: bodyEl?.value || '',
+                                buttonText: btnEl?.value || ''
+                              });
+                            }}
+                            className="btn btn-primary btn-sm w-full"
+                          >
+                            Save
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* CUSTOMISATION TAB */}
+        {activeTab === 'customisation' && (
+          <div className="card p-6 mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Tour Styling</h2>
+            <p className="text-sm text-gray-500">
+              Styling customisation for tours is coming soon. For now, you can customise individual step content in the Content tab.
+            </p>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex items-center justify-between">

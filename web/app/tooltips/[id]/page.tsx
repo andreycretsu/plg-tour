@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import ImageUpload from '@/components/ImageUpload';
 import ColorPicker from '@/components/ColorPicker';
-import { Save, Crosshair, AlertCircle, CheckCircle, ArrowLeft, MousePointer, Hand, Trash2, Loader2, Languages, Globe, RefreshCw } from 'lucide-react';
+import { Save, Crosshair, AlertCircle, CheckCircle, ArrowLeft, MousePointer, Hand, Trash2, Loader2, Languages, Globe, RefreshCw, Settings, FileText } from 'lucide-react';
 
 export default function EditTooltipPage() {
   const router = useRouter();
@@ -62,8 +62,8 @@ export default function EditTooltipPage() {
   const [zIndex, setZIndex] = useState(2147483647);
   const [delayMs, setDelayMs] = useState(0);
 
-  // Translations
-  const [activeTab, setActiveTab] = useState<'content' | 'translations'>('content');
+  // Tabs and Translations
+  const [activeTab, setActiveTab] = useState<'content' | 'customisation'>('content');
   const [previewLang, setPreviewLang] = useState('en');
   const [translations, setTranslations] = useState<Record<string, { title: string; body: string; buttonText: string }>>({});
   const [translating, setTranslating] = useState(false);
@@ -503,7 +503,219 @@ export default function EditTooltipPage() {
             </label>
           </div>
 
-          {/* Targeting Section */}
+          {/* Tabs */}
+          <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-lg">
+            <button
+              onClick={() => setActiveTab('content')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all ${
+                activeTab === 'content'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <FileText size={18} />
+              Content
+            </button>
+            <button
+              onClick={() => setActiveTab('customisation')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all ${
+                activeTab === 'customisation'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Settings size={18} />
+              Customisation
+            </button>
+          </div>
+
+          {/* CONTENT TAB */}
+          {activeTab === 'content' && (
+            <>
+              {/* Card Content */}
+              <div className="card p-5 mb-5">
+                <h2 className="text-base font-semibold text-gray-900 mb-4">Content</h2>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="label">Title</label>
+                    <input
+                      type="text"
+                      className="input"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="Feature Title"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="label">Body</label>
+                    <textarea
+                      className="input min-h-[80px]"
+                      value={body}
+                      onChange={(e) => setBody(e.target.value)}
+                      placeholder="Description of the feature..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="label">Button Text</label>
+                    <input
+                      type="text"
+                      className="input"
+                      value={buttonText}
+                      onChange={(e) => setButtonText(e.target.value)}
+                      placeholder="Got it"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="label">Image (Optional)</label>
+                    <ImageUpload
+                      value={imageUrl}
+                      onChange={setImageUrl}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Translations */}
+              <div className="card p-5 mb-5">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Languages size={20} className="text-blue-600" />
+                    <h2 className="text-base font-semibold text-gray-900">Translations</h2>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAutoTranslate}
+                    disabled={translating || !title}
+                    className="btn btn-secondary btn-sm flex items-center gap-2"
+                  >
+                    {translating ? (
+                      <>
+                        <Loader2 size={14} className="animate-spin" />
+                        Translating...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw size={14} />
+                        Auto-translate All
+                      </>
+                    )}
+                  </button>
+                </div>
+                
+                <p className="text-sm text-gray-500 mb-4">
+                  Auto-translate your content to multiple languages. Visitors will see content in their browser's language.
+                </p>
+
+                {/* Preview Language Selector */}
+                <div className="mb-4">
+                  <label className="label">Preview Language</label>
+                  <select
+                    value={previewLang}
+                    onChange={(e) => setPreviewLang(e.target.value)}
+                    className="input"
+                  >
+                    {LANGUAGES.map(lang => (
+                      <option key={lang.code} value={lang.code}>
+                        {lang.native} ({lang.name}) {translations[lang.code] ? '✓' : lang.code === 'en' ? '(source)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Translation Status Grid */}
+                <div className="grid grid-cols-3 gap-2">
+                  {LANGUAGES.filter(l => l.code !== 'en').map(lang => {
+                    const hasTranslation = !!translations[lang.code];
+                    const isEditing = editingLang === lang.code;
+                    
+                    return (
+                      <div
+                        key={lang.code}
+                        className={`p-3 rounded-lg border ${
+                          hasTranslation 
+                            ? 'border-green-200 bg-green-50' 
+                            : 'border-gray-200 bg-gray-50'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium">{lang.native}</span>
+                          {hasTranslation && <CheckCircle size={14} className="text-green-500" />}
+                        </div>
+                        <div className="flex gap-1">
+                          <button
+                            type="button"
+                            onClick={() => setPreviewLang(lang.code)}
+                            className="text-xs text-blue-600 hover:underline"
+                          >
+                            Preview
+                          </button>
+                          <span className="text-gray-300">|</span>
+                          <button
+                            type="button"
+                            onClick={() => setEditingLang(isEditing ? null : lang.code)}
+                            className="text-xs text-blue-600 hover:underline"
+                          >
+                            {isEditing ? 'Cancel' : 'Edit'}
+                          </button>
+                        </div>
+                        
+                        {/* Inline Edit Form */}
+                        {isEditing && (
+                          <div className="mt-3 space-y-2 border-t border-gray-200 pt-3">
+                            <input
+                              type="text"
+                              placeholder="Translated title"
+                              className="input text-sm"
+                              defaultValue={translations[lang.code]?.title || ''}
+                              id={`trans-title-${lang.code}`}
+                            />
+                            <textarea
+                              placeholder="Translated body"
+                              className="input text-sm min-h-[60px]"
+                              defaultValue={translations[lang.code]?.body || ''}
+                              id={`trans-body-${lang.code}`}
+                            />
+                            <input
+                              type="text"
+                              placeholder="Button text"
+                              className="input text-sm"
+                              defaultValue={translations[lang.code]?.buttonText || ''}
+                              id={`trans-btn-${lang.code}`}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const titleEl = document.getElementById(`trans-title-${lang.code}`) as HTMLInputElement;
+                                const bodyEl = document.getElementById(`trans-body-${lang.code}`) as HTMLTextAreaElement;
+                                const btnEl = document.getElementById(`trans-btn-${lang.code}`) as HTMLInputElement;
+                                saveTranslation(lang.code, {
+                                  title: titleEl?.value || '',
+                                  body: bodyEl?.value || '',
+                                  buttonText: btnEl?.value || ''
+                                });
+                              }}
+                              className="btn btn-primary btn-sm w-full"
+                            >
+                              Save
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* CUSTOMISATION TAB */}
+          {activeTab === 'customisation' && (
+            <>
+              {/* Targeting Section */}
           <div className="card p-5 mb-5">
             <h2 className="text-base font-semibold text-gray-900 mb-4">Targeting</h2>
             
@@ -882,137 +1094,6 @@ export default function EditTooltipPage() {
             </div>
           </div>
 
-          {/* Translations */}
-          <div className="card p-5 mb-5">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Languages size={20} className="text-blue-600" />
-                <h2 className="text-base font-semibold text-gray-900">Translations</h2>
-              </div>
-              <button
-                type="button"
-                onClick={handleAutoTranslate}
-                disabled={translating || !title}
-                className="btn btn-secondary btn-sm flex items-center gap-2"
-              >
-                {translating ? (
-                  <>
-                    <Loader2 size={14} className="animate-spin" />
-                    Translating...
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw size={14} />
-                    Auto-translate All
-                  </>
-                )}
-              </button>
-            </div>
-            
-            <p className="text-sm text-gray-500 mb-4">
-              Auto-translate your content to multiple languages. Visitors will see content in their browser's language.
-            </p>
-
-            {/* Preview Language Selector */}
-            <div className="mb-4">
-              <label className="label">Preview Language</label>
-              <select
-                value={previewLang}
-                onChange={(e) => setPreviewLang(e.target.value)}
-                className="input"
-              >
-                {LANGUAGES.map(lang => (
-                  <option key={lang.code} value={lang.code}>
-                    {lang.native} ({lang.name}) {translations[lang.code] ? '✓' : lang.code === 'en' ? '(source)' : ''}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Translation Status Grid */}
-            <div className="grid grid-cols-3 gap-2">
-              {LANGUAGES.filter(l => l.code !== 'en').map(lang => {
-                const hasTranslation = !!translations[lang.code];
-                const isEditing = editingLang === lang.code;
-                
-                return (
-                  <div
-                    key={lang.code}
-                    className={`p-3 rounded-lg border ${
-                      hasTranslation 
-                        ? 'border-green-200 bg-green-50' 
-                        : 'border-gray-200 bg-gray-50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium">{lang.native}</span>
-                      {hasTranslation && <CheckCircle size={14} className="text-green-500" />}
-                    </div>
-                    <div className="flex gap-1">
-                      <button
-                        type="button"
-                        onClick={() => setPreviewLang(lang.code)}
-                        className="text-xs text-blue-600 hover:underline"
-                      >
-                        Preview
-                      </button>
-                      <span className="text-gray-300">|</span>
-                      <button
-                        type="button"
-                        onClick={() => setEditingLang(isEditing ? null : lang.code)}
-                        className="text-xs text-blue-600 hover:underline"
-                      >
-                        {isEditing ? 'Cancel' : 'Edit'}
-                      </button>
-                    </div>
-                    
-                    {/* Inline Edit Form */}
-                    {isEditing && (
-                      <div className="mt-3 space-y-2 border-t border-gray-200 pt-3">
-                        <input
-                          type="text"
-                          placeholder="Translated title"
-                          className="input text-sm"
-                          defaultValue={translations[lang.code]?.title || ''}
-                          id={`trans-title-${lang.code}`}
-                        />
-                        <textarea
-                          placeholder="Translated body"
-                          className="input text-sm min-h-[60px]"
-                          defaultValue={translations[lang.code]?.body || ''}
-                          id={`trans-body-${lang.code}`}
-                        />
-                        <input
-                          type="text"
-                          placeholder="Button text"
-                          className="input text-sm"
-                          defaultValue={translations[lang.code]?.buttonText || ''}
-                          id={`trans-btn-${lang.code}`}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const titleEl = document.getElementById(`trans-title-${lang.code}`) as HTMLInputElement;
-                            const bodyEl = document.getElementById(`trans-body-${lang.code}`) as HTMLTextAreaElement;
-                            const btnEl = document.getElementById(`trans-btn-${lang.code}`) as HTMLInputElement;
-                            saveTranslation(lang.code, {
-                              title: titleEl?.value || '',
-                              body: bodyEl?.value || '',
-                              buttonText: btnEl?.value || ''
-                            });
-                          }}
-                          className="btn btn-primary btn-sm w-full"
-                        >
-                          Save
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
           {/* Display Frequency */}
           <div className="card p-5 mb-5">
             <h2 className="text-base font-semibold text-gray-900 mb-4">Display Frequency</h2>
@@ -1137,6 +1218,8 @@ export default function EditTooltipPage() {
               </div>
             </div>
           </div>
+            </>
+          )}
 
           {/* Actions */}
           <div className="flex items-center justify-between mb-8">

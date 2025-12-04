@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import { PreviewPanel } from '@/components/StepPreview';
 import ColorPicker from '@/components/ColorPicker';
-import { Plus, Trash2, GripVertical, Save, Crosshair, AlertCircle, CheckCircle, Eye, Layers } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Save, Crosshair, AlertCircle, CheckCircle, Eye, Layers, Settings, FileText, Languages } from 'lucide-react';
 import ImageUpload from '@/components/ImageUpload';
 
 interface Step {
@@ -56,6 +56,7 @@ const defaultFrequency: TourFrequency = {
 
 export default function NewTourPage() {
   const router = useRouter();
+  const [activeTab, setActiveTab] = useState<'content' | 'customisation'>('content');
   const [tourName, setTourName] = useState('New Product Tour');
   const [urlPattern, setUrlPattern] = useState('');
   const [steps, setSteps] = useState<Step[]>([]);
@@ -309,7 +310,36 @@ export default function NewTourPage() {
             </div>
           )}
 
-          {/* Tour Details */}
+          {/* Tabs */}
+          <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-lg">
+            <button
+              onClick={() => setActiveTab('content')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all ${
+                activeTab === 'content'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <FileText size={18} />
+              Content
+            </button>
+            <button
+              onClick={() => setActiveTab('customisation')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all ${
+                activeTab === 'customisation'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Settings size={18} />
+              Customisation
+            </button>
+          </div>
+
+          {/* CONTENT TAB */}
+          {activeTab === 'content' && (
+            <>
+              {/* Tour Details */}
           <div className="card p-6 mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Tour Details</h2>
             
@@ -341,7 +371,23 @@ export default function NewTourPage() {
             </div>
           </div>
 
-          {/* Card Styling (Collapsible) */}
+              {/* Translations Info */}
+              <div className="card p-5 mb-5 bg-blue-50 border-blue-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <Languages size={20} className="text-blue-600" />
+                  <h2 className="text-base font-semibold text-gray-900">Translations</h2>
+                </div>
+                <p className="text-sm text-blue-700">
+                  Save this tour first, then you can auto-translate to 10+ languages on the Edit page.
+                </p>
+              </div>
+            </>
+          )}
+
+          {/* CUSTOMISATION TAB */}
+          {activeTab === 'customisation' && (
+            <>
+              {/* Card Styling (Collapsible) */}
           <div className="card p-6 mb-6">
             <button
               onClick={() => setShowStyling(!showStyling)}
@@ -584,8 +630,10 @@ export default function NewTourPage() {
               </div>
             )}
           </div>
+            </>
+          )}
 
-          {/* Steps */}
+          {/* Steps - Always visible */}
           <div className="card p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-gray-900">

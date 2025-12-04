@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import ImageUpload from '@/components/ImageUpload';
 import ColorPicker from '@/components/ColorPicker';
-import { Save, Crosshair, AlertCircle, CheckCircle, ArrowLeft, MousePointer, Hand } from 'lucide-react';
+import { Save, Crosshair, AlertCircle, CheckCircle, ArrowLeft, MousePointer, Hand, Languages, Settings, FileText } from 'lucide-react';
 
 export default function NewTooltipPage() {
   const router = useRouter();
@@ -13,6 +13,22 @@ export default function NewTooltipPage() {
   const [extensionInstalled, setExtensionInstalled] = useState(false);
   const [pickingElement, setPickingElement] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
+  const [activeTab, setActiveTab] = useState<'customisation' | 'content'>('content');
+  const [previewLang, setPreviewLang] = useState('en');
+  
+  const LANGUAGES = [
+    { code: 'en', name: 'English', native: 'English' },
+    { code: 'uk', name: 'Ukrainian', native: 'Українська' },
+    { code: 'pl', name: 'Polish', native: 'Polski' },
+    { code: 'es', name: 'Spanish', native: 'Español' },
+    { code: 'pt', name: 'Portuguese', native: 'Português' },
+    { code: 'de', name: 'German', native: 'Deutsch' },
+    { code: 'ru', name: 'Russian', native: 'Русский' },
+    { code: 'fr', name: 'French', native: 'Français' },
+    { code: 'it', name: 'Italian', native: 'Italiano' },
+    { code: 'ja', name: 'Japanese', native: '日本語' },
+    { code: 'zh', name: 'Chinese', native: '中文' },
+  ];
 
   // Form state
   const [name, setName] = useState('New Tooltip');
@@ -260,7 +276,7 @@ export default function NewTooltipPage() {
           </div>
 
           {/* Extension Status */}
-          <div className={`mb-6 p-3 rounded-lg flex items-center gap-3 ${
+          <div className={`mb-4 p-3 rounded-lg flex items-center gap-3 ${
             extensionInstalled 
               ? 'bg-green-50 border border-green-200' 
               : 'bg-yellow-50 border border-yellow-200'
@@ -278,7 +294,99 @@ export default function NewTooltipPage() {
             )}
           </div>
 
-          {/* Targeting Section */}
+          {/* Tabs */}
+          <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-lg">
+            <button
+              onClick={() => setActiveTab('content')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all ${
+                activeTab === 'content'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <FileText size={18} />
+              Content
+            </button>
+            <button
+              onClick={() => setActiveTab('customisation')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all ${
+                activeTab === 'customisation'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Settings size={18} />
+              Customisation
+            </button>
+          </div>
+
+          {/* CONTENT TAB */}
+          {activeTab === 'content' && (
+            <>
+              {/* Card Content */}
+              <div className="card p-5 mb-5">
+                <h2 className="text-base font-semibold text-gray-900 mb-4">Content</h2>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="label">Title</label>
+                    <input
+                      type="text"
+                      className="input"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="Feature Title"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="label">Body</label>
+                    <textarea
+                      className="input min-h-[80px]"
+                      value={body}
+                      onChange={(e) => setBody(e.target.value)}
+                      placeholder="Description of the feature..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="label">Button Text</label>
+                    <input
+                      type="text"
+                      className="input"
+                      value={buttonText}
+                      onChange={(e) => setButtonText(e.target.value)}
+                      placeholder="Got it"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="label">Image (Optional)</label>
+                    <ImageUpload
+                      value={imageUrl}
+                      onChange={setImageUrl}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Translations Info */}
+              <div className="card p-5 mb-5 bg-blue-50 border-blue-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <Languages size={20} className="text-blue-600" />
+                  <h2 className="text-base font-semibold text-gray-900">Translations</h2>
+                </div>
+                <p className="text-sm text-blue-700">
+                  Save this tooltip first, then you can auto-translate to 10+ languages on the Edit page.
+                </p>
+              </div>
+            </>
+          )}
+
+          {/* CUSTOMISATION TAB */}
+          {activeTab === 'customisation' && (
+            <>
+              {/* Targeting Section */}
           <div className="card p-5 mb-5">
             <h2 className="text-base font-semibold text-gray-900 mb-4">Targeting</h2>
             
@@ -492,42 +600,6 @@ export default function NewTooltipPage() {
             <div>
               <label className="label">Beacon Color</label>
               <ColorPicker value={iconColor} onChange={setIconColor} />
-            </div>
-          </div>
-
-          {/* Card Settings */}
-          <div className="card p-5 mb-5">
-            <h2 className="text-base font-semibold text-gray-900 mb-4">Card Content</h2>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="label">Title</label>
-                <input
-                  type="text"
-                  className="input"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Feature Title"
-                />
-              </div>
-
-              <div>
-                <label className="label">Body</label>
-                <textarea
-                  className="input min-h-[80px]"
-                  value={body}
-                  onChange={(e) => setBody(e.target.value)}
-                  placeholder="Description of the feature..."
-                />
-              </div>
-
-              <div>
-                <label className="label">Image (Optional)</label>
-                <ImageUpload
-                  value={imageUrl}
-                  onChange={setImageUrl}
-                />
-              </div>
             </div>
           </div>
 
@@ -786,6 +858,8 @@ export default function NewTooltipPage() {
               </div>
             </div>
           </div>
+            </>
+          )}
 
           {/* Actions */}
           <div className="flex items-center justify-between mb-8">
