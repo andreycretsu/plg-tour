@@ -7,8 +7,11 @@ import { X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button, type ButtonProps } from "@/components/ui/button"
 
+// SVG dot grid pattern encoded as data URL
+const dotGridPattern = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cg fill='none' stroke='%236d28d9' stroke-width='0.5' opacity='0.15'%3E%3Crect width='40' height='40' x='0' y='0'/%3E%3C/g%3E%3Ccircle cx='0' cy='0' r='2' fill='%236d28d9' opacity='0.3'/%3E%3Ccircle cx='40' cy='0' r='2' fill='%236d28d9' opacity='0.3'/%3E%3Ccircle cx='0' cy='40' r='2' fill='%236d28d9' opacity='0.3'/%3E%3Ccircle cx='40' cy='40' r='2' fill='%236d28d9' opacity='0.3'/%3E%3C/svg%3E")`
+
 const bannerVariants = cva(
-  "relative w-full flex items-center justify-between gap-4 px-4 py-3 text-sm transition-all",
+  "relative w-full flex items-center justify-between gap-4 px-4 py-3 text-sm transition-all overflow-hidden",
   {
     variants: {
       variant: {
@@ -103,7 +106,21 @@ const Banner = React.forwardRef<HTMLDivElement, BannerProps>(
         className={cn(bannerVariants({ variant, size }), className)}
         {...props}
       >
-        <div className="flex items-center gap-3 flex-1 min-w-0">
+        {/* Dot grid pattern overlay for promotional variant */}
+        {variant === "promotional" && (
+          <div 
+            className="absolute inset-0 pointer-events-none"
+            style={{ 
+              backgroundImage: dotGridPattern,
+              backgroundSize: '40px 40px',
+              backgroundPosition: '0 0',
+              opacity: 0.6,
+            }}
+            aria-hidden="true"
+          />
+        )}
+        
+        <div className="relative z-10 flex items-center gap-3 flex-1 min-w-0">
           {icon && (
             <div className="flex-shrink-0 flex items-center justify-center">
               {icon}
@@ -128,7 +145,7 @@ const Banner = React.forwardRef<HTMLDivElement, BannerProps>(
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="relative z-10 flex items-center gap-2 shrink-0">
           {actionText && (
             <Button
               variant={actionVariant}
