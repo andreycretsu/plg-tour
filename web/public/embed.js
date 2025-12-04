@@ -84,6 +84,38 @@
     return getUserLanguage();
   }
 
+  // Replace personalization variables in text
+  function replaceVariables(text) {
+    if (!text) return text;
+    
+    // Get first and last name from userName if available
+    let firstName = '';
+    let lastName = '';
+    let fullName = userConfig.userName || '';
+    
+    if (fullName) {
+      const parts = fullName.trim().split(/\s+/);
+      firstName = parts[0] || '';
+      lastName = parts.slice(1).join(' ') || '';
+    }
+    
+    // Also check for separate firstName/lastName in config
+    if (window.TourLayerConfig) {
+      firstName = window.TourLayerConfig.firstName || firstName;
+      lastName = window.TourLayerConfig.lastName || lastName;
+      fullName = window.TourLayerConfig.userName || fullName || `${firstName} ${lastName}`.trim();
+    }
+    
+    // Replace all variables (case-insensitive matching for flexibility)
+    return text
+      .replace(/\{\{firstName\}\}/gi, firstName)
+      .replace(/\{\{lastName\}\}/gi, lastName)
+      .replace(/\{\{userName\}\}/gi, fullName)
+      .replace(/\{\{user_name\}\}/gi, fullName)
+      .replace(/\{\{first_name\}\}/gi, firstName)
+      .replace(/\{\{last_name\}\}/gi, lastName);
+  }
+
   // Get API token and user config
   function getConfig() {
     let token = null;
@@ -611,14 +643,19 @@
       animation: tl-fade-in 0.2s ease-out;
     `;
     
+    // Apply variable replacement for personalization
+    const displayTitle = replaceVariables(tooltip.title);
+    const displayBody = replaceVariables(tooltip.body);
+    const displayButtonText = replaceVariables(tooltip.button_text || 'Got it');
+    
     card.innerHTML = `
       <button class="tl-card-close" data-action="close">&times;</button>
       ${tooltip.image_url ? `<img src="${escapeHtml(tooltip.image_url)}" class="tl-card-image" style="border-radius: ${Math.max(0, cardBorderRadius - 4)}px ${Math.max(0, cardBorderRadius - 4)}px 0 0;" alt="">` : ''}
       <div class="tl-card-content" style="color: ${cardTextColor}; padding: ${cardPadding}px;">
-        <h3 class="tl-card-title">${escapeHtml(tooltip.title)}</h3>
-        ${tooltip.body ? `<p class="tl-card-body">${escapeHtml(tooltip.body)}</p>` : ''}
+        <h3 class="tl-card-title">${escapeHtml(displayTitle)}</h3>
+        ${displayBody ? `<p class="tl-card-body">${escapeHtml(displayBody)}</p>` : ''}
         <button class="tl-card-btn" style="background: ${buttonColor}; color: ${buttonTextColor}; border-radius: ${buttonBorderRadius}px; margin-top: 12px; padding: 10px 20px; border: none; cursor: pointer; font-weight: 500; width: ${tooltip.text_align === 'center' ? '100%' : 'auto'};" data-action="dismiss">
-          ${escapeHtml(tooltip.button_text || 'Got it')}
+          ${escapeHtml(displayButtonText)}
         </button>
       </div>
     `;
@@ -1151,22 +1188,27 @@
     const tooltip = document.createElement('div');
     tooltip.className = 'tl-tooltip';
     
+    // Apply variable replacement for personalization
+    const displayTitle = replaceVariables(step.title);
+    const displayContent = replaceVariables(step.content);
+    const displayButtonText = replaceVariables(step.button_text || 'Next');
+    
     tooltip.innerHTML = `
       <button class="tl-close" data-action="close">&times;</button>
       <div class="tl-header">
-        <div class="tl-title">${escapeHtml(step.title)}</div>
+        <div class="tl-title">${escapeHtml(displayTitle)}</div>
         <div class="tl-step">Step ${index + 1} of ${totalSteps}</div>
       </div>
       <div class="tl-body">
         ${step.image_url ? `<img src="${escapeHtml(step.image_url)}" class="tl-image" alt="">` : ''}
-        <div class="tl-content">${escapeHtml(step.content)}</div>
+        <div class="tl-content">${escapeHtml(displayContent)}</div>
       </div>
       <div class="tl-footer">
         <button class="tl-btn tl-btn-skip" data-action="skip">Skip tour</button>
         <div style="display: flex; gap: 8px;">
           ${!isFirstStep ? '<button class="tl-btn tl-btn-secondary" data-action="prev">Back</button>' : ''}
           <button class="tl-btn tl-btn-primary" data-action="next">
-            ${isLastStep ? 'Finish' : step.button_text || 'Next'}
+            ${isLastStep ? 'Finish' : displayButtonText}
           </button>
         </div>
       </div>

@@ -663,6 +663,28 @@ export default function EditTooltipPage() {
               <div className="card p-5 mb-5">
                 <h2 className="text-base font-semibold text-gray-900 mb-4">Content</h2>
                 
+                {/* Available Variables */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                  <p className="text-xs font-medium text-blue-800 mb-2">📝 Available Variables (click to copy)</p>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { var: '{{firstName}}', label: 'First Name' },
+                      { var: '{{lastName}}', label: 'Last Name' },
+                      { var: '{{userName}}', label: 'Full Name' },
+                    ].map(({ var: v, label }) => (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => navigator.clipboard.writeText(v)}
+                        className="px-2 py-1 bg-white border border-blue-300 rounded text-xs text-blue-700 hover:bg-blue-100 transition-colors"
+                        title={`Click to copy ${v}`}
+                      >
+                        {v} <span className="text-blue-400">({label})</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="space-y-4">
                   <div>
                     <label className="label">Title</label>
@@ -671,7 +693,7 @@ export default function EditTooltipPage() {
                       className="input"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
-                      placeholder="Feature Title"
+                      placeholder="Hey {{firstName}}, check this out!"
                     />
                   </div>
 

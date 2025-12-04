@@ -60,6 +60,38 @@
     return finalLang;
   }
   
+  // Replace personalization variables in text
+  function replaceVariables(text) {
+    if (!text) return text;
+    
+    // Get first and last name from userName if available
+    let firstName = '';
+    let lastName = '';
+    let fullName = userConfig.userName || '';
+    
+    if (fullName) {
+      const parts = fullName.trim().split(/\s+/);
+      firstName = parts[0] || '';
+      lastName = parts.slice(1).join(' ') || '';
+    }
+    
+    // Also check for separate firstName/lastName in config
+    if (window.TourLayerConfig) {
+      firstName = window.TourLayerConfig.firstName || firstName;
+      lastName = window.TourLayerConfig.lastName || lastName;
+      fullName = window.TourLayerConfig.userName || fullName || `${firstName} ${lastName}`.trim();
+    }
+    
+    // Replace all variables (case-insensitive matching for flexibility)
+    return text
+      .replace(/\{\{firstName\}\}/gi, firstName)
+      .replace(/\{\{lastName\}\}/gi, lastName)
+      .replace(/\{\{userName\}\}/gi, fullName)
+      .replace(/\{\{user_name\}\}/gi, fullName)
+      .replace(/\{\{first_name\}\}/gi, firstName)
+      .replace(/\{\{last_name\}\}/gi, lastName);
+  }
+  
   // Get user config from page (if set by website)
   function getUserConfig() {
     if (window.TourLayerConfig) {
@@ -632,14 +664,19 @@
       text-align: ${tooltip.text_align || 'left'};
     `;
     
+    // Apply variable replacement for personalization
+    const displayTitle = replaceVariables(tooltip.title);
+    const displayBody = replaceVariables(tooltip.body);
+    const displayButtonText = replaceVariables(tooltip.button_text || 'Got it');
+    
     card.innerHTML = `
       <button class="tourlayer-card-close" data-action="close">&times;</button>
       ${tooltip.image_url ? `<img src="${escapeHtml(tooltip.image_url)}" class="tourlayer-card-image" style="border-radius: ${Math.max(0, cardBorderRadius - 4)}px ${Math.max(0, cardBorderRadius - 4)}px 0 0;" alt="">` : ''}
       <div class="tourlayer-card-content" style="color: ${cardTextColor}; padding: ${cardPadding}px;">
-        <h3 class="tourlayer-card-title">${escapeHtml(tooltip.title)}</h3>
-        ${tooltip.body ? `<p class="tourlayer-card-body">${escapeHtml(tooltip.body)}</p>` : ''}
+        <h3 class="tourlayer-card-title">${escapeHtml(displayTitle)}</h3>
+        ${displayBody ? `<p class="tourlayer-card-body">${escapeHtml(displayBody)}</p>` : ''}
         <button class="tourlayer-card-btn" style="background: ${buttonColor}; color: ${buttonTextColor}; border-radius: ${buttonBorderRadius}px; margin-top: 12px; padding: 10px 20px; border: none; cursor: pointer; font-weight: 500; width: ${tooltip.text_align === 'center' ? '100%' : 'auto'};" data-action="dismiss">
-          ${escapeHtml(tooltip.button_text || 'Got it')}
+          ${escapeHtml(displayButtonText)}
         </button>
       </div>
     `;
@@ -1161,15 +1198,19 @@
       overflow: hidden;
     `;
     
+    // Apply variable replacement for personalization
+    const displayTitle = replaceVariables(step.title);
+    const displayContent = replaceVariables(step.content);
+    
     tooltip.innerHTML = `
       <button class="tourlayer-close" data-action="close">&times;</button>
       <div class="tourlayer-tooltip-header" style="background: ${styling.buttonColor};">
-        <div class="tourlayer-tooltip-title">${escapeHtml(step.title)}</div>
+        <div class="tourlayer-tooltip-title">${escapeHtml(displayTitle)}</div>
         <div class="tourlayer-tooltip-step">Step ${index + 1} of ${totalSteps}</div>
       </div>
       <div class="tourlayer-tooltip-body" style="padding: ${styling.cardPadding}px; color: ${styling.cardTextColor};">
         ${step.image_url ? `<img src="${escapeHtml(step.image_url)}" class="tourlayer-tooltip-image" style="border-radius: ${Math.max(0, styling.cardBorderRadius - 4)}px;" alt="">` : ''}
-        <div class="tourlayer-tooltip-content">${escapeHtml(step.content)}</div>
+        <div class="tourlayer-tooltip-content">${escapeHtml(displayContent)}</div>
       </div>
       <div class="tourlayer-tooltip-footer">
         <button class="tourlayer-btn tourlayer-btn-skip" data-action="skip">Skip tour</button>
@@ -1230,15 +1271,19 @@
       const isLastStep = index === totalSteps - 1;
       const isFirstStep = index === 0;
 
+      // Apply variable replacement for personalization
+      const displayStepTitle = replaceVariables(step.title);
+      const displayStepContent = replaceVariables(step.content);
+      
       tooltip.innerHTML = `
         <button class="tourlayer-close" data-action="close">&times;</button>
         <div class="tourlayer-tooltip-header" style="background: ${styling.buttonColor};">
-          <div class="tourlayer-tooltip-title">${escapeHtml(step.title)}</div>
+          <div class="tourlayer-tooltip-title">${escapeHtml(displayStepTitle)}</div>
           <div class="tourlayer-tooltip-step">Step ${index + 1} of ${totalSteps}</div>
         </div>
         <div class="tourlayer-tooltip-body" style="padding: ${styling.cardPadding}px; color: ${styling.cardTextColor};">
           ${step.image_url ? `<img src="${escapeHtml(step.image_url)}" class="tourlayer-tooltip-image" style="border-radius: ${Math.max(0, styling.cardBorderRadius - 4)}px;" alt="">` : ''}
-          <div class="tourlayer-tooltip-content">${escapeHtml(step.content)}</div>
+          <div class="tourlayer-tooltip-content">${escapeHtml(displayStepContent)}</div>
         </div>
         <div class="tourlayer-tooltip-footer">
           <button class="tourlayer-btn tourlayer-btn-skip" data-action="skip">Skip tour</button>

@@ -72,12 +72,15 @@ export default function SettingsPage() {
     const apiToken = workspace?.apiToken || user?.apiToken || 'YOUR_API_TOKEN';
     
     if (withUser) {
-      return `<!-- TourLayer - Product Tours with User Tracking -->
+      return `<!-- TourLayer - Product Tours with User Tracking & Personalization -->
 <script>
   window.TourLayerConfig = {
     token: '${apiToken}',
     userId: 'YOUR_USER_ID',     // Your app's logged-in user ID
-    userLocale: 'en'            // User's language (en, uk, pl, es, pt, de, ru, fr, it, ja, zh)
+    userName: 'John Doe',       // Full name (for {{userName}} variable)
+    firstName: 'John',          // First name (for {{firstName}} variable)
+    lastName: 'Doe',            // Last name (for {{lastName}} variable)
+    userLocale: 'en'            // User's language (en, uk, pl, es, de, ru, fr, it, ja, zh)
   };
 </script>
 <script src="https://plg-tour.vercel.app/embed.js"></script>`;
