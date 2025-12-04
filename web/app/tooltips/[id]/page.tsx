@@ -10,7 +10,7 @@ import { Save, Crosshair, AlertCircle, CheckCircle, MousePointer, Hand, Trash2, 
 
 // Shadcn UI components
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Field, FieldLabel, FieldGroup, FieldDescription } from '@/components/ui/field';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
 
@@ -1178,174 +1178,153 @@ export default function EditTooltipPage() {
           <div className="card p-5 mb-5">
             <h2 className="text-base font-semibold text-gray-900 mb-4">Card Styling</h2>
             
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              <div className="space-y-2">
-                <Label>Width (px)</Label>
-                <Input
-                  type="number"
-                  value={cardWidth}
-                  onChange={(e) => setCardWidth(parseInt(e.target.value) || 320)}
-                />
+            <FieldGroup>
+              <div className="grid grid-cols-3 gap-4">
+                <Field>
+                  <FieldLabel>Width (px)</FieldLabel>
+                  <Input
+                    type="number"
+                    value={cardWidth}
+                    onChange={(e) => setCardWidth(parseInt(e.target.value) || 320)}
+                  />
+                </Field>
+
+                <Field>
+                  <FieldLabel>Padding (px)</FieldLabel>
+                  <Input
+                    type="number"
+                    value={cardPadding}
+                    onChange={(e) => setCardPadding(parseInt(e.target.value) || 20)}
+                  />
+                </Field>
+
+                <Field>
+                  <FieldLabel>Corner Radius (px)</FieldLabel>
+                  <Input
+                    type="number"
+                    value={cardBorderRadius}
+                    onChange={(e) => setCardBorderRadius(parseInt(e.target.value) || 12)}
+                  />
+                </Field>
               </div>
 
-              <div className="space-y-2">
-                <Label>Padding (px)</Label>
-                <Input
-                  type="number"
-                  value={cardPadding}
-                  onChange={(e) => setCardPadding(parseInt(e.target.value) || 20)}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <Field>
+                  <FieldLabel>Text Alignment</FieldLabel>
+                  <div className="flex gap-1">
+                    {['left', 'center', 'right'].map((align) => (
+                      <button
+                        key={align}
+                        type="button"
+                        onClick={() => setTextAlign(align as any)}
+                        className={`flex-1 py-1.5 rounded-md capitalize text-sm font-medium transition-colors ${
+                          textAlign === align 
+                            ? 'bg-primary text-primary-foreground' 
+                            : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                        }`}
+                      >
+                        {align}
+                      </button>
+                    ))}
+                  </div>
+                </Field>
+
+                <Field>
+                  <FieldLabel>Shadow</FieldLabel>
+                  <Select value={cardShadow} onValueChange={setCardShadow}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      <SelectItem value="small">Small</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="large">Large</SelectItem>
+                      <SelectItem value="extra">Extra Large</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </Field>
               </div>
 
-              <div className="space-y-2">
-                <Label>Corner Radius (px)</Label>
-                <Input
-                  type="number"
-                  value={cardBorderRadius}
-                  onChange={(e) => setCardBorderRadius(parseInt(e.target.value) || 12)}
-                />
-              </div>
-            </div>
+              <div className="grid grid-cols-2 gap-4">
+                <Field>
+                  <FieldLabel>Background Color</FieldLabel>
+                  <ColorPicker value={cardBgColor} onChange={setCardBgColor} />
+                </Field>
 
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="space-y-2">
-                <Label>Text Alignment</Label>
-                <div className="flex gap-1">
-                  {['left', 'center', 'right'].map((align) => (
-                    <button
-                      key={align}
-                      type="button"
-                      onClick={() => setTextAlign(align as any)}
-                      className={`flex-1 py-2 rounded-md capitalize text-sm font-medium transition-colors ${
-                        textAlign === align 
-                          ? 'bg-primary text-primary-foreground' 
-                          : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                      }`}
-                    >
-                      {align}
-                    </button>
-                  ))}
-                </div>
+                <Field>
+                  <FieldLabel>Text Color</FieldLabel>
+                  <ColorPicker value={cardTextColor} onChange={setCardTextColor} />
+                </Field>
               </div>
-
-              <div className="space-y-2">
-                <Label>Shadow</Label>
-                <Select value={cardShadow} onValueChange={setCardShadow}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">None</SelectItem>
-                    <SelectItem value="small">Small</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="large">Large</SelectItem>
-                    <SelectItem value="extra">Extra Large</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Background Color</Label>
-                <ColorPicker value={cardBgColor} onChange={setCardBgColor} />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Text Color</Label>
-                <ColorPicker value={cardTextColor} onChange={setCardTextColor} />
-              </div>
-            </div>
+            </FieldGroup>
           </div>
 
           {/* Typography */}
           <div className="card p-5 mb-5">
             <h2 className="text-base font-semibold text-gray-900 mb-4">Typography</h2>
             
-            <div className="grid grid-cols-3 gap-6 mb-4">
-              <div className="space-y-3">
-                <Label>Title Size: {titleSize}px</Label>
-                <Slider
-                  value={[Number(titleSize)]}
-                  onValueChange={([value]) => setTitleSize(value)}
-                  min={12}
-                  max={24}
-                  step={1}
-                />
-              </div>
+            <FieldGroup>
+              <div className="grid grid-cols-3 gap-4">
+                <Field>
+                  <FieldLabel>Title Size: {titleSize}px</FieldLabel>
+                  <Slider
+                    value={[Number(titleSize)]}
+                    onValueChange={([value]) => setTitleSize(value)}
+                    min={12}
+                    max={24}
+                    step={1}
+                  />
+                </Field>
 
-              <div className="space-y-3">
-                <Label>Body Size: {bodySize}px</Label>
-                <Slider
-                  value={[Number(bodySize)]}
-                  onValueChange={([value]) => setBodySize(value)}
-                  min={10}
-                  max={18}
-                  step={1}
-                />
-              </div>
+                <Field>
+                  <FieldLabel>Body Size: {bodySize}px</FieldLabel>
+                  <Slider
+                    value={[Number(bodySize)]}
+                    onValueChange={([value]) => setBodySize(value)}
+                    min={10}
+                    max={18}
+                    step={1}
+                  />
+                </Field>
 
-              <div className="space-y-3">
-                <Label>Line Height: {Number(bodyLineHeight).toFixed(2)}</Label>
-                <Slider
-                  value={[Number(bodyLineHeight) * 100]}
-                  onValueChange={([value]) => setBodyLineHeight(value / 100)}
-                  min={100}
-                  max={200}
-                  step={10}
-                />
+                <Field>
+                  <FieldLabel>Line Height: {Number(bodyLineHeight).toFixed(2)}</FieldLabel>
+                  <Slider
+                    value={[Number(bodyLineHeight) * 100]}
+                    onValueChange={([value]) => setBodyLineHeight(value / 100)}
+                    min={100}
+                    max={200}
+                    step={10}
+                  />
+                </Field>
               </div>
-            </div>
+            </FieldGroup>
           </div>
 
           {/* Button Styling */}
           <div className="card p-5 mb-5">
             <h2 className="text-base font-semibold text-gray-900 mb-4">Button Styling</h2>
             
-            {/* Size */}
-            <div className="mb-4 space-y-2">
-              <Label>Size</Label>
-              <div className="flex gap-1">
-                {[
-                  { size: 'xxs', label: 'XXS' },
-                  { size: 'xs', label: 'XS' },
-                  { size: 's', label: 'S' },
-                  { size: 'm', label: 'M' },
-                  { size: 'l', label: 'L' },
-                  { size: 'xl', label: 'XL' },
-                ].map(({ size, label }) => (
-                  <button
-                    key={size}
-                    type="button"
-                    onClick={() => setButtonSize(size as any)}
-                    className={`flex-1 py-2 rounded-md text-xs font-medium transition-colors ${
-                      buttonSize === size
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                    }`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Position and Type */}
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="space-y-2">
-                <Label>Position</Label>
+            <FieldGroup>
+              {/* Size */}
+              <Field>
+                <FieldLabel>Size</FieldLabel>
                 <div className="flex gap-1">
                   {[
-                    { pos: 'left', label: '←' },
-                    { pos: 'center', label: '•' },
-                    { pos: 'right', label: '→' },
-                  ].map(({ pos, label }) => (
+                    { size: 'xxs', label: 'XXS' },
+                    { size: 'xs', label: 'XS' },
+                    { size: 's', label: 'S' },
+                    { size: 'm', label: 'M' },
+                    { size: 'l', label: 'L' },
+                    { size: 'xl', label: 'XL' },
+                  ].map(({ size, label }) => (
                     <button
-                      key={pos}
+                      key={size}
                       type="button"
-                      onClick={() => setButtonPosition(pos as any)}
-                      className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
-                        buttonPosition === pos
+                      onClick={() => setButtonSize(size as any)}
+                      className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                        buttonSize === size
                           ? 'bg-primary text-primary-foreground'
                           : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                       }`}
@@ -1354,54 +1333,81 @@ export default function EditTooltipPage() {
                     </button>
                   ))}
                 </div>
+              </Field>
+
+              {/* Position and Type */}
+              <div className="grid grid-cols-2 gap-4">
+                <Field>
+                  <FieldLabel>Position</FieldLabel>
+                  <div className="flex gap-1">
+                    {[
+                      { pos: 'left', label: '←' },
+                      { pos: 'center', label: '•' },
+                      { pos: 'right', label: '→' },
+                    ].map(({ pos, label }) => (
+                      <button
+                        key={pos}
+                        type="button"
+                        onClick={() => setButtonPosition(pos as any)}
+                        className={`flex-1 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                          buttonPosition === pos
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </Field>
+
+                <Field>
+                  <FieldLabel>Type</FieldLabel>
+                  <div className="flex gap-1">
+                    {[
+                      { type: 'regular', label: 'Regular' },
+                      { type: 'stretched', label: 'Stretched' },
+                    ].map(({ type, label }) => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => setButtonType(type as any)}
+                        className={`flex-1 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                          buttonType === type
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </Field>
               </div>
 
-              <div className="space-y-2">
-                <Label>Type</Label>
-                <div className="flex gap-1">
-                  {[
-                    { type: 'regular', label: 'Regular' },
-                    { type: 'stretched', label: 'Stretched' },
-                  ].map(({ type, label }) => (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={() => setButtonType(type as any)}
-                      className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
-                        buttonType === type
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                      }`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
+              {/* Corner Radius */}
+              <Field>
+                <FieldLabel>Corner Radius (px)</FieldLabel>
+                <Input
+                  type="number"
+                  value={buttonBorderRadius}
+                  onChange={(e) => setButtonBorderRadius(parseInt(e.target.value) || 8)}
+                />
+              </Field>
 
-            {/* Corner Radius */}
-            <div className="mb-4 space-y-2">
-              <Label>Corner Radius (px)</Label>
-              <Input
-                type="number"
-                value={buttonBorderRadius}
-                onChange={(e) => setButtonBorderRadius(parseInt(e.target.value) || 8)}
-              />
-            </div>
+              {/* Colors */}
+              <div className="grid grid-cols-2 gap-4">
+                <Field>
+                  <FieldLabel>Button Background</FieldLabel>
+                  <ColorPicker value={buttonColor} onChange={setButtonColor} />
+                </Field>
 
-            {/* Colors */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Button Background</Label>
-                <ColorPicker value={buttonColor} onChange={setButtonColor} />
+                <Field>
+                  <FieldLabel>Button Text Color</FieldLabel>
+                  <ColorPicker value={buttonTextColor} onChange={setButtonTextColor} />
+                </Field>
               </div>
-
-              <div className="space-y-2">
-                <Label>Button Text Color</Label>
-                <ColorPicker value={buttonTextColor} onChange={setButtonTextColor} />
-              </div>
-            </div>
+            </FieldGroup>
           </div>
 
           {/* Display Frequency */}
