@@ -6,7 +6,7 @@ import FullScreenModal from '@/components/FullScreenModal';
 import ImageUpload from '@/components/ImageUpload';
 import ColorPicker from '@/components/ColorPicker';
 import CenterSlider from '@/components/CenterSlider';
-import { Save, Crosshair, AlertCircle, CheckCircle, MousePointer, Hand, Languages, Settings, FileText, Star, Sparkles, Wand2, Circle } from 'lucide-react';
+import { Save, Crosshair, AlertCircle, CheckCircle, MousePointer, Hand, Languages, Settings, FileText, Star, Sparkles, Wand2, Circle, Check, RefreshCw } from 'lucide-react';
 
 export default function NewTooltipPage() {
   const router = useRouter();
@@ -14,7 +14,7 @@ export default function NewTooltipPage() {
   const [extensionInstalled, setExtensionInstalled] = useState(false);
   const [pickingElement, setPickingElement] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
-  const [activeTab, setActiveTab] = useState<'customisation' | 'content'>('content');
+  const [activeStep, setActiveStep] = useState(0);
   const [previewLang, setPreviewLang] = useState('en');
   
   const LANGUAGES = [
@@ -339,6 +339,15 @@ export default function NewTooltipPage() {
     );
   };
 
+  // Stepper configuration
+  const steps = [
+    { id: 0, label: 'Content', icon: FileText },
+    { id: 1, label: 'Target', icon: Crosshair },
+    { id: 2, label: 'Beacon', icon: Circle },
+    { id: 3, label: 'Card Style', icon: Settings },
+    { id: 4, label: 'Frequency', icon: RefreshCw },
+  ];
+
   return (
     <FullScreenModal
       title="New Tooltip"
@@ -361,9 +370,10 @@ export default function NewTooltipPage() {
         }
       `}</style>
 
-      <div className="flex gap-6 p-6 h-full">
+      <div className="flex h-full">
         {/* Left Column - Form */}
-        <div className="flex-1 max-w-2xl overflow-y-auto">
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="max-w-2xl">
           {/* Extension Status */}
           <div className={`mb-4 p-3 rounded-lg flex items-center gap-3 ${
             extensionInstalled 
@@ -383,35 +393,8 @@ export default function NewTooltipPage() {
             )}
           </div>
 
-          {/* Tabs */}
-          <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-lg">
-            <button
-              onClick={() => setActiveTab('content')}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all ${
-                activeTab === 'content'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <FileText size={18} />
-              Content
-            </button>
-            <button
-              onClick={() => setActiveTab('customisation')}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all ${
-                activeTab === 'customisation'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <Settings size={18} />
-              Customisation
-            </button>
-          </div>
-
-          {/* CONTENT TAB */}
-          {activeTab === 'content' && (
-            <>
+          {/* Step Content */}
+          {activeStep === 0 && (
               {/* Card Content */}
               <div className="card p-5 mb-5">
                 <h2 className="text-base font-semibold text-gray-900 mb-4">Content</h2>
@@ -491,11 +474,10 @@ export default function NewTooltipPage() {
                   Save this tooltip first, then you can auto-translate to 10+ languages on the Edit page.
                 </p>
               </div>
-            </>
           )}
 
-          {/* CUSTOMISATION TAB */}
-          {activeTab === 'customisation' && (
+          {/* CUSTOMISATION STEPS */}
+          {activeStep >= 1 && (
             <>
               {/* Targeting Section */}
           <div className="card p-5 mb-5">
@@ -1134,17 +1116,46 @@ export default function NewTooltipPage() {
             </>
           )}
 
+          </div>
         </div>
 
-        {/* Right Column - Preview */}
-        <div className="flex-1 min-w-[400px]">
-          <div className="sticky top-0 h-screen py-6 flex flex-col">
-            {/* Preview Area */}
-            {showPreview && (
-              <div 
-                className="rounded-xl p-6 flex-1 flex items-center justify-center h-full overflow-hidden"
-                style={{ backgroundColor: '#f3f4f6', minHeight: 'calc(100vh - 48px)' }}
-              >
+        {/* Right Column - Stepper + Preview */}
+        <div className="w-[500px] flex flex-col border-l border-gray-200">
+          {/* Vertical Stepper */}
+          <div className="p-4 border-b border-gray-200 bg-white">
+            <div className="flex gap-2">
+              {steps.map((step, index) => {
+                const Icon = step.icon;
+                const isActive = activeStep === index;
+                const isCompleted = activeStep > index;
+                return (
+                  <button
+                    key={step.id}
+                    onClick={() => setActiveStep(index)}
+                    className={`flex-1 flex flex-col items-center gap-1 p-2 rounded-lg transition-all ${
+                      isActive 
+                        ? 'bg-blue-100 text-blue-700' 
+                        : isCompleted
+                          ? 'bg-green-50 text-green-600'
+                          : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      isActive ? 'bg-blue-600 text-white' : isCompleted ? 'bg-green-500 text-white' : 'bg-gray-200'
+                    }`}>
+                      {isCompleted ? <Check size={16} /> : <Icon size={16} />}
+                    </div>
+                    <span className="text-xs font-medium">{step.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          
+          {/* Preview Area */}
+          <div 
+            className="flex-1 flex items-center justify-center overflow-hidden bg-gray-50"
+          >
                 {/* Preview container - positions calculated from beacon */}
                 <div className="relative">
                   {/* Mock Element */}
@@ -1251,7 +1262,6 @@ export default function NewTooltipPage() {
                   })()}
                 </div>
               </div>
-            )}
           </div>
         </div>
       </div>

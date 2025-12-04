@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import FullScreenModal from '@/components/FullScreenModal';
 import { PreviewPanel } from '@/components/StepPreview';
 import ColorPicker from '@/components/ColorPicker';
-import { Plus, Trash2, GripVertical, Save, Crosshair, AlertCircle, CheckCircle, Eye, Layers, Settings, FileText, Languages } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Save, Crosshair, AlertCircle, CheckCircle, Eye, Layers, Settings, FileText, Languages, Check, RefreshCw } from 'lucide-react';
 import ImageUpload from '@/components/ImageUpload';
 
 interface Step {
@@ -56,7 +56,7 @@ const defaultFrequency: TourFrequency = {
 
 export default function NewTourPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'content' | 'customisation'>('content');
+  const [currentFormStep, setCurrentFormStep] = useState(0);
   const [tourName, setTourName] = useState('New Product Tour');
   const [urlPattern, setUrlPattern] = useState('');
   const [steps, setSteps] = useState<Step[]>([]);
@@ -69,6 +69,9 @@ export default function NewTourPage() {
   const [pickingForStep, setPickingForStep] = useState<string | null>(null);
   const [pickerStatus, setPickerStatus] = useState<'idle' | 'waiting' | 'success'>('idle');
   const [activePreviewStep, setActivePreviewStep] = useState<string | null>(null);
+  
+  // Get active step object for preview
+  const activeStep = activePreviewStep ? steps.find(s => s.id === activePreviewStep) || (steps.length > 0 ? steps[0] : null) : (steps.length > 0 ? steps[0] : null);
 
   // Check if extension is installed
   useEffect(() => {
@@ -267,9 +270,10 @@ export default function NewTourPage() {
         </button>
       }
     >
-      <div className="flex gap-6 p-6 h-full">
+      <div className="flex h-full">
         {/* Main Form */}
-        <div className="flex-1 max-w-3xl overflow-y-auto">
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="max-w-3xl">
           {/* Extension Status */}
           <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${
             extensionInstalled 
@@ -317,35 +321,8 @@ export default function NewTourPage() {
             </div>
           )}
 
-          {/* Tabs */}
-          <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-lg">
-            <button
-              onClick={() => setActiveTab('content')}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all ${
-                activeTab === 'content'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <FileText size={18} />
-              Content
-            </button>
-            <button
-              onClick={() => setActiveTab('customisation')}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all ${
-                activeTab === 'customisation'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <Settings size={18} />
-              Customisation
-            </button>
-          </div>
-
-          {/* CONTENT TAB */}
-          {activeTab === 'content' && (
-            <>
+          {/* Step Content */}
+          {currentFormStep === 0 && (
               {/* Tour Details */}
           <div className="card p-6 mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Tour Details</h2>
@@ -391,8 +368,8 @@ export default function NewTourPage() {
             </>
           )}
 
-          {/* CUSTOMISATION TAB */}
-          {activeTab === 'customisation' && (
+          {/* CUSTOMISATION STEP */}
+          {currentFormStep >= 1 && (
             <>
               {/* Card Styling (Collapsible) */}
           <div className="card p-6 mb-6">
@@ -817,33 +794,50 @@ export default function NewTourPage() {
             )}
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => router.push('/tours')}
-              className="btn btn-secondary"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={saveTour}
-              disabled={loading}
-              className="btn btn-primary flex items-center gap-2"
-            >
-              <Save size={18} />
-              {loading ? 'Saving...' : 'Save Tour'}
-            </button>
           </div>
         </div>
 
         {/* Preview Panel - Sticky Sidebar */}
-        <div className="flex-1 min-w-[400px]">
-          <div className="sticky top-0 h-screen py-6 flex flex-col">
+        <div className="w-[500px] flex flex-col border-l border-gray-200">
+          {/* Stepper */}
+          <div className="p-4 border-b border-gray-200 bg-white">
+            <div className="flex gap-2">
+              {[
+                { id: 0, label: 'Content', icon: FileText },
+                { id: 1, label: 'Style', icon: Settings },
+                { id: 2, label: 'Frequency', icon: RefreshCw },
+              ].map((formStep, index) => {
+                const Icon = formStep.icon;
+                const isActive = currentFormStep === index;
+                const isCompleted = currentFormStep > index;
+                return (
+                  <button
+                    key={formStep.id}
+                    onClick={() => setCurrentFormStep(index)}
+                    className={`flex-1 flex flex-col items-center gap-1 p-2 rounded-lg transition-all ${
+                      isActive 
+                        ? 'bg-blue-100 text-blue-700' 
+                        : isCompleted
+                          ? 'bg-green-50 text-green-600'
+                          : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      isActive ? 'bg-blue-600 text-white' : isCompleted ? 'bg-green-500 text-white' : 'bg-gray-200'
+                    }`}>
+                      {isCompleted ? <Check size={16} /> : <Icon size={16} />}
+                    </div>
+                    <span className="text-xs font-medium">{formStep.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          
+          {/* Preview Area */}
+          <div className="flex-1 flex items-center justify-center overflow-hidden bg-gray-50">
             {activeStep ? (
-              <div 
-                className="rounded-xl p-6 flex-1 flex items-center justify-center h-full"
-                style={{ backgroundColor: '#f3f4f6', minHeight: 'calc(100vh - 48px)' }}
-              >
+              <div className="flex items-center justify-center h-full w-full p-6">
                 {/* Preview Layout - changes based on placement */}
                 <div 
                   className="flex items-center justify-center gap-4"

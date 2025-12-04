@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import FullScreenModal from '@/components/FullScreenModal';
-import { Plus, Trash2, GripVertical, Save, Crosshair, AlertCircle, CheckCircle, Loader2, Settings, FileText, Languages, RefreshCw, Copy } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Save, Crosshair, AlertCircle, CheckCircle, Loader2, Settings, FileText, Languages, RefreshCw, Copy, MoreVertical, Check } from 'lucide-react';
 import ImageUpload from '@/components/ImageUpload';
 
 interface Step {
@@ -52,7 +52,8 @@ export default function EditTourPage() {
   const [pickingForStep, setPickingForStep] = useState<string | null>(null);
   const [pickerStatus, setPickerStatus] = useState<'idle' | 'waiting' | 'success'>('idle');
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'content' | 'customisation'>('content');
+  const [currentFormStep, setCurrentFormStep] = useState(0);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
   
   // Translations
   const [previewLang, setPreviewLang] = useState('en');
@@ -433,24 +434,57 @@ export default function EditTourPage() {
     <FullScreenModal
       title="Edit Tour"
       onClose={() => router.push('/tours')}
+      headerExtra={
+        <label className="relative inline-flex items-center cursor-pointer">
+          <input
+            type="checkbox"
+            checked={isActive}
+            onChange={(e) => setIsActive(e.target.checked)}
+            className="sr-only peer"
+          />
+          <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+          <span className="ml-2 text-sm font-medium text-gray-700">
+            {isActive ? 'Active' : 'Inactive'}
+          </span>
+        </label>
+      }
       actions={
         <div className="flex items-center gap-2">
-          <button
-            onClick={duplicateTour}
-            disabled={duplicating}
-            className="btn btn-secondary flex items-center gap-2"
-          >
-            <Copy size={16} />
-            {duplicating ? 'Duplicating...' : 'Duplicate'}
-          </button>
-          <button
-            onClick={deleteTour}
-            disabled={deleting}
-            className="btn btn-secondary text-red-600 hover:bg-red-50 flex items-center gap-2"
-          >
-            <Trash2 size={16} />
-            {deleting ? 'Deleting...' : 'Delete'}
-          </button>
+          {/* More Menu */}
+          <div className="relative">
+            <button
+              onClick={() => setShowMoreMenu(!showMoreMenu)}
+              className="p-2 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              <MoreVertical size={20} className="text-gray-600" />
+            </button>
+            {showMoreMenu && (
+              <>
+                <div 
+                  className="fixed inset-0 z-10" 
+                  onClick={() => setShowMoreMenu(false)}
+                />
+                <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
+                  <button
+                    onClick={() => { duplicateTour(); setShowMoreMenu(false); }}
+                    disabled={duplicating}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                  >
+                    <Copy size={16} />
+                    {duplicating ? 'Duplicating...' : 'Duplicate'}
+                  </button>
+                  <button
+                    onClick={() => { deleteTour(); setShowMoreMenu(false); }}
+                    disabled={deleting}
+                    className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                  >
+                    <Trash2 size={16} />
+                    {deleting ? 'Deleting...' : 'Delete'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
           <button
             onClick={saveTour}
             disabled={saving}
@@ -462,8 +496,10 @@ export default function EditTourPage() {
         </div>
       }
     >
-      <div className="p-6 overflow-y-auto h-full">
-        <div className="max-w-4xl mx-auto">
+      <div className="flex h-full">
+        {/* Main Form */}
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="max-w-4xl">
           {/* Extension Status */}
         <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${
           extensionInstalled 
@@ -511,35 +547,8 @@ export default function EditTourPage() {
           </div>
         )}
 
-        {/* Tabs */}
-        <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-lg">
-          <button
-            onClick={() => setActiveTab('content')}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all ${
-              activeTab === 'content'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            <FileText size={18} />
-            Content
-          </button>
-          <button
-            onClick={() => setActiveTab('customisation')}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all ${
-              activeTab === 'customisation'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            <Settings size={18} />
-            Customisation
-          </button>
-        </div>
-
-        {/* CONTENT TAB */}
-        {activeTab === 'content' && (
-          <>
+        {/* Step Content */}
+        {currentFormStep === 0 && (
             {/* Tour Details */}
         <div className="card p-6 mb-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Tour Details</h2>
@@ -858,8 +867,8 @@ export default function EditTourPage() {
           </>
         )}
 
-        {/* CUSTOMISATION TAB */}
-        {activeTab === 'customisation' && (
+        {/* CUSTOMISATION STEP */}
+        {currentFormStep >= 1 && (
           <div className="card p-6 mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Tour Styling</h2>
             <p className="text-sm text-gray-500">
@@ -868,6 +877,52 @@ export default function EditTourPage() {
           </div>
         )}
 
+          </div>
+        </div>
+
+        {/* Right Panel - Stepper */}
+        <div className="w-[300px] flex flex-col border-l border-gray-200">
+          {/* Stepper */}
+          <div className="p-4 bg-white border-b border-gray-200">
+            <div className="flex gap-2">
+              {[
+                { id: 0, label: 'Content', icon: FileText },
+                { id: 1, label: 'Style', icon: Settings },
+              ].map((formStep, index) => {
+                const Icon = formStep.icon;
+                const isActive = currentFormStep === index;
+                const isCompleted = currentFormStep > index;
+                return (
+                  <button
+                    key={formStep.id}
+                    onClick={() => setCurrentFormStep(index)}
+                    className={`flex-1 flex flex-col items-center gap-1 p-2 rounded-lg transition-all ${
+                      isActive 
+                        ? 'bg-blue-100 text-blue-700' 
+                        : isCompleted
+                          ? 'bg-green-50 text-green-600'
+                          : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      isActive ? 'bg-blue-600 text-white' : isCompleted ? 'bg-green-500 text-white' : 'bg-gray-200'
+                    }`}>
+                      {isCompleted ? <Check size={16} /> : <Icon size={16} />}
+                    </div>
+                    <span className="text-xs font-medium">{formStep.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          
+          {/* Preview placeholder */}
+          <div className="flex-1 flex items-center justify-center bg-gray-50 p-4">
+            <div className="text-center text-gray-500">
+              <p className="text-sm">Preview</p>
+              <p className="text-xs mt-1">Tour preview coming soon</p>
+            </div>
+          </div>
         </div>
       </div>
     </FullScreenModal>
