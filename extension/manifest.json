@@ -21,7 +21,8 @@
     "storage",
     "activeTab",
     "scripting",
-    "tabs"
+    "tabs",
+    "<all_urls>"
   ],
   "host_permissions": [
     "https://*/*",
