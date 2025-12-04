@@ -74,9 +74,23 @@ export default function SettingsPage() {
     setTimeout(() => setCopied(null), 2000);
   };
 
-  const getEmbedSnippet = () => {
+  const getEmbedSnippet = (withUser: boolean = false) => {
     const apiToken = workspace?.apiToken || user?.apiToken || 'YOUR_API_TOKEN';
-    return `<!-- TourLayer - Product Tours -->
+    
+    if (withUser) {
+      return `<!-- TourLayer - Product Tours with User Tracking -->
+<script>
+  window.TourLayerConfig = {
+    token: '${apiToken}',
+    userId: 'YOUR_USER_ID',      // Required: Your app's unique user ID
+    userEmail: 'user@email.com', // Optional: For analytics
+    userName: 'John Doe'         // Optional: For personalization
+  };
+</script>
+<script src="https://plg-tour.vercel.app/embed.js"></script>`;
+    }
+    
+    return `<!-- TourLayer - Product Tours (Basic) -->
 <script 
   src="https://plg-tour.vercel.app/embed.js" 
   data-token="${apiToken}">
@@ -226,14 +240,18 @@ export default function SettingsPage() {
                   </p>
                 </div>
 
+                {/* Recommended: With User Tracking */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="label mb-0">Your Embed Code</label>
+                    <div className="flex items-center gap-2">
+                      <label className="label mb-0">With User Tracking</label>
+                      <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full">Recommended</span>
+                    </div>
                     <button
-                      onClick={() => copyToClipboard(getEmbedSnippet(), 'snippet')}
+                      onClick={() => copyToClipboard(getEmbedSnippet(true), 'snippet-user')}
                       className="btn btn-secondary btn-sm flex items-center gap-2"
                     >
-                      {copied === 'snippet' ? (
+                      {copied === 'snippet-user' ? (
                         <>
                           <Check size={14} />
                           Copied!
@@ -248,15 +266,52 @@ export default function SettingsPage() {
                   </div>
                   <div className="bg-slate-900 rounded-lg p-4 overflow-x-auto">
                     <pre className="text-sm text-green-400 font-mono whitespace-pre-wrap">
-{getEmbedSnippet()}
+{getEmbedSnippet(true)}
                     </pre>
                   </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    👆 Use this to enable "Show Once" across browsers/devices. Replace YOUR_USER_ID with your app's user ID.
+                  </p>
+                </div>
+
+                {/* Basic: Anonymous */}
+                <div className="pt-4 border-t border-gray-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <label className="label mb-0">Basic (Anonymous)</label>
+                    </div>
+                    <button
+                      onClick={() => copyToClipboard(getEmbedSnippet(false), 'snippet-basic')}
+                      className="btn btn-secondary btn-sm flex items-center gap-2"
+                    >
+                      {copied === 'snippet-basic' ? (
+                        <>
+                          <Check size={14} />
+                          Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={14} />
+                          Copy Code
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <div className="bg-slate-900 rounded-lg p-4 overflow-x-auto">
+                    <pre className="text-sm text-green-400 font-mono whitespace-pre-wrap">
+{getEmbedSnippet(false)}
+                    </pre>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    👆 Simple setup, but "Show Once" only works per browser (uses localStorage).
+                  </p>
                 </div>
 
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <h3 className="font-semibold text-blue-900 mb-2">📋 Installation Steps:</h3>
                   <ol className="list-decimal list-inside space-y-2 text-sm text-blue-800">
                     <li>Copy the embed code above</li>
+                    <li>Replace <code className="bg-blue-100 px-1 rounded">YOUR_USER_ID</code> with your logged-in user's ID</li>
                     <li>Paste it into your website's HTML, just before the closing <code className="bg-blue-100 px-1 rounded">&lt;/body&gt;</code> tag</li>
                     <li>Deploy your changes</li>
                     <li>Tours will automatically appear on matching URLs!</li>
