@@ -1109,39 +1109,35 @@ export default function NewTooltipPage() {
             {/* Preview Area */}
             {showPreview && (
               <div 
-                className="rounded-xl p-6 flex-1 flex items-center justify-center h-full"
+                className="rounded-xl p-6 flex-1 flex items-center justify-center h-full overflow-hidden"
                 style={{ backgroundColor: '#f3f4f6', minHeight: 'calc(100vh - 48px)' }}
               >
-                {/* Preview Layout - changes based on edge */}
-                <div className={`flex items-center justify-center`}
-                style={{
-                  flexDirection: iconEdge === 'top' ? 'column-reverse' : 
-                                 iconEdge === 'bottom' ? 'column' : 
-                                 iconEdge === 'left' ? 'row-reverse' : 'row',
-                  gap: `${cardGap}px`
-                }}>
-                  
-                  {/* Mock Element - Square */}
-                  <div className="relative flex-shrink-0">
-                    <div 
-                      className="bg-gray-300 rounded-lg flex items-center justify-center text-gray-500 font-medium text-sm"
-                      style={{ width: 100, height: 100 }}
-                    >
-                      Element
-                      
-                      {/* Beacon */}
-                      {iconShape && (
-                        <div style={getBeaconPreviewStyle()}>
-                          {renderBeaconIcon()}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Tooltip Card Preview */}
+                {/* Preview container - positions calculated from beacon */}
+                <div className="relative">
+                  {/* Mock Element */}
                   <div 
-                    className="flex-shrink-0"
-                    style={{
+                    className="bg-gray-300 rounded-lg flex items-center justify-center text-gray-500 font-medium text-sm"
+                    style={{ width: 100, height: 100 }}
+                  >
+                    Element
+                  </div>
+                  
+                  {/* Beacon - positioned on element edge */}
+                  {iconShape && (
+                    <div style={getBeaconPreviewStyle()}>
+                      {renderBeaconIcon()}
+                    </div>
+                  )}
+
+                  {/* Card - positioned relative to beacon */}
+                  {(() => {
+                    const elementSize = 100;
+                    const halfElement = elementSize / 2;
+                    const halfBeacon = iconSize / 2;
+                    
+                    // Calculate card position based on beacon position + cardGap
+                    let cardStyle: React.CSSProperties = {
+                      position: 'absolute',
                       width: cardWidth,
                       backgroundColor: cardBgColor,
                       color: cardTextColor,
@@ -1149,49 +1145,73 @@ export default function NewTooltipPage() {
                       padding: cardPadding,
                       boxShadow: getShadowValue(cardShadow),
                       textAlign: textAlign,
-                      // Card offset: for top/bottom edges, offset moves card horizontally
-                      // For left/right edges, offset moves card vertically
-                      transform: (iconEdge === 'top' || iconEdge === 'bottom')
-                        ? `translateX(${cardOffsetY}px)`
-                        : `translateY(${cardOffsetY}px)`,
-                    }}
-                  >
-                    {imageUrl && (
-                      <img 
-                        src={imageUrl} 
-                        alt="Preview" 
-                        className="w-full object-cover mb-3"
-                        style={{ 
-                          borderRadius: Math.max(0, cardBorderRadius - 4),
-                          aspectRatio: '16 / 9'
-                        }}
-                      />
-                    )}
-                    <h3 className="font-semibold mb-1" style={{ fontSize: `${titleSize}px` }}>
-                      {title || 'Tooltip Title'}
-                    </h3>
-                    <p className="opacity-80 mb-3" style={{ fontSize: `${bodySize}px`, lineHeight: bodyLineHeight }}>
-                      {body || 'Tooltip description goes here...'}
-                    </p>
-                    {buttonText && (
-                      <button
-                        style={{
-                          backgroundColor: buttonColor,
-                          color: buttonTextColor,
-                          borderRadius: buttonBorderRadius,
-                          padding: getButtonSizeStyles(buttonSize).padding,
-                          width: textAlign === 'center' ? '100%' : 'auto',
-                          display: textAlign === 'center' ? 'block' : 'inline-block',
-                          border: 'none',
-                          fontWeight: 500,
-                          fontSize: getButtonSizeStyles(buttonSize).fontSize,
-                          cursor: 'pointer',
-                        }}
-                      >
-                        {buttonText}
-                      </button>
-                    )}
-                  </div>
+                    };
+
+                    // Position card based on edge - distance from beacon, not element
+                    switch (iconEdge) {
+                      case 'top':
+                        // Beacon is above element, card is above beacon
+                        cardStyle.bottom = elementSize + iconOffset + iconSize + cardGap;
+                        cardStyle.left = halfElement - cardWidth / 2 + cardOffsetY;
+                        break;
+                      case 'bottom':
+                        // Beacon is below element, card is below beacon
+                        cardStyle.top = elementSize + iconOffset + iconSize + cardGap;
+                        cardStyle.left = halfElement - cardWidth / 2 + cardOffsetY;
+                        break;
+                      case 'left':
+                        // Beacon is left of element, card is left of beacon
+                        cardStyle.right = elementSize + iconOffset + iconSize + cardGap;
+                        cardStyle.top = halfElement - 100 + cardOffsetY; // -100 to roughly center card vertically
+                        break;
+                      case 'right':
+                      default:
+                        // Beacon is right of element, card is right of beacon
+                        cardStyle.left = elementSize + iconOffset + iconSize + cardGap;
+                        cardStyle.top = halfElement - 100 + cardOffsetY;
+                        break;
+                    }
+
+                    return (
+                      <div style={cardStyle}>
+                        {imageUrl && (
+                          <img 
+                            src={imageUrl} 
+                            alt="Preview" 
+                            className="w-full object-cover mb-3"
+                            style={{ 
+                              borderRadius: Math.max(0, cardBorderRadius - 4),
+                              aspectRatio: '16 / 9'
+                            }}
+                          />
+                        )}
+                        <h3 className="font-semibold mb-1" style={{ fontSize: `${titleSize}px` }}>
+                          {title || 'Tooltip Title'}
+                        </h3>
+                        <p className="opacity-80 mb-3" style={{ fontSize: `${bodySize}px`, lineHeight: bodyLineHeight }}>
+                          {body || 'Tooltip description goes here...'}
+                        </p>
+                        {buttonText && (
+                          <button
+                            style={{
+                              backgroundColor: buttonColor,
+                              color: buttonTextColor,
+                              borderRadius: buttonBorderRadius,
+                              padding: getButtonSizeStyles(buttonSize).padding,
+                              width: textAlign === 'center' ? '100%' : 'auto',
+                              display: textAlign === 'center' ? 'block' : 'inline-block',
+                              border: 'none',
+                              fontWeight: 500,
+                              fontSize: getButtonSizeStyles(buttonSize).fontSize,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            {buttonText}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             )}

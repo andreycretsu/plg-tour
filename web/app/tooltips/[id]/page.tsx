@@ -1480,57 +1480,67 @@ export default function EditTooltipPage() {
             {/* Preview Area */}
             {showPreview && (
               <div 
-                className="rounded-xl p-6 flex-1 flex items-center justify-center h-full"
+                className="rounded-xl p-6 flex-1 flex items-center justify-center h-full overflow-hidden"
                 style={{ backgroundColor: '#f3f4f6', minHeight: 'calc(100vh - 48px)' }}
               >
-                {/* Preview Layout - changes based on edge */}
-                <div className={`flex items-center justify-center`}
-                style={{
-                  flexDirection: iconEdge === 'top' ? 'column-reverse' : 
-                                 iconEdge === 'bottom' ? 'column' : 
-                                 iconEdge === 'left' ? 'row-reverse' : 'row',
-                  gap: `${cardGap}px`
-                }}>
-                  
-                  {/* Mock Element - Square */}
-                  <div className="relative flex-shrink-0">
-                    <div 
-                      className="bg-gray-300 rounded-lg flex items-center justify-center text-gray-500 font-medium text-sm"
-                      style={{ width: 100, height: 100 }}
-                    >
-                      Element
-                      
-                      {/* Beacon */}
-                      {iconShape && (
-                        <div style={getBeaconPreviewStyle()}>
-                          {renderBeaconIcon()}
-                        </div>
-                      )}
-                    </div>
+                {/* Preview container - positions calculated from beacon */}
+                <div className="relative">
+                  {/* Mock Element */}
+                  <div 
+                    className="bg-gray-300 rounded-lg flex items-center justify-center text-gray-500 font-medium text-sm"
+                    style={{ width: 100, height: 100 }}
+                  >
+                    Element
                   </div>
+                  
+                  {/* Beacon - positioned on element edge */}
+                  {iconShape && (
+                    <div style={getBeaconPreviewStyle()}>
+                      {renderBeaconIcon()}
+                    </div>
+                  )}
 
-                  {/* Tooltip Card Preview */}
+                  {/* Card - positioned relative to beacon */}
                   {(() => {
                     const preview = getPreviewContent();
-                    // Card offset: for top/bottom edges, offset moves card horizontally
-                    // For left/right edges, offset moves card vertically
-                    const cardTransform = (iconEdge === 'top' || iconEdge === 'bottom')
-                      ? `translateX(${cardPosOffsetY}px)`
-                      : `translateY(${cardPosOffsetY}px)`;
+                    const elementSize = 100;
+                    const halfElement = elementSize / 2;
+                    
+                    // Calculate card position based on beacon position + cardGap
+                    let cardStyle: React.CSSProperties = {
+                      position: 'absolute',
+                      width: cardWidth,
+                      backgroundColor: cardBgColor,
+                      color: cardTextColor,
+                      borderRadius: cardBorderRadius,
+                      padding: cardPadding,
+                      boxShadow: getShadowValue(cardShadow),
+                      textAlign: textAlign,
+                    };
+
+                    // Position card based on edge - distance from beacon, not element
+                    switch (iconEdge) {
+                      case 'top':
+                        cardStyle.bottom = elementSize + iconOffset + iconSize + cardGap;
+                        cardStyle.left = halfElement - cardWidth / 2 + cardPosOffsetY;
+                        break;
+                      case 'bottom':
+                        cardStyle.top = elementSize + iconOffset + iconSize + cardGap;
+                        cardStyle.left = halfElement - cardWidth / 2 + cardPosOffsetY;
+                        break;
+                      case 'left':
+                        cardStyle.right = elementSize + iconOffset + iconSize + cardGap;
+                        cardStyle.top = halfElement - 100 + cardPosOffsetY;
+                        break;
+                      case 'right':
+                      default:
+                        cardStyle.left = elementSize + iconOffset + iconSize + cardGap;
+                        cardStyle.top = halfElement - 100 + cardPosOffsetY;
+                        break;
+                    }
+
                     return (
-                      <div 
-                        className="flex-shrink-0"
-                        style={{
-                          width: cardWidth,
-                          backgroundColor: cardBgColor,
-                          color: cardTextColor,
-                          borderRadius: cardBorderRadius,
-                          padding: cardPadding,
-                          boxShadow: getShadowValue(cardShadow),
-                          textAlign: textAlign,
-                          transform: cardTransform,
-                        }}
-                      >
+                      <div style={cardStyle}>
                         {/* Language Badge */}
                         {previewLang !== 'en' && (
                           <div className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded inline-block mb-2">
