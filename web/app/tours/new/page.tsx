@@ -886,8 +886,11 @@ export default function NewTourPage() {
                       <img 
                         src={activeStep.imageUrl} 
                         alt="Preview" 
-                        className="w-full h-20 object-cover mb-2"
-                        style={{ borderRadius: Math.max(0, styling.cardBorderRadius - 4) }}
+                        className="w-full object-cover mb-2"
+                        style={{ 
+                          borderRadius: Math.max(0, styling.cardBorderRadius - 4),
+                          aspectRatio: '16 / 9'
+                        }}
                       />
                     )}
                     <h3 className="font-semibold text-sm mb-1">

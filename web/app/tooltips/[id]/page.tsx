@@ -1298,8 +1298,11 @@ export default function EditTooltipPage() {
                           <img 
                             src={imageUrl} 
                             alt="Preview" 
-                            className="w-full h-24 object-cover mb-3"
-                            style={{ borderRadius: Math.max(0, cardBorderRadius - 4) }}
+                            className="w-full object-cover mb-3"
+                            style={{ 
+                              borderRadius: Math.max(0, cardBorderRadius - 4),
+                              aspectRatio: '16 / 9'
+                            }}
                           />
                         )}
                         <h3 className="font-semibold text-sm mb-1">

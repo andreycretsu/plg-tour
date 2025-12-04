@@ -700,7 +700,7 @@
       
       .tl-card-image {
         width: 100%;
-        max-height: 150px;
+        aspect-ratio: 16 / 9;
         object-fit: cover;
       }
       
@@ -843,7 +843,7 @@
       
       .tl-image {
         width: 100%;
-        max-height: 150px;
+        aspect-ratio: 16 / 9;
         object-fit: cover;
         margin-bottom: 12px;
         border-radius: 8px;

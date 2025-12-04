@@ -802,7 +802,7 @@
       
       .tourlayer-card-image {
         width: 100%;
-        max-height: 150px;
+        aspect-ratio: 16 / 9;
         object-fit: cover;
         display: block;
         background: #f3f4f6;
