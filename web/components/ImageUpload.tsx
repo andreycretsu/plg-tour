@@ -31,9 +31,9 @@ export default function ImageUpload({ value, onChange, placeholder }: ImageUploa
       return;
     }
 
-    // Validate file size (max 10MB for Cloudinary free tier)
-    if (file.size > 10 * 1024 * 1024) {
-      setError('File too large. Maximum 10MB');
+    // Validate file size (max 2MB to save Cloudinary credits)
+    if (file.size > 2 * 1024 * 1024) {
+      setError('File too large. Maximum 2MB');
       return;
     }
 
@@ -187,7 +187,7 @@ export default function ImageUpload({ value, onChange, placeholder }: ImageUploa
                 <span className="text-sm text-blue-600 font-medium">Click to upload</span>
                 <span className="text-sm text-gray-500"> or drag & drop</span>
               </div>
-              <span className="text-xs text-gray-400">JPG, PNG, GIF, WebP (max 10MB)</span>
+              <span className="text-xs text-gray-400">JPG, PNG, GIF, WebP (max 2MB)</span>
             </div>
           )}
         </div>

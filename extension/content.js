@@ -607,38 +607,56 @@
       </div>
     `;
     
-    // Position card based on beacon edge (opposite side)
+    // Position card based on beacon edge (opposite side) with smart fallback
     const edge = tooltip.icon_edge || 'right';
     let top, left;
     const gap = 16; // Space between element and card
+    const cardHeight = 250; // Estimated card height
     
+    // Calculate preferred position based on edge
     switch (edge) {
       case 'top':
         // Beacon on top, card below
         top = rect.bottom + gap;
         left = rect.left + rect.width / 2 - cardWidth / 2;
+        // If no room below, put above
+        if (top + cardHeight > window.innerHeight) {
+          top = rect.top - gap - cardHeight;
+        }
         break;
       case 'bottom':
-        // Beacon on bottom, card above (estimate card height ~200px)
-        top = rect.top - gap - 200;
+        // Beacon on bottom, card above
+        top = rect.top - gap - cardHeight;
         left = rect.left + rect.width / 2 - cardWidth / 2;
+        // If no room above, put below
+        if (top < 16) {
+          top = rect.bottom + gap;
+        }
         break;
       case 'left':
         // Beacon on left, card on right
-        top = rect.top + rect.height / 2 - 100;
+        top = rect.top + rect.height / 2 - cardHeight / 2;
         left = rect.right + gap;
+        // If no room on right, put on left
+        if (left + cardWidth > window.innerWidth - 16) {
+          left = rect.left - cardWidth - gap;
+        }
         break;
       case 'right':
       default:
         // Beacon on right, card on left
-        top = rect.top + rect.height / 2 - 100;
+        top = rect.top + rect.height / 2 - cardHeight / 2;
         left = rect.left - cardWidth - gap;
+        // If no room on left, put on right
+        if (left < 16) {
+          left = rect.right + gap;
+        }
         break;
     }
     
-    // Keep within viewport
+    // Final viewport bounds check
     left = Math.max(16, Math.min(left, window.innerWidth - cardWidth - 16));
-    top = Math.max(16, top);
+    top = Math.max(16, Math.min(top, window.innerHeight - cardHeight - 16));
     
     card.style.top = `${top}px`;
     card.style.left = `${left}px`;
@@ -786,6 +804,8 @@
         width: 100%;
         max-height: 150px;
         object-fit: cover;
+        display: block;
+        background: #f3f4f6;
       }
       
       .tourlayer-card-content {
