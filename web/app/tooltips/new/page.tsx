@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import ImageUpload from '@/components/ImageUpload';
 import ColorPicker from '@/components/ColorPicker';
+import CenterSlider from '@/components/CenterSlider';
 import { Save, Crosshair, AlertCircle, CheckCircle, ArrowLeft, MousePointer, Hand, Languages, Settings, FileText, Star, Sparkles, Wand2, Circle } from 'lucide-react';
 
 export default function NewTooltipPage() {
@@ -676,47 +677,25 @@ export default function NewTooltipPage() {
                 <p className="text-xs text-gray-500 mb-3">Distance from the selected element</p>
                 
                 <div className="mb-3">
-                  <label className="label text-xs">From Edge: {iconOffset}px</label>
-                  <div className="relative">
-                    <input
-                      type="range"
-                      min="-30"
-                      max="30"
-                      value={iconOffset}
-                      onChange={(e) => {
-                        let val = parseInt(e.target.value);
-                        if (val >= -3 && val <= 3) val = 0;
-                        setIconOffset(val);
-                      }}
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                    />
-                    <div 
-                      className="absolute left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-400 rounded-full pointer-events-none border-2 border-white"
-                      style={{ top: '50%', transform: 'translate(-50%, -50%)' }}
-                    />
-                  </div>
+                  <CenterSlider
+                    value={iconOffset}
+                    onChange={setIconOffset}
+                    min={-30}
+                    max={30}
+                    label="From Edge"
+                    magneticRange={3}
+                  />
                 </div>
 
                 <div>
-                  <label className="label text-xs">Along Edge: {iconOffsetY}px</label>
-                  <div className="relative">
-                    <input
-                      type="range"
-                      min="-50"
-                      max="50"
-                      value={iconOffsetY}
-                      onChange={(e) => {
-                        let val = parseInt(e.target.value);
-                        if (val >= -5 && val <= 5) val = 0;
-                        setIconOffsetY(val);
-                      }}
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                    />
-                    <div 
-                      className="absolute left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-400 rounded-full pointer-events-none border-2 border-white"
-                      style={{ top: '50%', transform: 'translate(-50%, -50%)' }}
-                    />
-                  </div>
+                  <CenterSlider
+                    value={iconOffsetY}
+                    onChange={setIconOffsetY}
+                    min={-50}
+                    max={50}
+                    label="Along Edge"
+                    magneticRange={5}
+                  />
                 </div>
               </div>
 
@@ -726,39 +705,28 @@ export default function NewTooltipPage() {
                 <p className="text-xs text-gray-500 mb-3">Distance from the beacon</p>
                 
                 <div className="mb-3">
-                  <label className="label text-xs">Gap from Beacon: {cardGap}px</label>
-                  <div className="relative">
-                    <input
-                      type="range"
-                      min="0"
-                      max="40"
-                      value={cardGap}
-                      onChange={(e) => setCardGap(parseInt(e.target.value))}
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
-                    />
-                  </div>
+                  <CenterSlider
+                    value={cardGap}
+                    onChange={setCardGap}
+                    min={0}
+                    max={40}
+                    label="Gap from Beacon"
+                    centered={false}
+                    color="purple"
+                  />
                 </div>
 
                 <div>
-                  <label className="label text-xs">Card Offset: {cardOffsetY}px</label>
-                  <div className="relative">
-                    <input
-                      type="range"
-                      min="-50"
-                      max="50"
-                      value={cardOffsetY}
-                      onChange={(e) => {
-                        let val = parseInt(e.target.value);
-                        if (val >= -5 && val <= 5) val = 0;
-                        setCardOffsetY(val);
-                      }}
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
-                    />
-                    <div 
-                      className="absolute left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-400 rounded-full pointer-events-none border-2 border-white"
-                      style={{ top: '50%', transform: 'translate(-50%, -50%)' }}
-                    />
-                  </div>
+                  <CenterSlider
+                    value={cardOffsetY}
+                    onChange={setCardOffsetY}
+                    min={-50}
+                    max={50}
+                    label="Card Offset"
+                    magneticRange={5}
+                    centered={true}
+                    color="purple"
+                  />
                 </div>
               </div>
             </div>
