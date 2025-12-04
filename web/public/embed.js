@@ -623,10 +623,73 @@
       </div>
     `;
     
-    // Position card below element
-    let top = rect.bottom + 16;
-    let left = rect.left + rect.width / 2 - cardWidth / 2;
+    // Position card relative to the BEACON (not the element)
+    const edge = tooltip.icon_edge || 'right';
+    const iconSize = tooltip.icon_size || 16;
+    const iconOffset = tooltip.icon_offset || 0;
+    const iconOffsetY = tooltip.icon_offset_y || 0;
+    let top, left;
+    const gap = 12; // Space between beacon and card
+    const cardHeight = 250; // Estimated card height
+    
+    // First, calculate beacon position
+    let beaconX, beaconY;
+    switch (edge) {
+      case 'top':
+        beaconX = rect.left + rect.width / 2 + iconOffsetY;
+        beaconY = rect.top - iconSize / 2 - iconOffset;
+        break;
+      case 'bottom':
+        beaconX = rect.left + rect.width / 2 + iconOffsetY;
+        beaconY = rect.bottom - iconSize / 2 + iconOffset;
+        break;
+      case 'left':
+        beaconX = rect.left - iconSize / 2 - iconOffset;
+        beaconY = rect.top + rect.height / 2 + iconOffsetY;
+        break;
+      case 'right':
+      default:
+        beaconX = rect.right - iconSize / 2 + iconOffset;
+        beaconY = rect.top + rect.height / 2 + iconOffsetY;
+        break;
+    }
+    
+    // Now position card relative to beacon
+    switch (edge) {
+      case 'top':
+        top = beaconY + iconSize + gap;
+        left = beaconX - cardWidth / 2;
+        if (top + cardHeight > window.innerHeight) {
+          top = beaconY - gap - cardHeight;
+        }
+        break;
+      case 'bottom':
+        top = beaconY - gap - cardHeight;
+        left = beaconX - cardWidth / 2;
+        if (top < 16) {
+          top = beaconY + iconSize + gap;
+        }
+        break;
+      case 'left':
+        top = beaconY - cardHeight / 2;
+        left = beaconX + iconSize + gap;
+        if (left + cardWidth > window.innerWidth - 16) {
+          left = beaconX - cardWidth - gap;
+        }
+        break;
+      case 'right':
+      default:
+        top = beaconY - cardHeight / 2;
+        left = beaconX - cardWidth - gap;
+        if (left < 16) {
+          left = beaconX + iconSize + gap;
+        }
+        break;
+    }
+    
+    // Final viewport bounds check
     left = Math.max(16, Math.min(left, window.innerWidth - cardWidth - 16));
+    top = Math.max(16, Math.min(top, window.innerHeight - cardHeight - 16));
     
     card.style.top = `${top}px`;
     card.style.left = `${left}px`;
