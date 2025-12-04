@@ -1273,59 +1273,100 @@ export default function NewTooltipPage() {
                         )}
                         
                         {/* Tooltip Card */}
-                        <div
-                          className="absolute pointer-events-none"
-                          style={{
-                            left: iconEdge === 'right'
-                              ? screenshotElementRect.x + screenshotElementRect.width + iconOffset + iconSize + cardGap
-                              : iconEdge === 'left'
-                              ? screenshotElementRect.x - iconOffset - iconSize - cardGap - cardWidth
-                              : screenshotElementRect.x + screenshotElementRect.width / 2 - cardWidth / 2,
-                            top: iconEdge === 'bottom'
-                              ? screenshotElementRect.y + screenshotElementRect.height + iconOffset + iconSize + cardGap
-                              : iconEdge === 'top'
-                              ? screenshotElementRect.y - iconOffset - iconSize - cardGap - 200
-                              : screenshotElementRect.y + screenshotElementRect.height / 2 - 100,
-                            width: cardWidth,
-                            backgroundColor: cardBgColor,
-                            color: cardTextColor,
-                            borderRadius: cardBorderRadius,
-                            padding: cardPadding,
-                            boxShadow: getShadowValue(cardShadow),
-                            textAlign: textAlign,
-                          }}
-                        >
-                          {imageUrl && (
-                            <img 
-                              src={imageUrl} 
-                              alt="Preview" 
-                              className="w-full object-cover mb-3"
-                              style={{ borderRadius: Math.max(0, cardBorderRadius - 4), aspectRatio: '16 / 9' }}
-                            />
-                          )}
-                          <h3 className="font-semibold mb-1" style={{ fontSize: `${titleSize}px` }}>
-                            {title || 'Tooltip Title'}
-                          </h3>
-                          <p className="opacity-80 mb-3" style={{ fontSize: `${bodySize}px`, lineHeight: bodyLineHeight }}>
-                            {body || 'Tooltip description goes here...'}
-                          </p>
-                          {buttonText && (
-                            <div style={{ display: 'flex', justifyContent: buttonPosition === 'center' ? 'center' : buttonPosition === 'right' ? 'flex-end' : 'flex-start' }}>
-                              <button style={{
-                                backgroundColor: buttonColor,
-                                color: buttonTextColor,
-                                borderRadius: buttonBorderRadius,
-                                padding: getButtonSizeStyles(buttonSize).padding,
-                                width: buttonType === 'stretched' ? '100%' : 'auto',
-                                border: 'none',
-                                fontWeight: 500,
-                                fontSize: getButtonSizeStyles(buttonSize).fontSize,
-                              }}>
-                                {buttonText}
-                              </button>
+                        {(() => {
+                          // Calculate beacon position first (matching the beacon positioning above)
+                          const beaconLeft = iconEdge === 'left' 
+                            ? screenshotElementRect.x - iconSize - iconOffset
+                            : iconEdge === 'right'
+                            ? screenshotElementRect.x + screenshotElementRect.width + iconOffset
+                            : screenshotElementRect.x + screenshotElementRect.width / 2 - iconSize / 2 + iconOffsetY;
+                          
+                          const beaconTop = iconEdge === 'top'
+                            ? screenshotElementRect.y - iconSize - iconOffset
+                            : iconEdge === 'bottom'
+                            ? screenshotElementRect.y + screenshotElementRect.height + iconOffset
+                            : screenshotElementRect.y + screenshotElementRect.height / 2 - iconSize / 2 + iconOffsetY;
+                          
+                          // Calculate card position relative to beacon
+                          let cardLeft: number;
+                          let cardTop: number;
+                          
+                          switch (iconEdge) {
+                            case 'right':
+                              // Card to the right of beacon
+                              cardLeft = beaconLeft + iconSize + cardGap;
+                              cardTop = beaconTop + cardOffsetY;
+                              break;
+                            case 'left':
+                              // Card to the left of beacon
+                              cardLeft = beaconLeft - cardGap - cardWidth;
+                              cardTop = beaconTop + cardOffsetY;
+                              break;
+                            case 'bottom':
+                              // Card below beacon, centered horizontally
+                              cardLeft = beaconLeft - cardWidth / 2 + iconSize / 2 + cardOffsetY;
+                              cardTop = beaconTop + iconSize + cardGap;
+                              break;
+                            case 'top':
+                              // Card above beacon, centered horizontally
+                              cardLeft = beaconLeft - cardWidth / 2 + iconSize / 2 + cardOffsetY;
+                              cardTop = beaconTop - cardGap;
+                              break;
+                            default:
+                              // Center position (shouldn't happen with valid iconEdge)
+                              cardLeft = screenshotElementRect.x + screenshotElementRect.width / 2 - cardWidth / 2;
+                              cardTop = screenshotElementRect.y + screenshotElementRect.height / 2;
+                          }
+                          
+                          return (
+                            <div
+                              className="absolute pointer-events-none"
+                              style={{
+                                left: `${cardLeft}px`,
+                                top: iconEdge === 'top' ? `${cardTop}px` : `${cardTop}px`,
+                                transform: iconEdge === 'top' ? `translateY(-100%)` : undefined,
+                                width: cardWidth,
+                                backgroundColor: cardBgColor,
+                                color: cardTextColor,
+                                borderRadius: cardBorderRadius,
+                                padding: cardPadding,
+                                boxShadow: getShadowValue(cardShadow),
+                                textAlign: textAlign,
+                              }}
+                            >
+                              {imageUrl && (
+                                <img 
+                                  src={imageUrl} 
+                                  alt="Preview" 
+                                  className="w-full object-cover mb-3"
+                                  style={{ borderRadius: Math.max(0, cardBorderRadius - 4), aspectRatio: '16 / 9' }}
+                                />
+                              )}
+                              <h3 className="font-semibold mb-1" style={{ fontSize: `${titleSize}px` }}>
+                                {title || 'Tooltip Title'}
+                              </h3>
+                              <p className="opacity-80 mb-3" style={{ fontSize: `${bodySize}px`, lineHeight: bodyLineHeight }}>
+                                {body || 'Tooltip description goes here...'}
+                              </p>
+                              {buttonText && (
+                                <div style={{ display: 'flex', justifyContent: buttonPosition === 'center' ? 'center' : buttonPosition === 'right' ? 'flex-end' : 'flex-start' }}>
+                                  <button style={{
+                                    backgroundColor: buttonColor,
+                                    color: buttonTextColor,
+                                    borderRadius: buttonBorderRadius,
+                                    padding: getButtonSizeStyles(buttonSize).padding,
+                                    width: buttonType === 'stretched' ? '100%' : 'auto',
+                                    border: 'none',
+                                    fontWeight: 500,
+                                    fontSize: getButtonSizeStyles(buttonSize).fontSize,
+                                  }}>
+                                    {buttonText}
+                                  </button>
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
+                          );
+                        })()}
                       </>
                     )}
                       </div>

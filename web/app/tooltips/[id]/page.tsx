@@ -2043,20 +2043,58 @@ export default function EditTooltipPage() {
                             {/* Tooltip Card */}
                             {(() => {
                               const preview = getPreviewContent();
+                              
+                              // Calculate beacon position first (matching the beacon positioning above)
+                              const beaconLeft = iconEdge === 'left' 
+                                ? screenshotElementRect.x - iconSize - iconOffset
+                                : iconEdge === 'right'
+                                ? screenshotElementRect.x + screenshotElementRect.width + iconOffset
+                                : screenshotElementRect.x + screenshotElementRect.width / 2 - iconSize / 2 + iconOffsetY;
+                              
+                              const beaconTop = iconEdge === 'top'
+                                ? screenshotElementRect.y - iconSize - iconOffset
+                                : iconEdge === 'bottom'
+                                ? screenshotElementRect.y + screenshotElementRect.height + iconOffset
+                                : screenshotElementRect.y + screenshotElementRect.height / 2 - iconSize / 2 + iconOffsetY;
+                              
+                              // Calculate card position relative to beacon
+                              let cardLeft: number;
+                              let cardTop: number;
+                              
+                              switch (iconEdge) {
+                                case 'right':
+                                  // Card to the right of beacon
+                                  cardLeft = beaconLeft + iconSize + cardGap;
+                                  cardTop = beaconTop + cardPosOffsetY;
+                                  break;
+                                case 'left':
+                                  // Card to the left of beacon
+                                  cardLeft = beaconLeft - cardGap - cardWidth;
+                                  cardTop = beaconTop + cardPosOffsetY;
+                                  break;
+                                case 'bottom':
+                                  // Card below beacon, centered horizontally
+                                  cardLeft = beaconLeft - cardWidth / 2 + iconSize / 2 + cardPosOffsetY;
+                                  cardTop = beaconTop + iconSize + cardGap;
+                                  break;
+                                case 'top':
+                                  // Card above beacon, centered horizontally
+                                  cardLeft = beaconLeft - cardWidth / 2 + iconSize / 2 + cardPosOffsetY;
+                                  cardTop = beaconTop - cardGap;
+                                  break;
+                                default:
+                                  // Center position (shouldn't happen with valid iconEdge)
+                                  cardLeft = screenshotElementRect.x + screenshotElementRect.width / 2 - cardWidth / 2;
+                                  cardTop = screenshotElementRect.y + screenshotElementRect.height / 2;
+                              }
+                              
                               return (
                                 <div
                                   className="absolute pointer-events-none"
                                   style={{
-                                    left: iconEdge === 'right'
-                                      ? screenshotElementRect.x + screenshotElementRect.width + iconOffset + iconSize + cardGap
-                                      : iconEdge === 'left'
-                                      ? screenshotElementRect.x - iconOffset - iconSize - cardGap - cardWidth
-                                      : screenshotElementRect.x + screenshotElementRect.width / 2 - cardWidth / 2,
-                                    top: iconEdge === 'bottom'
-                                      ? screenshotElementRect.y + screenshotElementRect.height + iconOffset + iconSize + cardGap
-                                      : iconEdge === 'top'
-                                      ? screenshotElementRect.y - iconOffset - iconSize - cardGap - 200
-                                      : screenshotElementRect.y + screenshotElementRect.height / 2 - 100,
+                                    left: `${cardLeft}px`,
+                                    top: iconEdge === 'top' ? `${cardTop}px` : `${cardTop}px`,
+                                    transform: iconEdge === 'top' ? `translateY(-100%)` : undefined,
                                     width: cardWidth,
                                     backgroundColor: cardBgColor,
                                     color: cardTextColor,
