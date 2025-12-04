@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       workspaceId: workspace.id 
     });
 
-    // Create response with user data (no sensitive tokens in body)
+    // Create response with user data (apiToken included for Settings page)
     const response = NextResponse.json({
       user: {
         id: user.id,
@@ -94,6 +94,7 @@ export async function POST(request: NextRequest) {
         name: workspace.name,
         slug: workspace.slug,
         role: 'owner',
+        apiToken: workspace.api_token, // Needed for embed snippet
         createdAt: workspace.created_at,
       },
     });
