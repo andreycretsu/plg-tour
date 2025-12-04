@@ -6,6 +6,13 @@ import FullScreenModal from '@/components/FullScreenModal';
 import { PreviewPanel } from '@/components/StepPreview';
 import ColorPicker from '@/components/ColorPicker';
 import { Plus, Trash2, GripVertical, Save, Crosshair, AlertCircle, CheckCircle, Eye, Layers, Settings, FileText, Languages, Check, RefreshCw } from 'lucide-react';
+
+// Shadcn UI components
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Field, FieldLabel, FieldDescription, FieldGroup } from '@/components/ui/field';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import ImageUpload from '@/components/ImageUpload';
 
 interface Step {
@@ -327,32 +334,30 @@ export default function NewTourPage() {
           <div className="card p-6 mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Tour Details</h2>
             
-            <div className="space-y-4">
-              <div>
-                <label className="label">Tour Name</label>
-                <input
-                  type="text"
-                  className="input"
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="tour-name">Tour Name</FieldLabel>
+                <Input
+                  id="tour-name"
                   value={tourName}
                   onChange={(e) => setTourName(e.target.value)}
                   placeholder="e.g., Welcome Tour"
                 />
-              </div>
+              </Field>
 
-              <div>
-                <label className="label">URL Pattern</label>
-                <input
-                  type="text"
-                  className="input"
+              <Field>
+                <FieldLabel htmlFor="url-pattern">URL Pattern</FieldLabel>
+                <Input
+                  id="url-pattern"
                   value={urlPattern}
                   onChange={(e) => setUrlPattern(e.target.value)}
                   placeholder="e.g., https://app.example.com/dashboard*"
                 />
-                <p className="text-sm text-gray-500 mt-1">
+                <FieldDescription>
                   Use * as wildcard. Example: https://app.example.com/* matches all pages
-                </p>
-              </div>
-            </div>
+                </FieldDescription>
+              </Field>
+            </FieldGroup>
           </div>
 
               {/* Translations Info */}
@@ -712,45 +717,43 @@ export default function NewTourPage() {
                           </div>
                         </div>
 
-                        <div>
-                          <label className="label text-xs">Step Title</label>
-                          <input
-                            type="text"
-                            className="input text-sm"
+                        <Field>
+                          <FieldLabel className="text-xs">Step Title</FieldLabel>
+                          <Input
+                            className="text-sm"
                             value={step.title}
                             onChange={(e) => updateStep(step.id, 'title', e.target.value)}
                             placeholder="Welcome to Dashboard"
                           />
-                        </div>
+                        </Field>
 
-                        <div>
-                          <label className="label text-xs">Step Content</label>
-                          <textarea
-                            className="input text-sm min-h-[80px]"
+                        <Field>
+                          <FieldLabel className="text-xs">Step Content</FieldLabel>
+                          <Textarea
+                            className="text-sm min-h-[80px]"
                             value={step.content}
                             onChange={(e) => updateStep(step.id, 'content', e.target.value)}
                             placeholder="This is where you can..."
                           />
-                        </div>
+                        </Field>
 
-                        <div>
-                          <label className="label text-xs">Image (Optional)</label>
+                        <Field>
+                          <FieldLabel className="text-xs">Image (Optional)</FieldLabel>
                           <ImageUpload
                             value={step.imageUrl}
                             onChange={(url) => updateStep(step.id, 'imageUrl', url)}
                           />
-                        </div>
+                        </Field>
 
-                        <div className="w-1/2">
-                          <label className="label text-xs">Button Text</label>
-                          <input
-                            type="text"
-                            className="input text-sm"
+                        <Field className="w-1/2">
+                          <FieldLabel className="text-xs">Button Text</FieldLabel>
+                          <Input
+                            className="text-sm"
                             value={step.buttonText}
                             onChange={(e) => updateStep(step.id, 'buttonText', e.target.value)}
                             placeholder="Next"
                           />
-                        </div>
+                        </Field>
 
                         <div className="flex items-center gap-4">
                           <div className="flex items-center gap-2">

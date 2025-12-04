@@ -4,6 +4,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import FullScreenModal from '@/components/FullScreenModal';
 import { Plus, Trash2, GripVertical, Save, Crosshair, AlertCircle, CheckCircle, Loader2, Settings, FileText, Languages, RefreshCw, Copy, MoreVertical, Check } from 'lucide-react';
+
+// Shadcn UI components
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Field, FieldLabel, FieldDescription, FieldGroup } from '@/components/ui/field';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import ImageUpload from '@/components/ImageUpload';
 
 interface Step {

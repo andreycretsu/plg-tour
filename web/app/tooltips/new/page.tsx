@@ -8,6 +8,13 @@ import ColorPicker from '@/components/ColorPicker';
 import CenterSlider from '@/components/CenterSlider';
 import { Save, Crosshair, AlertCircle, CheckCircle, MousePointer, Hand, Languages, Settings, FileText, Star, Sparkles, Wand2, Circle, Check, RefreshCw } from 'lucide-react';
 
+// Shadcn UI components
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Field, FieldLabel, FieldDescription, FieldGroup } from '@/components/ui/field';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+
 export default function NewTooltipPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -421,47 +428,46 @@ export default function NewTooltipPage() {
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="label">Title</label>
-                    <input
-                      type="text"
-                      className="input"
+                <FieldGroup>
+                  <Field>
+                    <FieldLabel htmlFor="title">Title</FieldLabel>
+                    <Input
+                      id="title"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
                       placeholder="Hey {{firstName}}, check this out!"
                     />
-                  </div>
+                  </Field>
 
-                  <div>
-                    <label className="label">Body</label>
-                    <textarea
-                      className="input min-h-[80px]"
+                  <Field>
+                    <FieldLabel htmlFor="body">Body</FieldLabel>
+                    <Textarea
+                      id="body"
+                      className="min-h-[80px]"
                       value={body}
                       onChange={(e) => setBody(e.target.value)}
                       placeholder="Hi {{userName}}, here's a quick tip..."
                     />
-                  </div>
+                  </Field>
 
-                  <div>
-                    <label className="label">Button Text</label>
-                    <input
-                      type="text"
-                      className="input"
+                  <Field>
+                    <FieldLabel htmlFor="buttonText">Button Text</FieldLabel>
+                    <Input
+                      id="buttonText"
                       value={buttonText}
                       onChange={(e) => setButtonText(e.target.value)}
                       placeholder="Got it"
                     />
-                  </div>
+                  </Field>
 
-                  <div>
-                    <label className="label">Image (Optional)</label>
+                  <Field>
+                    <FieldLabel>Image (Optional)</FieldLabel>
                     <ImageUpload
                       value={imageUrl}
                       onChange={setImageUrl}
                     />
-                  </div>
-                </div>
+                  </Field>
+                </FieldGroup>
               </div>
 
               {/* Translations Info */}
@@ -483,36 +489,34 @@ export default function NewTooltipPage() {
           <div className="card p-5 mb-5">
             <h2 className="text-base font-semibold text-gray-900 mb-4">Targeting</h2>
             
-            <div className="space-y-4">
-              <div>
-                <label className="label">Tooltip Name</label>
-                <input
-                  type="text"
-                  className="input"
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="tooltip-name">Tooltip Name</FieldLabel>
+                <Input
+                  id="tooltip-name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g., Feature Discovery"
                 />
-              </div>
+              </Field>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="label">Website URL</label>
-                  <input
-                    type="text"
-                    className="input"
+                <Field>
+                  <FieldLabel htmlFor="website-url">Website URL</FieldLabel>
+                  <Input
+                    id="website-url"
                     value={urlPattern}
                     onChange={(e) => setUrlPattern(e.target.value)}
                     placeholder="https://app.example.com/*"
                   />
-                </div>
+                </Field>
 
-                <div>
-                  <label className="label">Element Selector</label>
+                <Field>
+                  <FieldLabel htmlFor="selector">Element Selector</FieldLabel>
                   <div className="flex gap-2">
-                    <input
-                      type="text"
-                      className="input flex-1"
+                    <Input
+                      id="selector"
+                      className="flex-1"
                       value={selector}
                       onChange={(e) => setSelector(e.target.value)}
                       placeholder=".my-button"
@@ -530,9 +534,9 @@ export default function NewTooltipPage() {
                       {pickingElement ? '...' : 'Pick'}
                     </button>
                   </div>
-                </div>
+                </Field>
               </div>
-            </div>
+            </FieldGroup>
           </div>
 
           {/* Trigger Settings */}
@@ -540,8 +544,8 @@ export default function NewTooltipPage() {
             <h2 className="text-base font-semibold text-gray-900 mb-4">Trigger Settings</h2>
             
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="label">Trigger On</label>
+              <Field>
+                <FieldLabel>Trigger On</FieldLabel>
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -568,20 +572,21 @@ export default function NewTooltipPage() {
                     Hover
                   </button>
                 </div>
-              </div>
+              </Field>
 
-              <div>
-                <label className="label">Dismiss When</label>
-                <select
-                  className="input"
-                  value={dismissType}
-                  onChange={(e) => setDismissType(e.target.value as any)}
-                >
-                  <option value="button">Click Button</option>
-                  <option value="click_element">Click Target Element</option>
-                  <option value="click_outside">Click Outside</option>
-                </select>
-              </div>
+              <Field>
+                <FieldLabel>Dismiss When</FieldLabel>
+                <Select value={dismissType} onValueChange={(v) => setDismissType(v as any)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="button">Click Button</SelectItem>
+                    <SelectItem value="click_element">Click Target Element</SelectItem>
+                    <SelectItem value="click_outside">Click Outside</SelectItem>
+                  </SelectContent>
+                </Select>
+              </Field>
             </div>
           </div>
 

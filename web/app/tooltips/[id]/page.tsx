@@ -8,6 +8,13 @@ import ColorPicker from '@/components/ColorPicker';
 import CenterSlider from '@/components/CenterSlider';
 import { Save, Crosshair, AlertCircle, CheckCircle, MousePointer, Hand, Trash2, Loader2, Languages, Globe, RefreshCw, Settings, FileText, Star, Sparkles, Wand2, Circle, Copy, MoreVertical, Check } from 'lucide-react';
 
+// Shadcn UI components
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Field, FieldLabel, FieldDescription, FieldGroup } from '@/components/ui/field';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+
 export default function EditTooltipPage() {
   const router = useRouter();
   const params = useParams();

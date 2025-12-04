@@ -4,6 +4,9 @@ import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Building2, Globe } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Field, FieldLabel, FieldGroup, FieldDescription } from '@/components/ui/field';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -63,85 +66,87 @@ export default function SignupPage() {
         </div>
 
         <div className="card p-8">
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit}>
             {error && (
-              <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm">
+              <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm mb-5">
                 {error}
               </div>
             )}
 
-            {/* Company Name with URL Preview - Like Fibery */}
-            <div>
-              <label className="label flex items-center gap-2">
-                <Building2 size={14} />
-                Company Name
-              </label>
-              <input
-                type="text"
-                className="input text-lg font-medium"
-                value={company}
-                onChange={(e) => setCompany(e.target.value)}
-                placeholder="Acme Inc."
-                required
-              />
-            </div>
-
-            {/* Auto-generated URL preview */}
-            <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
-              <div className="flex-1 px-4 py-3">
-                <span className="text-gray-900 font-medium">{workspaceSlug}</span>
-              </div>
-              <div className="px-4 py-3 bg-gray-100 text-gray-500 text-sm border-l border-gray-200">
-                .tourlayer.io
-              </div>
-            </div>
-
-            <div className="border-t border-gray-100 pt-5">
-              <div>
-                <label className="label">Your Name</label>
-                <input
-                  type="text"
-                  className="input"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="John Doe"
+            <FieldGroup>
+              {/* Company Name with URL Preview - Like Fibery */}
+              <Field>
+                <FieldLabel htmlFor="company" className="flex items-center gap-2">
+                  <Building2 size={14} />
+                  Company Name
+                </FieldLabel>
+                <Input
+                  id="company"
+                  className="text-lg font-medium"
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                  placeholder="Acme Inc."
                   required
                 />
+              </Field>
+
+              {/* Auto-generated URL preview */}
+              <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg overflow-hidden -mt-3">
+                <div className="flex-1 px-4 py-3">
+                  <span className="text-gray-900 font-medium">{workspaceSlug}</span>
+                </div>
+                <div className="px-4 py-3 bg-gray-100 text-gray-500 text-sm border-l border-gray-200">
+                  .tourlayer.io
+                </div>
               </div>
-            </div>
 
-            <div>
-              <label className="label">Work Email</label>
-              <input
-                type="email"
-                className="input"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@company.com"
-                required
-              />
-            </div>
+              <div className="border-t border-gray-100 pt-5">
+                <Field>
+                  <FieldLabel htmlFor="name">Your Name</FieldLabel>
+                  <Input
+                    id="name"
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="John Doe"
+                    required
+                  />
+                </Field>
+              </div>
 
-            <div>
-              <label className="label">Password</label>
-              <input
-                type="password"
-                className="input"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                minLength={6}
-              />
-            </div>
+              <Field>
+                <FieldLabel htmlFor="email">Work Email</FieldLabel>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@company.com"
+                  required
+                />
+              </Field>
 
-            <button
-              type="submit"
-              className="btn btn-primary w-full text-lg py-3"
-              disabled={loading}
-            >
-              {loading ? 'Creating workspace...' : 'Continue'}
-            </button>
+              <Field>
+                <FieldLabel htmlFor="password">Password</FieldLabel>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  minLength={6}
+                />
+              </Field>
+
+              <Button
+                type="submit"
+                className="w-full text-lg py-3"
+                disabled={loading}
+              >
+                {loading ? 'Creating workspace...' : 'Continue'}
+              </Button>
+            </FieldGroup>
           </form>
 
           <p className="text-center text-sm text-gray-600 mt-6">
