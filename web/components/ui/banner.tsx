@@ -113,7 +113,7 @@ const Banner = React.forwardRef<HTMLDivElement, BannerProps>(
             style={{ 
               backgroundImage: dotGridPattern,
               backgroundSize: '30px 30px',
-              backgroundPosition: '0 0',
+              backgroundPosition: '0 15px',
               opacity: 0.7,
             }}
             aria-hidden="true"
