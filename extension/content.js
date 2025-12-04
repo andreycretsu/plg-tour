@@ -607,13 +607,38 @@
       </div>
     `;
     
-    // Position card
-    const cardWidth = tooltip.card_width || 320;
-    let top = rect.bottom + 16;
-    let left = rect.left + rect.width / 2 - cardWidth / 2;
+    // Position card based on beacon edge (opposite side)
+    const edge = tooltip.icon_edge || 'right';
+    let top, left;
+    const gap = 16; // Space between element and card
+    
+    switch (edge) {
+      case 'top':
+        // Beacon on top, card below
+        top = rect.bottom + gap;
+        left = rect.left + rect.width / 2 - cardWidth / 2;
+        break;
+      case 'bottom':
+        // Beacon on bottom, card above (estimate card height ~200px)
+        top = rect.top - gap - 200;
+        left = rect.left + rect.width / 2 - cardWidth / 2;
+        break;
+      case 'left':
+        // Beacon on left, card on right
+        top = rect.top + rect.height / 2 - 100;
+        left = rect.right + gap;
+        break;
+      case 'right':
+      default:
+        // Beacon on right, card on left
+        top = rect.top + rect.height / 2 - 100;
+        left = rect.left - cardWidth - gap;
+        break;
+    }
     
     // Keep within viewport
     left = Math.max(16, Math.min(left, window.innerWidth - cardWidth - 16));
+    top = Math.max(16, top);
     
     card.style.top = `${top}px`;
     card.style.left = `${left}px`;
