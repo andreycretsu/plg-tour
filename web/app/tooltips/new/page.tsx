@@ -6,14 +6,7 @@ import FullScreenModal from '@/components/FullScreenModal';
 import ImageUpload from '@/components/ImageUpload';
 import ColorPicker from '@/components/ColorPicker';
 import CenterSlider from '@/components/CenterSlider';
-import { Save, Crosshair, AlertCircle, CheckCircle, MousePointer, Hand, Languages, Settings, FileText, Star, Sparkles, Wand2, Circle, Check, RefreshCw } from 'lucide-react';
-
-// Shadcn UI components
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Field, FieldLabel, FieldDescription, FieldGroup } from '@/components/ui/field';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
+import { Save, Crosshair, AlertCircle, CheckCircle, MousePointer, Hand, Languages, Settings, FileText, Star, Sparkles, Wand2, Circle } from 'lucide-react';
 
 export default function NewTooltipPage() {
   const router = useRouter();
@@ -21,7 +14,7 @@ export default function NewTooltipPage() {
   const [extensionInstalled, setExtensionInstalled] = useState(false);
   const [pickingElement, setPickingElement] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
-  const [activeStep, setActiveStep] = useState(0);
+  const [activeTab, setActiveTab] = useState<'customisation' | 'content'>('content');
   const [previewLang, setPreviewLang] = useState('en');
   
   const LANGUAGES = [
@@ -346,15 +339,6 @@ export default function NewTooltipPage() {
     );
   };
 
-  // Stepper configuration
-  const steps = [
-    { id: 0, label: 'Content', icon: FileText },
-    { id: 1, label: 'Target', icon: Crosshair },
-    { id: 2, label: 'Beacon', icon: Circle },
-    { id: 3, label: 'Card Style', icon: Settings },
-    { id: 4, label: 'Frequency', icon: RefreshCw },
-  ];
-
   return (
     <FullScreenModal
       title="New Tooltip"
@@ -377,10 +361,9 @@ export default function NewTooltipPage() {
         }
       `}</style>
 
-      <div className="flex h-full">
+      <div className="flex gap-6 p-6 h-full">
         {/* Left Column - Form */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-2xl">
+        <div className="flex-1 max-w-2xl overflow-y-auto">
           {/* Extension Status */}
           <div className={`mb-4 p-3 rounded-lg flex items-center gap-3 ${
             extensionInstalled 
@@ -400,8 +383,35 @@ export default function NewTooltipPage() {
             )}
           </div>
 
-          {/* Step Content */}
-          {activeStep === 0 && (
+          {/* Tabs */}
+          <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-lg">
+            <button
+              onClick={() => setActiveTab('content')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all ${
+                activeTab === 'content'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <FileText size={18} />
+              Content
+            </button>
+            <button
+              onClick={() => setActiveTab('customisation')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all ${
+                activeTab === 'customisation'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Settings size={18} />
+              Customisation
+            </button>
+          </div>
+
+          {/* CONTENT TAB */}
+          {activeTab === 'content' && (
+            <>
               {/* Card Content */}
               <div className="card p-5 mb-5">
                 <h2 className="text-base font-semibold text-gray-900 mb-4">Content</h2>
@@ -428,46 +438,47 @@ export default function NewTooltipPage() {
                   </div>
                 </div>
 
-                <FieldGroup>
-                  <Field>
-                    <FieldLabel htmlFor="title">Title</FieldLabel>
-                    <Input
-                      id="title"
+                <div className="space-y-4">
+                  <div>
+                    <label className="label">Title</label>
+                    <input
+                      type="text"
+                      className="input"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
                       placeholder="Hey {{firstName}}, check this out!"
                     />
-                  </Field>
+                  </div>
 
-                  <Field>
-                    <FieldLabel htmlFor="body">Body</FieldLabel>
-                    <Textarea
-                      id="body"
-                      className="min-h-[80px]"
+                  <div>
+                    <label className="label">Body</label>
+                    <textarea
+                      className="input min-h-[80px]"
                       value={body}
                       onChange={(e) => setBody(e.target.value)}
                       placeholder="Hi {{userName}}, here's a quick tip..."
                     />
-                  </Field>
+                  </div>
 
-                  <Field>
-                    <FieldLabel htmlFor="buttonText">Button Text</FieldLabel>
-                    <Input
-                      id="buttonText"
+                  <div>
+                    <label className="label">Button Text</label>
+                    <input
+                      type="text"
+                      className="input"
                       value={buttonText}
                       onChange={(e) => setButtonText(e.target.value)}
                       placeholder="Got it"
                     />
-                  </Field>
+                  </div>
 
-                  <Field>
-                    <FieldLabel>Image (Optional)</FieldLabel>
+                  <div>
+                    <label className="label">Image (Optional)</label>
                     <ImageUpload
                       value={imageUrl}
                       onChange={setImageUrl}
                     />
-                  </Field>
-                </FieldGroup>
+                  </div>
+                </div>
               </div>
 
               {/* Translations Info */}
@@ -480,43 +491,46 @@ export default function NewTooltipPage() {
                   Save this tooltip first, then you can auto-translate to 10+ languages on the Edit page.
                 </p>
               </div>
+            </>
           )}
 
-          {/* CUSTOMISATION STEPS */}
-          {activeStep >= 1 && (
+          {/* CUSTOMISATION TAB */}
+          {activeTab === 'customisation' && (
             <>
               {/* Targeting Section */}
           <div className="card p-5 mb-5">
             <h2 className="text-base font-semibold text-gray-900 mb-4">Targeting</h2>
             
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="tooltip-name">Tooltip Name</FieldLabel>
-                <Input
-                  id="tooltip-name"
+            <div className="space-y-4">
+              <div>
+                <label className="label">Tooltip Name</label>
+                <input
+                  type="text"
+                  className="input"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g., Feature Discovery"
                 />
-              </Field>
+              </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <Field>
-                  <FieldLabel htmlFor="website-url">Website URL</FieldLabel>
-                  <Input
-                    id="website-url"
+                <div>
+                  <label className="label">Website URL</label>
+                  <input
+                    type="text"
+                    className="input"
                     value={urlPattern}
                     onChange={(e) => setUrlPattern(e.target.value)}
                     placeholder="https://app.example.com/*"
                   />
-                </Field>
+                </div>
 
-                <Field>
-                  <FieldLabel htmlFor="selector">Element Selector</FieldLabel>
+                <div>
+                  <label className="label">Element Selector</label>
                   <div className="flex gap-2">
-                    <Input
-                      id="selector"
-                      className="flex-1"
+                    <input
+                      type="text"
+                      className="input flex-1"
                       value={selector}
                       onChange={(e) => setSelector(e.target.value)}
                       placeholder=".my-button"
@@ -534,9 +548,9 @@ export default function NewTooltipPage() {
                       {pickingElement ? '...' : 'Pick'}
                     </button>
                   </div>
-                </Field>
+                </div>
               </div>
-            </FieldGroup>
+            </div>
           </div>
 
           {/* Trigger Settings */}
@@ -544,8 +558,8 @@ export default function NewTooltipPage() {
             <h2 className="text-base font-semibold text-gray-900 mb-4">Trigger Settings</h2>
             
             <div className="grid grid-cols-2 gap-4">
-              <Field>
-                <FieldLabel>Trigger On</FieldLabel>
+              <div>
+                <label className="label">Trigger On</label>
                 <div className="flex gap-2">
                   <button
                     type="button"
@@ -572,21 +586,20 @@ export default function NewTooltipPage() {
                     Hover
                   </button>
                 </div>
-              </Field>
+              </div>
 
-              <Field>
-                <FieldLabel>Dismiss When</FieldLabel>
-                <Select value={dismissType} onValueChange={(v) => setDismissType(v as any)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="button">Click Button</SelectItem>
-                    <SelectItem value="click_element">Click Target Element</SelectItem>
-                    <SelectItem value="click_outside">Click Outside</SelectItem>
-                  </SelectContent>
-                </Select>
-              </Field>
+              <div>
+                <label className="label">Dismiss When</label>
+                <select
+                  className="input"
+                  value={dismissType}
+                  onChange={(e) => setDismissType(e.target.value as any)}
+                >
+                  <option value="button">Click Button</option>
+                  <option value="click_element">Click Target Element</option>
+                  <option value="click_outside">Click Outside</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -1121,46 +1134,17 @@ export default function NewTooltipPage() {
             </>
           )}
 
-          </div>
         </div>
 
-        {/* Right Column - Stepper + Preview */}
-        <div className="w-[500px] flex flex-col border-l border-gray-200">
-          {/* Vertical Stepper */}
-          <div className="p-4 border-b border-gray-200 bg-white">
-            <div className="flex gap-2">
-              {steps.map((step, index) => {
-                const Icon = step.icon;
-                const isActive = activeStep === index;
-                const isCompleted = activeStep > index;
-                return (
-                  <button
-                    key={step.id}
-                    onClick={() => setActiveStep(index)}
-                    className={`flex-1 flex flex-col items-center gap-1 p-2 rounded-lg transition-all ${
-                      isActive 
-                        ? 'bg-blue-100 text-blue-700' 
-                        : isCompleted
-                          ? 'bg-green-50 text-green-600'
-                          : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
-                    }`}
-                  >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      isActive ? 'bg-blue-600 text-white' : isCompleted ? 'bg-green-500 text-white' : 'bg-gray-200'
-                    }`}>
-                      {isCompleted ? <Check size={16} /> : <Icon size={16} />}
-                    </div>
-                    <span className="text-xs font-medium">{step.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          
-          {/* Preview Area */}
-          <div 
-            className="flex-1 flex items-center justify-center overflow-hidden bg-gray-50"
-          >
+        {/* Right Column - Preview */}
+        <div className="flex-1 min-w-[400px]">
+          <div className="sticky top-0 h-screen py-6 flex flex-col">
+            {/* Preview Area */}
+            {showPreview && (
+              <div 
+                className="rounded-xl p-6 flex-1 flex items-center justify-center h-full overflow-hidden"
+                style={{ backgroundColor: '#f3f4f6', minHeight: 'calc(100vh - 48px)' }}
+              >
                 {/* Preview container - positions calculated from beacon */}
                 <div className="relative">
                   {/* Mock Element */}
@@ -1267,6 +1251,7 @@ export default function NewTooltipPage() {
                   })()}
                 </div>
               </div>
+            )}
           </div>
         </div>
       </div>

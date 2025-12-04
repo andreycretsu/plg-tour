@@ -6,14 +6,7 @@ import FullScreenModal from '@/components/FullScreenModal';
 import ImageUpload from '@/components/ImageUpload';
 import ColorPicker from '@/components/ColorPicker';
 import CenterSlider from '@/components/CenterSlider';
-import { Save, Crosshair, AlertCircle, CheckCircle, MousePointer, Hand, Trash2, Loader2, Languages, Globe, RefreshCw, Settings, FileText, Star, Sparkles, Wand2, Circle, Copy, MoreVertical, Check } from 'lucide-react';
-
-// Shadcn UI components
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Field, FieldLabel, FieldDescription, FieldGroup } from '@/components/ui/field';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
+import { Save, Crosshair, AlertCircle, CheckCircle, MousePointer, Hand, Trash2, Loader2, Languages, Globe, RefreshCw, Settings, FileText, Star, Sparkles, Wand2, Circle, Copy } from 'lucide-react';
 
 export default function EditTooltipPage() {
   const router = useRouter();
@@ -85,9 +78,8 @@ export default function EditTooltipPage() {
   const [zIndex, setZIndex] = useState(2147483647);
   const [delayMs, setDelayMs] = useState(0);
 
-  // Stepper and UI
-  const [activeStep, setActiveStep] = useState(0);
-  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  // Tabs and Translations
+  const [activeTab, setActiveTab] = useState<'content' | 'customisation'>('content');
   const [previewLang, setPreviewLang] = useState('en');
   const [translations, setTranslations] = useState<Record<string, { title: string; body: string; buttonText: string }>>({});
   const [translating, setTranslating] = useState(false);
@@ -575,70 +567,28 @@ export default function EditTooltipPage() {
     );
   }
 
-  // Stepper configuration
-  const steps = [
-    { id: 0, label: 'Content', icon: FileText },
-    { id: 1, label: 'Target', icon: Crosshair },
-    { id: 2, label: 'Beacon', icon: Circle },
-    { id: 3, label: 'Card Style', icon: Settings },
-    { id: 4, label: 'Frequency', icon: RefreshCw },
-  ];
-
   return (
     <FullScreenModal
       title="Edit Tooltip"
       onClose={() => router.push('/tooltips')}
-      headerExtra={
-        <label className="relative inline-flex items-center cursor-pointer">
-          <input
-            type="checkbox"
-            checked={isActive}
-            onChange={(e) => setIsActive(e.target.checked)}
-            className="sr-only peer"
-          />
-          <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-          <span className="ml-2 text-sm font-medium text-gray-700">
-            {isActive ? 'Active' : 'Inactive'}
-          </span>
-        </label>
-      }
       actions={
         <div className="flex items-center gap-2">
-          {/* More Menu */}
-          <div className="relative">
-            <button
-              onClick={() => setShowMoreMenu(!showMoreMenu)}
-              className="p-2 rounded-lg hover:bg-gray-200 transition-colors"
-            >
-              <MoreVertical size={20} className="text-gray-600" />
-            </button>
-            {showMoreMenu && (
-              <>
-                <div 
-                  className="fixed inset-0 z-10" 
-                  onClick={() => setShowMoreMenu(false)}
-                />
-                <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
-                  <button
-                    onClick={() => { duplicateTooltip(); setShowMoreMenu(false); }}
-                    disabled={duplicating}
-                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
-                  >
-                    <Copy size={16} />
-                    {duplicating ? 'Duplicating...' : 'Duplicate'}
-                  </button>
-                  <button
-                    onClick={() => { deleteTooltip(); setShowMoreMenu(false); }}
-                    disabled={deleting}
-                    className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                  >
-                    <Trash2 size={16} />
-                    {deleting ? 'Deleting...' : 'Delete'}
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+          <button
+            onClick={duplicateTooltip}
+            disabled={duplicating}
+            className="btn btn-secondary flex items-center gap-2"
+          >
+            <Copy size={16} />
+            {duplicating ? 'Duplicating...' : 'Duplicate'}
+          </button>
+          <button
+            onClick={deleteTooltip}
+            disabled={deleting}
+            className="btn btn-secondary text-red-600 hover:bg-red-50 flex items-center gap-2"
+          >
+            <Trash2 size={16} />
+            {deleting ? 'Deleting...' : 'Delete'}
+          </button>
           <button
             onClick={saveTooltip}
             disabled={saving}
@@ -657,12 +607,57 @@ export default function EditTooltipPage() {
         }
       `}</style>
 
-      <div className="flex h-full">
+      <div className="flex gap-6 p-6 h-full">
         {/* Left Column - Form */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-2xl">
-          {/* Step Content */}
-          {activeStep === 0 && (
+        <div className="flex-1 max-w-2xl overflow-y-auto">
+          {/* Status Toggle */}
+          <div className="card p-4 mb-5 flex items-center justify-between">
+            <div>
+              <h3 className="font-medium text-gray-900">Tooltip Status</h3>
+              <p className="text-sm text-gray-500">Enable or disable this tooltip</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={isActive}
+                onChange={(e) => setIsActive(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <span className="ml-3 text-sm font-medium text-gray-700">
+                {isActive ? 'Active' : 'Inactive'}
+              </span>
+            </label>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-lg">
+            <button
+              onClick={() => setActiveTab('content')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all ${
+                activeTab === 'content'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <FileText size={18} />
+              Content
+            </button>
+            <button
+              onClick={() => setActiveTab('customisation')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all ${
+                activeTab === 'customisation'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Settings size={18} />
+              Customisation
+            </button>
+          </div>
+
+          {/* CONTENT TAB */}
+          {activeTab === 'content' && (
             <>
               {/* Card Content */}
               <div className="card p-5 mb-5">
@@ -866,8 +861,8 @@ export default function EditTooltipPage() {
             </>
           )}
 
-          {/* CUSTOMISATION STEPS */}
-          {activeStep >= 1 && (
+          {/* CUSTOMISATION TAB */}
+          {activeTab === 'customisation' && (
             <>
               {/* Targeting Section */}
           <div className="card p-5 mb-5">
@@ -1537,46 +1532,34 @@ export default function EditTooltipPage() {
             </>
           )}
 
+          {/* Actions */}
+          <div className="flex items-center justify-between mb-8">
+            <button
+              onClick={() => router.push('/tooltips')}
+              className="btn btn-secondary"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={saveTooltip}
+              disabled={saving}
+              className="btn btn-primary flex items-center gap-2"
+            >
+              <Save size={18} />
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
           </div>
         </div>
 
-        {/* Right Column - Stepper + Preview */}
-        <div className="w-[500px] flex flex-col border-l border-gray-200">
-          {/* Vertical Stepper */}
-          <div className="p-4 border-b border-gray-200 bg-white">
-            <div className="flex gap-2">
-              {steps.map((step, index) => {
-                const Icon = step.icon;
-                const isActive = activeStep === index;
-                const isCompleted = activeStep > index;
-                return (
-                  <button
-                    key={step.id}
-                    onClick={() => setActiveStep(index)}
-                    className={`flex-1 flex flex-col items-center gap-1 p-2 rounded-lg transition-all ${
-                      isActive 
-                        ? 'bg-blue-100 text-blue-700' 
-                        : isCompleted
-                          ? 'bg-green-50 text-green-600'
-                          : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
-                    }`}
-                  >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      isActive ? 'bg-blue-600 text-white' : isCompleted ? 'bg-green-500 text-white' : 'bg-gray-200'
-                    }`}>
-                      {isCompleted ? <Check size={16} /> : <Icon size={16} />}
-                    </div>
-                    <span className="text-xs font-medium">{step.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          
-          {/* Preview Area */}
-          <div 
-            className="flex-1 flex items-center justify-center overflow-hidden bg-gray-50"
-          >
+        {/* Right Column - Preview */}
+        <div className="flex-1 min-w-[400px]">
+          <div className="sticky top-0 h-screen py-6 flex flex-col">
+            {/* Preview Area */}
+            {showPreview && (
+              <div 
+                className="rounded-xl p-6 flex-1 flex items-center justify-center h-full overflow-hidden"
+                style={{ backgroundColor: '#f3f4f6', minHeight: 'calc(100vh - 48px)' }}
+              >
                 {/* Preview container - positions calculated from beacon */}
                 <div className="relative">
                   {/* Mock Element */}
