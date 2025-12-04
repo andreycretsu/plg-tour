@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Plus, Search, Trash2, Eye, EyeOff, Copy } from 'lucide-react';
+import { Plus, Search, Trash2, Eye, EyeOff, Copy, ToggleLeft, ToggleRight } from 'lucide-react';
 
 export default function ToursPage() {
   const router = useRouter();
@@ -39,6 +39,24 @@ export default function ToursPage() {
     tour.name.toLowerCase().includes(search.toLowerCase()) ||
     tour.url_pattern.toLowerCase().includes(search.toLowerCase())
   );
+
+  const toggleActive = async (tourId: number, currentState: boolean) => {
+    try {
+      await fetch(`/api/tours/${tourId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isActive: !currentState }),
+      });
+
+      setTours(tours.map(t => 
+        t.id === tourId ? { ...t, is_active: !currentState } : t
+      ));
+    } catch (error) {
+      console.error('Failed to toggle tour:', error);
+    }
+  };
 
   const deleteTour = async (tourId: number) => {
     if (!confirm('Are you sure you want to delete this tour?')) return;
@@ -163,6 +181,17 @@ export default function ToursPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => toggleActive(tour.id, tour.is_active)}
+                          className={`p-2 rounded-lg transition-colors ${
+                            tour.is_active
+                              ? 'text-green-600 hover:bg-green-50'
+                              : 'text-gray-400 hover:bg-gray-100'
+                          }`}
+                          title={tour.is_active ? 'Deactivate' : 'Activate'}
+                        >
+                          {tour.is_active ? <ToggleRight size={20} /> : <ToggleLeft size={20} />}
+                        </button>
                         <button
                           onClick={() => duplicateTour(tour.id)}
                           className="text-purple-600 hover:text-purple-700 p-2"

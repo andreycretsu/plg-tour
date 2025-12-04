@@ -202,8 +202,11 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Try cookie first, then Authorization header
+    const cookieToken = request.cookies.get('token')?.value;
     const authHeader = request.headers.get('authorization');
-    const token = extractToken(authHeader);
+    const headerToken = extractToken(authHeader);
+    const token = cookieToken || headerToken;
 
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
