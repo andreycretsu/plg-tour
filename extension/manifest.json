@@ -21,12 +21,10 @@
     "storage",
     "activeTab",
     "scripting",
-    "tabs",
-    "<all_urls>"
+    "tabs"
   ],
   "host_permissions": [
-    "https://*/*",
-    "http://*/*"
+    "<all_urls>"
   ],
   "background": {
     "service_worker": "background.js"

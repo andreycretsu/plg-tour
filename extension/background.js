@@ -270,6 +270,10 @@ async function captureScreenshot(targetUrl, selector) {
     // Small delay to ensure page is fully rendered
     await new Promise(r => setTimeout(r, 800));
     
+    // Focus the window (required for captureVisibleTab in MV3)
+    await chrome.windows.update(tab.windowId, { focused: true });
+    await new Promise(r => setTimeout(r, 200));
+    
     // Get element position if selector provided
     let elementRect = null;
     if (selector) {
