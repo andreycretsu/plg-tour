@@ -29,8 +29,8 @@ export default function EditTooltipPage() {
   const [triggerType, setTriggerType] = useState<'click' | 'hover'>('click');
   const [dismissType, setDismissType] = useState<'button' | 'click_element' | 'click_outside'>('button');
   
-  // Icon/Beacon settings
-  const [iconType, setIconType] = useState<'pulse' | 'beacon' | 'dot' | 'none'>('pulse');
+  // Icon/Beacon settings - expanded types
+  const [iconType, setIconType] = useState<string>('pulse_dot');
   const [iconEdge, setIconEdge] = useState<'top' | 'right' | 'bottom' | 'left'>('right');
   const [iconOffset, setIconOffset] = useState(0);
   const [iconOffsetY, setIconOffsetY] = useState(0);
@@ -99,7 +99,7 @@ export default function EditTooltipPage() {
         setSelector(t.selector || '');
         setTriggerType(t.trigger_type || 'click');
         setDismissType(t.dismiss_type || 'button');
-        setIconType(t.icon_type || 'pulse');
+        setIconType(t.icon_type || 'pulse_dot');
         setIconEdge(t.icon_edge || 'right');
         setIconOffset(t.icon_offset || 0);
         setIconOffsetY(t.icon_offset_y || 0);
@@ -389,6 +389,10 @@ export default function EditTooltipPage() {
     }
   };
 
+  // Check if beacon should animate
+  const isAnimated = iconType.startsWith('pulse_');
+  const iconShape = iconType.replace('pulse_', '').replace('static_', '');
+
   // Get beacon position for preview - properly centered
   const getBeaconPreviewStyle = (): React.CSSProperties => {
     const size = iconSize;
@@ -398,9 +402,10 @@ export default function EditTooltipPage() {
       position: 'absolute',
       width: size,
       height: size,
-      borderRadius: '50%',
-      backgroundColor: iconColor,
-      animation: iconType === 'pulse' ? 'pulse 2s infinite' : undefined,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      animation: isAnimated ? 'pulse 2s infinite' : undefined,
     };
 
     // Position beacon on the edge with offsets
@@ -435,6 +440,56 @@ export default function EditTooltipPage() {
           marginTop: -halfSize + iconOffsetY,
         };
     }
+  };
+
+  // Render beacon icon based on type
+  const renderBeaconIcon = () => {
+    const size = iconSize;
+    
+    if (iconShape === 'dot') {
+      return (
+        <div style={{
+          width: size,
+          height: size,
+          borderRadius: '50%',
+          backgroundColor: iconColor,
+        }} />
+      );
+    }
+    
+    if (iconShape === 'star') {
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill={iconColor}>
+          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        </svg>
+      );
+    }
+    
+    if (iconShape === 'sparkle') {
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill={iconColor}>
+          <path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z"/>
+        </svg>
+      );
+    }
+    
+    if (iconShape === 'wand') {
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill={iconColor}>
+          <path d="M7.5 5.6L10 7L8.6 4.5L10 2L7.5 3.4L5 2L6.4 4.5L5 7L7.5 5.6ZM19.5 15.4L17 14L18.4 16.5L17 19L19.5 17.6L22 19L20.6 16.5L22 14L19.5 15.4ZM22 2L20.6 4.5L22 7L19.5 5.6L17 7L18.4 4.5L17 2L19.5 3.4L22 2ZM14.37 7.29C13.98 6.9 13.35 6.9 12.96 7.29L1.29 18.96C0.9 19.35 0.9 19.98 1.29 20.37L3.63 22.71C4.02 23.1 4.65 23.1 5.04 22.71L16.71 11.04C17.1 10.65 17.1 10.02 16.71 9.63L14.37 7.29Z"/>
+        </svg>
+      );
+    }
+    
+    // Default: dot
+    return (
+      <div style={{
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        backgroundColor: iconColor,
+      }} />
+    );
   };
 
   if (loading) {
@@ -831,10 +886,24 @@ export default function EditTooltipPage() {
                 <select
                   className="input"
                   value={iconType}
-                  onChange={(e) => setIconType(e.target.value as any)}
+                  onChange={(e) => setIconType(e.target.value)}
                 >
-                  <option value="pulse">Pulse (Animated)</option>
-                  <option value="beacon">Static Dot</option>
+                  <optgroup label="Dot">
+                    <option value="pulse_dot">🔴 Pulsing Dot</option>
+                    <option value="static_dot">⚫ Static Dot</option>
+                  </optgroup>
+                  <optgroup label="Star">
+                    <option value="pulse_star">⭐ Pulsing Star</option>
+                    <option value="static_star">★ Static Star</option>
+                  </optgroup>
+                  <optgroup label="Sparkle">
+                    <option value="pulse_sparkle">✨ Pulsing Sparkle</option>
+                    <option value="static_sparkle">✦ Static Sparkle</option>
+                  </optgroup>
+                  <optgroup label="Magic Wand">
+                    <option value="pulse_wand">🪄 Pulsing Wand</option>
+                    <option value="static_wand">⚡ Static Wand</option>
+                  </optgroup>
                 </select>
               </div>
 
@@ -1267,7 +1336,9 @@ export default function EditTooltipPage() {
                       
                       {/* Beacon */}
                       {iconType !== 'none' && (
-                        <div style={getBeaconPreviewStyle()} />
+                        <div style={getBeaconPreviewStyle()}>
+                          {renderBeaconIcon()}
+                        </div>
                       )}
                     </div>
                   </div>

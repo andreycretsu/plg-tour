@@ -447,17 +447,55 @@
         cursor: pointer;
       `;
       
+      // Create beacon inner based on icon type
       if (tooltip.icon_type !== 'none') {
-        const dot = document.createElement('div');
-        dot.className = `tl-beacon-${tooltip.icon_type || 'pulse'}`;
-        dot.style.cssText = `
+        const iconType = tooltip.icon_type || 'pulse_dot';
+        const isAnimated = iconType.startsWith('pulse_') || iconType === 'pulse';
+        const iconShape = iconType.replace('pulse_', '').replace('static_', '') || 'dot';
+        const iconColor = tooltip.icon_color || '#3b82f6';
+        
+        const iconWrapper = document.createElement('div');
+        iconWrapper.style.cssText = `
           width: 100%;
           height: 100%;
-          background: ${tooltip.icon_color || '#3b82f6'};
-          border-radius: 50%;
-          ${tooltip.icon_type === 'pulse' ? 'animation: tl-pulse 2s infinite;' : ''}
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          ${isAnimated ? 'animation: tl-pulse 2s infinite;' : ''}
         `;
-        beacon.appendChild(dot);
+        
+        if (iconShape === 'dot' || iconShape === 'beacon' || iconShape === 'pulse') {
+          // Dot
+          const dot = document.createElement('div');
+          dot.style.cssText = `
+            width: 100%;
+            height: 100%;
+            background: ${iconColor};
+            border-radius: 50%;
+          `;
+          iconWrapper.appendChild(dot);
+        } else if (iconShape === 'star') {
+          // Star SVG
+          iconWrapper.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 24 24" fill="${iconColor}"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+        } else if (iconShape === 'sparkle') {
+          // Sparkle SVG
+          iconWrapper.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 24 24" fill="${iconColor}"><path d="M12 0L14.59 9.41L24 12L14.59 14.59L12 24L9.41 14.59L0 12L9.41 9.41L12 0Z"/></svg>`;
+        } else if (iconShape === 'wand') {
+          // Magic wand SVG
+          iconWrapper.innerHTML = `<svg width="100%" height="100%" viewBox="0 0 24 24" fill="${iconColor}"><path d="M7.5 5.6L10 7L8.6 4.5L10 2L7.5 3.4L5 2L6.4 4.5L5 7L7.5 5.6ZM19.5 15.4L17 14L18.4 16.5L17 19L19.5 17.6L22 19L20.6 16.5L22 14L19.5 15.4ZM22 2L20.6 4.5L22 7L19.5 5.6L17 7L18.4 4.5L17 2L19.5 3.4L22 2ZM14.37 7.29C13.98 6.9 13.35 6.9 12.96 7.29L1.29 18.96C0.9 19.35 0.9 19.98 1.29 20.37L3.63 22.71C4.02 23.1 4.65 23.1 5.04 22.71L16.71 11.04C17.1 10.65 17.1 10.02 16.71 9.63L14.37 7.29Z"/></svg>`;
+        } else {
+          // Default to dot
+          const dot = document.createElement('div');
+          dot.style.cssText = `
+            width: 100%;
+            height: 100%;
+            background: ${iconColor};
+            border-radius: 50%;
+          `;
+          iconWrapper.appendChild(dot);
+        }
+        
+        beacon.appendChild(iconWrapper);
       }
       
       if (tooltip.trigger_type === 'hover') {
