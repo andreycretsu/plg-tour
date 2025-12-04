@@ -6,7 +6,7 @@ import FullScreenModal from '@/components/FullScreenModal';
 import ImageUpload from '@/components/ImageUpload';
 import ColorPicker from '@/components/ColorPicker';
 import CenterSlider from '@/components/CenterSlider';
-import { Save, Crosshair, AlertCircle, CheckCircle, MousePointer, Hand, Trash2, Loader2, Languages, Globe, RefreshCw, Settings, FileText, Star, Sparkles, Wand2, Circle, Copy } from 'lucide-react';
+import { Save, Crosshair, AlertCircle, CheckCircle, MousePointer, Hand, Trash2, Loader2, Languages, Globe, RefreshCw, Settings, FileText, Star, Sparkles, Wand2, Circle, Copy, Type, Palette, Repeat, Target, Zap, Camera } from 'lucide-react';
 
 // Shadcn UI components
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,20 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldLabel, FieldGroup, FieldDescription } from '@/components/ui/field';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
+import { Stepper, StepContent } from '@/components/ui/stepper';
+import { VariableInput, VariableTextarea } from '@/components/ui/variable-input';
+
+// Define wizard steps
+const WIZARD_STEPS = [
+  { id: 1, title: 'Content', icon: FileText },
+  { id: 2, title: 'Targeting', icon: Target },
+  { id: 3, title: 'Trigger', icon: Zap },
+  { id: 4, title: 'Beacon', icon: Circle },
+  { id: 5, title: 'Card Style', icon: Palette },
+  { id: 6, title: 'Typography', icon: Type },
+  { id: 7, title: 'Button', icon: Settings },
+  { id: 8, title: 'Frequency', icon: Repeat },
+];
 
 export default function EditTooltipPage() {
   const router = useRouter();
@@ -28,6 +42,13 @@ export default function EditTooltipPage() {
   const [pickingElement, setPickingElement] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
   const [isActive, setIsActive] = useState(true);
+  const [activeStep, setActiveStep] = useState(1);
+  
+  // Screenshot preview state
+  const [screenshot, setScreenshot] = useState<string | null>(null);
+  const [screenshotElementRect, setScreenshotElementRect] = useState<{x: number, y: number, width: number, height: number} | null>(null);
+  const [screenshotViewport, setScreenshotViewport] = useState<{width: number, height: number} | null>(null);
+  const [capturingScreenshot, setCapturingScreenshot] = useState(false);
 
   // Form state
   const [name, setName] = useState('');
@@ -85,8 +106,7 @@ export default function EditTooltipPage() {
   const [zIndex, setZIndex] = useState(2147483647);
   const [delayMs, setDelayMs] = useState(0);
 
-  // Tabs and Translations
-  const [activeTab, setActiveTab] = useState<'content' | 'customisation'>('content');
+  // Translations
   const [previewLang, setPreviewLang] = useState('en');
   const [translations, setTranslations] = useState<Record<string, { title: string; body: string; buttonText: string }>>({});
   const [translating, setTranslating] = useState(false);
@@ -290,6 +310,16 @@ export default function EditTooltipPage() {
       if (event.data.type === 'PICKER_CANCELLED') {
         setPickingElement(false);
       }
+      if (event.data.type === 'SCREENSHOT_CAPTURED') {
+        setCapturingScreenshot(false);
+        if (event.data.success) {
+          setScreenshot(event.data.screenshot);
+          setScreenshotElementRect(event.data.elementRect);
+          setScreenshotViewport(event.data.viewport);
+        } else {
+          alert('Failed to capture screenshot: ' + event.data.error);
+        }
+      }
     };
 
     window.addEventListener('message', handleMessage);
@@ -324,6 +354,30 @@ export default function EditTooltipPage() {
       source: 'tourlayer-webapp', 
       type: 'START_PICKER',
       targetUrl
+    }, '*');
+  };
+
+  const capturePreviewScreenshot = () => {
+    if (!extensionInstalled) {
+      alert('Please install the TourLayer Chrome extension first!');
+      return;
+    }
+
+    let targetUrl = urlPattern.replace(/\*+/g, '').trim();
+    if (!targetUrl) {
+      alert('Please enter a URL pattern first!');
+      return;
+    }
+    if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+      targetUrl = 'https://' + targetUrl;
+    }
+    
+    setCapturingScreenshot(true);
+    window.postMessage({ 
+      source: 'tourlayer-webapp', 
+      type: 'CAPTURE_SCREENSHOT',
+      targetUrl,
+      selector: selector || undefined
     }, '*');
   };
 
@@ -614,125 +668,84 @@ export default function EditTooltipPage() {
         }
       `}</style>
 
-      <div className="flex gap-6 p-6 h-full">
-        {/* Left Column - Form */}
-        <div className="flex-1 max-w-2xl overflow-y-auto">
-          {/* Status Toggle */}
-          <div className="card p-4 mb-5 flex items-center justify-between">
-            <div>
-              <h3 className="font-medium text-gray-900">Tooltip Status</h3>
-              <p className="text-sm text-gray-500">Enable or disable this tooltip</p>
-            </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={isActive}
-                onChange={(e) => setIsActive(e.target.checked)}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              <span className="ml-3 text-sm font-medium text-gray-700">
-                {isActive ? 'Active' : 'Inactive'}
-              </span>
-            </label>
+      <div className="flex h-full">
+        {/* Left Sidebar - Stepper */}
+        <div className="w-52 border-r border-gray-200 bg-gray-50/50 p-4 overflow-y-auto shrink-0">
+          {/* Extension Status */}
+          <div className={`mb-4 p-2 rounded-lg flex items-center gap-2 ${
+            extensionInstalled 
+              ? 'bg-green-50 border border-green-200' 
+              : 'bg-yellow-50 border border-yellow-200'
+          }`}>
+            {extensionInstalled ? (
+              <CheckCircle className="text-green-600 shrink-0" size={14} />
+            ) : (
+              <AlertCircle className="text-yellow-600 shrink-0" size={14} />
+            )}
+            <p className={`text-xs ${extensionInstalled ? 'text-green-700' : 'text-yellow-700'}`}>
+              {extensionInstalled ? 'Extension ready' : 'Install extension'}
+            </p>
           </div>
 
-          {/* Tabs */}
-          <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-lg">
-            <button
-              onClick={() => setActiveTab('content')}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all ${
-                activeTab === 'content'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <FileText size={18} />
-              Content
-            </button>
-            <button
-              onClick={() => setActiveTab('customisation')}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all ${
-                activeTab === 'customisation'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <Settings size={18} />
-              Customisation
-            </button>
-          </div>
+          {/* Vertical Stepper */}
+          <Stepper
+            steps={WIZARD_STEPS}
+            currentStep={activeStep}
+            onStepClick={setActiveStep}
+          />
+        </div>
 
-          {/* CONTENT TAB */}
-          {activeTab === 'content' && (
-            <>
-              {/* Card Content */}
-              <div className="card p-5 mb-5">
-                <h2 className="text-base font-semibold text-gray-900 mb-4">Content</h2>
+        {/* Middle Column - Form Content */}
+        <div className="flex-1 max-w-xl overflow-y-auto p-6">
+
+          {/* Step 1: Content */}
+          {activeStep === 1 && (
+            <StepContent
+              currentStep={activeStep}
+              onNext={() => setActiveStep(2)}
+              isFirst={true}
+              nextLabel="Next: Targeting"
+            >
+              <div className="card p-5">
+                <h2 className="text-base font-semibold text-gray-900 mb-4">Tooltip Content</h2>
                 
-                {/* Available Variables */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-                  <p className="text-xs font-medium text-blue-800 mb-2">📝 Available Variables (click to copy)</p>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      { var: '{{firstName}}', label: 'First Name' },
-                      { var: '{{lastName}}', label: 'Last Name' },
-                      { var: '{{userName}}', label: 'Full Name' },
-                    ].map(({ var: v, label }) => (
-                      <button
-                        key={v}
-                        type="button"
-                        onClick={() => navigator.clipboard.writeText(v)}
-                        className="px-2 py-1 bg-white border border-blue-300 rounded text-xs text-blue-700 hover:bg-blue-100 transition-colors"
-                        title={`Click to copy ${v}`}
-                      >
-                        {v} <span className="text-blue-400">({label})</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="label">Title</label>
-                    <input
-                      type="text"
-                      className="input"
+                <FieldGroup>
+                  <Field>
+                    <FieldLabel>Title</FieldLabel>
+                    <VariableInput
                       value={title}
-                      onChange={(e) => setTitle(e.target.value)}
+                      onValueChange={setTitle}
                       placeholder="Hey {{firstName}}, check this out!"
                     />
-                  </div>
+                  </Field>
 
-                  <div>
-                    <label className="label">Body</label>
-                    <textarea
-                      className="input min-h-[80px]"
+                  <Field>
+                    <FieldLabel>Body</FieldLabel>
+                    <VariableTextarea
                       value={body}
-                      onChange={(e) => setBody(e.target.value)}
+                      onValueChange={setBody}
                       placeholder="Description of the feature..."
+                      rows={4}
                     />
-                  </div>
+                  </Field>
 
-                  <div>
-                    <label className="label">Button Text</label>
-                    <input
-                      type="text"
-                      className="input"
+                  <Field>
+                    <FieldLabel>Button Text</FieldLabel>
+                    <VariableInput
                       value={buttonText}
-                      onChange={(e) => setButtonText(e.target.value)}
+                      onValueChange={setButtonText}
                       placeholder="Got it"
                     />
-                  </div>
+                  </Field>
 
-                  <div>
-                    <label className="label">Image (Optional)</label>
+                  <Field>
+                    <FieldLabel>Image (Optional)</FieldLabel>
                     <ImageUpload
                       value={imageUrl}
                       onChange={setImageUrl}
                     />
-                  </div>
-                </div>
+                  </Field>
+                </FieldGroup>
               </div>
 
               {/* Translations */}
@@ -865,280 +878,315 @@ export default function EditTooltipPage() {
                   })}
                 </div>
               </div>
-            </>
+            </StepContent>
           )}
 
-          {/* CUSTOMISATION TAB */}
-          {activeTab === 'customisation' && (
+          {/* Step 2: Targeting */}
+          {activeStep === 2 && (
+            <StepContent
+              currentStep={activeStep}
+              onBack={() => setActiveStep(1)}
+              onNext={() => setActiveStep(3)}
+              nextLabel="Next: Trigger"
+            >
+              <div className="card p-5">
+                <h2 className="text-base font-semibold text-gray-900 mb-4">Targeting</h2>
+                
+                <FieldGroup>
+                  <Field>
+                    <FieldLabel>Tooltip Name</FieldLabel>
+                    <Input
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g., Feature Discovery"
+                    />
+                  </Field>
+
+                  <Field>
+                    <FieldLabel>Website URL</FieldLabel>
+                    <Input
+                      value={urlPattern}
+                      onChange={(e) => setUrlPattern(e.target.value)}
+                      placeholder="https://app.example.com/*"
+                    />
+                    <FieldDescription>Use * as wildcard</FieldDescription>
+                  </Field>
+
+                  <Field>
+                    <FieldLabel>Element Selector</FieldLabel>
+                    <div className="flex gap-2">
+                      <Input
+                        className="flex-1"
+                        value={selector}
+                        onChange={(e) => setSelector(e.target.value)}
+                        placeholder=".my-button"
+                      />
+                      <button
+                        onClick={startPicker}
+                        disabled={!extensionInstalled || pickingElement}
+                        className={`px-3 py-2 rounded-md flex items-center gap-1 text-sm font-medium transition-colors ${
+                          extensionInstalled 
+                            ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        }`}
+                      >
+                        <Crosshair size={14} />
+                        {pickingElement ? '...' : 'Pick'}
+                      </button>
+                    </div>
+                  </Field>
+                </FieldGroup>
+              </div>
+            </StepContent>
+          )}
+
+          {/* Step 3: Trigger */}
+          {activeStep === 3 && (
+            <StepContent
+              currentStep={activeStep}
+              onBack={() => setActiveStep(2)}
+              onNext={() => setActiveStep(4)}
+              nextLabel="Next: Beacon"
+            >
+              <div className="card p-5">
+                <h2 className="text-base font-semibold text-gray-900 mb-4">Trigger Settings</h2>
+                
+                <FieldGroup>
+                  <Field>
+                    <FieldLabel>Trigger On</FieldLabel>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setTriggerType('click')}
+                        className={`flex-1 py-2 px-3 rounded-md flex items-center justify-center gap-2 text-sm transition-colors ${
+                          triggerType === 'click' 
+                            ? 'bg-primary text-primary-foreground' 
+                            : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                        }`}
+                      >
+                        <MousePointer size={14} />
+                        Click
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTriggerType('hover')}
+                        className={`flex-1 py-2 px-3 rounded-md flex items-center justify-center gap-2 text-sm transition-colors ${
+                          triggerType === 'hover' 
+                            ? 'bg-primary text-primary-foreground' 
+                            : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                        }`}
+                      >
+                        <Hand size={14} />
+                        Hover
+                      </button>
+                    </div>
+                  </Field>
+
+                  <Field>
+                    <FieldLabel>Dismiss When</FieldLabel>
+                    <Select value={dismissType} onValueChange={(v) => setDismissType(v as any)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="button">Click Button</SelectItem>
+                        <SelectItem value="click_element">Click Target Element</SelectItem>
+                        <SelectItem value="click_outside">Click Outside</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                </FieldGroup>
+              </div>
+            </StepContent>
+          )}
+
+          {/* Step 4: Beacon */}
+          {activeStep === 4 && (
+            <StepContent
+              currentStep={activeStep}
+              onBack={() => setActiveStep(3)}
+              onNext={() => setActiveStep(5)}
+              nextLabel="Next: Card Style"
+            >
+              <div className="card p-5">
+                <h2 className="text-base font-semibold text-gray-900 mb-4">Beacon Settings</h2>
+                
+                <FieldGroup>
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <Field>
+                      <FieldLabel>Icon Shape</FieldLabel>
+                      <div className="grid grid-cols-4 gap-2">
+                        {[
+                          { type: 'dot', icon: Circle, label: 'Dot' },
+                          { type: 'star', icon: Star, label: 'Star' },
+                          { type: 'sparkle', icon: Sparkles, label: 'Sparkle' },
+                          { type: 'wand', icon: Wand2, label: 'Wand' },
+                        ].map(({ type, icon: Icon, label }) => (
+                          <button
+                            key={type}
+                            type="button"
+                            onClick={() => setIconShape(type as any)}
+                            className={`flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all ${
+                              iconShape === type
+                                ? 'border-blue-500 bg-blue-50 text-blue-600'
+                                : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                            }`}
+                          >
+                            <Icon size={20} />
+                            <span className="text-xs mt-1">{label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </Field>
+
+                    <Field>
+                      <FieldLabel>Animation</FieldLabel>
+                      <button
+                        type="button"
+                        onClick={() => setIsPulsing(!isPulsing)}
+                        className={`w-full flex items-center justify-between p-3 rounded-lg border-2 transition-all ${
+                          isPulsing
+                            ? 'border-blue-500 bg-blue-50'
+                            : 'border-gray-200'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className={`w-4 h-4 rounded-full bg-blue-500 ${isPulsing ? 'animate-pulse' : ''}`}
+                          />
+                          <span className="text-sm font-medium">Pulse Animation</span>
+                        </div>
+                        <div className={`w-10 h-6 rounded-full transition-colors ${isPulsing ? 'bg-blue-500' : 'bg-gray-300'}`}>
+                          <div className={`w-5 h-5 rounded-full bg-white shadow-sm transform transition-transform mt-0.5 ${isPulsing ? 'translate-x-4.5 ml-4' : 'translate-x-0.5 ml-0.5'}`} />
+                        </div>
+                      </button>
+                    </Field>
+                  </div>
+
+                  <Field>
+                    <FieldLabel>Size: {iconSize}px</FieldLabel>
+                    <Slider
+                      value={[iconSize]}
+                      onValueChange={([value]) => setIconSize(value)}
+                      min={8}
+                      max={32}
+                      step={1}
+                    />
+                  </Field>
+
+                  <Field>
+                    <FieldLabel>Position Edge</FieldLabel>
+                    <div className="flex gap-2">
+                      {(['top', 'right', 'bottom', 'left'] as const).map((edge) => (
+                        <button
+                          key={edge}
+                          type="button"
+                          onClick={() => setIconEdge(edge)}
+                          className={`flex-1 py-2 rounded-lg capitalize text-sm transition-colors ${
+                            iconEdge === edge 
+                              ? 'bg-blue-600 text-white' 
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          {edge === 'top' && '↑'}
+                          {edge === 'right' && '→'}
+                          {edge === 'bottom' && '↓'}
+                          {edge === 'left' && '←'}
+                          {' '}{edge}
+                        </button>
+                      ))}
+                    </div>
+                  </Field>
+
+                  {/* Two columns for positioning */}
+                  <div className="grid grid-cols-2 gap-6 mb-4">
+                    {/* Left column: Beacon Position (relative to element) */}
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <h3 className="text-sm font-medium text-gray-700 mb-3">📍 Beacon Position</h3>
+                      <p className="text-xs text-gray-500 mb-3">Distance from the selected element</p>
+                      
+                      <div className="mb-3">
+                        <CenterSlider
+                          value={iconOffset}
+                          onChange={setIconOffset}
+                          min={-30}
+                          max={30}
+                          label="From Edge"
+                          magneticRange={3}
+                        />
+                      </div>
+
+                      <div>
+                        <CenterSlider
+                          value={iconOffsetY}
+                          onChange={setIconOffsetY}
+                          min={-50}
+                          max={50}
+                          label="Along Edge"
+                          magneticRange={5}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Right column: Card Position (relative to beacon) */}
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <h3 className="text-sm font-medium text-gray-700 mb-3">💬 Card Position</h3>
+                      <p className="text-xs text-gray-500 mb-3">Distance from the beacon</p>
+                      
+                      <div className="mb-3">
+                        <CenterSlider
+                          value={cardGap}
+                          onChange={setCardGap}
+                          min={0}
+                          max={40}
+                          label="Gap from Beacon"
+                          centered={false}
+                          color="purple"
+                        />
+                      </div>
+
+                      <div>
+                        <CenterSlider
+                          value={cardPosOffsetY}
+                          onChange={setCardPosOffsetY}
+                          min={-50}
+                          max={50}
+                          label="Card Offset"
+                          magneticRange={5}
+                          centered={true}
+                          color="purple"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <Field>
+                    <FieldLabel>Beacon Color</FieldLabel>
+                    <ColorPicker value={iconColor} onChange={setIconColor} />
+                  </Field>
+                </FieldGroup>
+              </div>
+            </StepContent>
+          )}
+
+          {/* Steps 5-8 placeholders - will be filled from new page */}
+          {activeStep >= 5 && activeStep <= 8 && (
+            <StepContent
+              currentStep={activeStep}
+              onBack={() => setActiveStep(activeStep - 1)}
+              onNext={() => activeStep < 8 && setActiveStep(activeStep + 1)}
+              nextLabel={activeStep < 8 ? `Next: ${WIZARD_STEPS[activeStep]?.title}` : undefined}
+            >
+              <div className="card p-5">
+                <h2 className="text-base font-semibold text-gray-900 mb-4">{WIZARD_STEPS[activeStep - 1]?.title}</h2>
+                <p className="text-gray-500">Step {activeStep} content - to be filled</p>
+              </div>
+            </StepContent>
+          )}
+
+          {/* Old content - to be removed */}
+          {false && (
             <>
-              {/* Targeting Section */}
-          <div className="card p-5 mb-5">
-            <h2 className="text-base font-semibold text-gray-900 mb-4">Targeting</h2>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="label">Tooltip Name</label>
-                <input
-                  type="text"
-                  className="input"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g., Feature Discovery"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="label">Website URL</label>
-                  <input
-                    type="text"
-                    className="input"
-                    value={urlPattern}
-                    onChange={(e) => setUrlPattern(e.target.value)}
-                    placeholder="https://app.example.com/*"
-                  />
-                </div>
-
-                <div>
-                  <label className="label">Element Selector</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      className="input flex-1"
-                      value={selector}
-                      onChange={(e) => setSelector(e.target.value)}
-                      placeholder=".my-button"
-                    />
-                    <button
-                      onClick={startPicker}
-                      disabled={!extensionInstalled || pickingElement}
-                      className={`px-3 py-2 rounded-lg flex items-center gap-1 text-sm font-medium transition-colors ${
-                        extensionInstalled 
-                          ? 'bg-purple-600 hover:bg-purple-700 text-white' 
-                          : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                      }`}
-                    >
-                      <Crosshair size={14} />
-                      {pickingElement ? '...' : 'Pick'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Trigger Settings */}
-          <div className="card p-5 mb-5">
-            <h2 className="text-base font-semibold text-gray-900 mb-4">Trigger Settings</h2>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="label">Trigger On</label>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setTriggerType('click')}
-                    className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-2 text-sm transition-colors ${
-                      triggerType === 'click' 
-                        ? 'bg-blue-600 text-white' 
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    <MousePointer size={14} />
-                    Click
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTriggerType('hover')}
-                    className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-2 text-sm transition-colors ${
-                      triggerType === 'hover' 
-                        ? 'bg-blue-600 text-white' 
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    <Hand size={14} />
-                    Hover
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="label">Dismiss When</label>
-                <select
-                  className="input"
-                  value={dismissType}
-                  onChange={(e) => setDismissType(e.target.value as any)}
-                >
-                  <option value="button">Click Button</option>
-                  <option value="click_element">Click Target Element</option>
-                  <option value="click_outside">Click Outside</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Beacon Settings */}
-          <div className="card p-5 mb-5">
-            <h2 className="text-base font-semibold text-gray-900 mb-4">Beacon Settings</h2>
-            
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="label">Icon Shape</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {[
-                    { type: 'dot', icon: Circle, label: 'Dot' },
-                    { type: 'star', icon: Star, label: 'Star' },
-                    { type: 'sparkle', icon: Sparkles, label: 'Sparkle' },
-                    { type: 'wand', icon: Wand2, label: 'Wand' },
-                  ].map(({ type, icon: Icon, label }) => (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={() => setIconShape(type as any)}
-                      className={`flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all ${
-                        iconShape === type
-                          ? 'border-blue-500 bg-blue-50 text-blue-600'
-                          : 'border-gray-200 hover:border-gray-300 text-gray-600'
-                      }`}
-                    >
-                      <Icon size={20} />
-                      <span className="text-xs mt-1">{label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="label">Animation</label>
-                <button
-                  type="button"
-                  onClick={() => setIsPulsing(!isPulsing)}
-                  className={`w-full flex items-center justify-between p-3 rounded-lg border-2 transition-all ${
-                    isPulsing
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className={`w-4 h-4 rounded-full bg-blue-500 ${isPulsing ? 'animate-pulse' : ''}`}
-                    />
-                    <span className="text-sm font-medium">Pulse Animation</span>
-                  </div>
-                  <div className={`w-10 h-6 rounded-full transition-colors ${isPulsing ? 'bg-blue-500' : 'bg-gray-300'}`}>
-                    <div className={`w-5 h-5 rounded-full bg-white shadow-sm transform transition-transform mt-0.5 ${isPulsing ? 'translate-x-4.5 ml-4' : 'translate-x-0.5 ml-0.5'}`} />
-                  </div>
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="label">Size: {iconSize}px</label>
-                <input
-                  type="range"
-                  min="8"
-                  max="32"
-                  value={iconSize}
-                  onChange={(e) => setIconSize(parseInt(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                />
-              </div>
-            </div>
-
-            {/* Edge Position */}
-            <div className="mb-4">
-              <label className="label">Position Edge</label>
-              <div className="flex gap-2">
-                {(['top', 'right', 'bottom', 'left'] as const).map((edge) => (
-                  <button
-                    key={edge}
-                    type="button"
-                    onClick={() => setIconEdge(edge)}
-                    className={`flex-1 py-2 rounded-lg capitalize text-sm transition-colors ${
-                      iconEdge === edge 
-                        ? 'bg-blue-600 text-white' 
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {edge === 'top' && '↑'}
-                    {edge === 'right' && '→'}
-                    {edge === 'bottom' && '↓'}
-                    {edge === 'left' && '←'}
-                    {' '}{edge}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Two columns for positioning */}
-            <div className="grid grid-cols-2 gap-6 mb-4">
-              {/* Left column: Beacon Position (relative to element) */}
-              <div className="border border-gray-200 rounded-lg p-4">
-                <h3 className="text-sm font-medium text-gray-700 mb-3">📍 Beacon Position</h3>
-                <p className="text-xs text-gray-500 mb-3">Distance from the selected element</p>
-                
-                <div className="mb-3">
-                  <CenterSlider
-                    value={iconOffset}
-                    onChange={setIconOffset}
-                    min={-30}
-                    max={30}
-                    label="From Edge"
-                    magneticRange={3}
-                  />
-                </div>
-
-                <div>
-                  <CenterSlider
-                    value={iconOffsetY}
-                    onChange={setIconOffsetY}
-                    min={-50}
-                    max={50}
-                    label="Along Edge"
-                    magneticRange={5}
-                  />
-                </div>
-              </div>
-
-              {/* Right column: Card Position (relative to beacon) */}
-              <div className="border border-gray-200 rounded-lg p-4">
-                <h3 className="text-sm font-medium text-gray-700 mb-3">💬 Card Position</h3>
-                <p className="text-xs text-gray-500 mb-3">Distance from the beacon</p>
-                
-                <div className="mb-3">
-                  <CenterSlider
-                    value={cardGap}
-                    onChange={setCardGap}
-                    min={0}
-                    max={40}
-                    label="Gap from Beacon"
-                    centered={false}
-                    color="purple"
-                  />
-                </div>
-
-                <div>
-                  <CenterSlider
-                    value={cardPosOffsetY}
-                    onChange={setCardPosOffsetY}
-                    min={-50}
-                    max={50}
-                    label="Card Offset"
-                    magneticRange={5}
-                    centered={true}
-                    color="purple"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label className="label">Beacon Color</label>
-              <ColorPicker value={iconColor} onChange={setIconColor} />
-            </div>
-          </div>
-
           {/* Card Settings */}
           <div className="card p-5 mb-5">
             <h2 className="text-base font-semibold text-gray-900 mb-4">Card Content</h2>
@@ -1537,43 +1585,174 @@ export default function EditTooltipPage() {
           </div>
             </>
           )}
-
-          {/* Actions */}
-          <div className="flex items-center justify-between mb-8">
-            <Button
-              variant="outline"
-              onClick={() => router.push('/tooltips')}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={saveTooltip}
-              disabled={saving}
-            >
-              <Save size={18} />
-              {saving ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </div>
         </div>
 
         {/* Right Column - Preview */}
         <div className="flex-1 min-w-[400px]">
           <div className="sticky top-0 h-screen py-6 flex flex-col">
+            {/* Capture Preview Button */}
+            <div className="flex items-center justify-between mb-3 px-2">
+              <span className="text-sm font-medium text-gray-700">Preview</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={capturePreviewScreenshot}
+                disabled={capturingScreenshot || !urlPattern}
+              >
+                {capturingScreenshot ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    Capturing...
+                  </>
+                ) : (
+                  <>
+                    <Camera size={14} />
+                    Capture Live Preview
+                  </>
+                )}
+              </Button>
+            </div>
+
             {/* Preview Area */}
             {showPreview && (
               <div 
-                className="rounded-xl p-6 flex-1 flex items-center justify-center h-full overflow-hidden"
-                style={{ backgroundColor: '#f3f4f6', minHeight: 'calc(100vh - 48px)' }}
+                className="rounded-xl flex-1 flex items-center justify-center h-full overflow-hidden relative"
+                style={{ backgroundColor: '#f3f4f6', minHeight: 'calc(100vh - 100px)' }}
               >
-                {/* Preview container - positions calculated from beacon */}
-                <div className="relative">
-                  {/* Mock Element */}
-                  <div 
-                    className="bg-gray-300 rounded-lg flex items-center justify-center text-gray-500 font-medium text-sm"
-                    style={{ width: 100, height: 100 }}
-                  >
-                    Element
+                {/* Screenshot Preview Mode */}
+                {screenshot ? (
+                  <div className="relative w-full h-full">
+                    {/* Scrollable screenshot container */}
+                    <div className="w-full h-full overflow-auto">
+                      {/* Screenshot as background */}
+                      <div className="relative" style={{ minWidth: screenshotViewport?.width || 'auto' }}>
+                        <img 
+                          src={screenshot} 
+                          alt="Page screenshot" 
+                          className="w-full h-auto block"
+                        />
+                    
+                        {/* Element highlight + Tooltip overlay */}
+                        {screenshotElementRect && (
+                          <>
+                            {/* Element highlight box */}
+                            <div
+                              className="absolute border-2 border-blue-500 bg-blue-500/10 rounded pointer-events-none"
+                              style={{
+                                left: screenshotElementRect.x,
+                                top: screenshotElementRect.y,
+                                width: screenshotElementRect.width,
+                                height: screenshotElementRect.height,
+                              }}
+                            />
+                            
+                            {/* Beacon */}
+                            {iconShape && (
+                              <div
+                                className="absolute pointer-events-none"
+                                style={{
+                                  left: iconEdge === 'left' 
+                                    ? screenshotElementRect.x - iconSize - iconOffset
+                                    : iconEdge === 'right'
+                                    ? screenshotElementRect.x + screenshotElementRect.width + iconOffset
+                                    : screenshotElementRect.x + screenshotElementRect.width / 2 - iconSize / 2 + iconOffsetY,
+                                  top: iconEdge === 'top'
+                                    ? screenshotElementRect.y - iconSize - iconOffset
+                                    : iconEdge === 'bottom'
+                                    ? screenshotElementRect.y + screenshotElementRect.height + iconOffset
+                                    : screenshotElementRect.y + screenshotElementRect.height / 2 - iconSize / 2 + iconOffsetY,
+                                }}
+                              >
+                                {renderBeaconIcon()}
+                              </div>
+                            )}
+                            
+                            {/* Tooltip Card */}
+                            {(() => {
+                              const preview = getPreviewContent();
+                              return (
+                                <div
+                                  className="absolute pointer-events-none"
+                                  style={{
+                                    left: iconEdge === 'right'
+                                      ? screenshotElementRect.x + screenshotElementRect.width + iconOffset + iconSize + cardGap
+                                      : iconEdge === 'left'
+                                      ? screenshotElementRect.x - iconOffset - iconSize - cardGap - cardWidth
+                                      : screenshotElementRect.x + screenshotElementRect.width / 2 - cardWidth / 2,
+                                    top: iconEdge === 'bottom'
+                                      ? screenshotElementRect.y + screenshotElementRect.height + iconOffset + iconSize + cardGap
+                                      : iconEdge === 'top'
+                                      ? screenshotElementRect.y - iconOffset - iconSize - cardGap - 200
+                                      : screenshotElementRect.y + screenshotElementRect.height / 2 - 100,
+                                    width: cardWidth,
+                                    backgroundColor: cardBgColor,
+                                    color: cardTextColor,
+                                    borderRadius: cardBorderRadius,
+                                    padding: cardPadding,
+                                    boxShadow: getShadowValue(cardShadow),
+                                    textAlign: textAlign,
+                                  }}
+                                >
+                                  {imageUrl && (
+                                    <img 
+                                      src={imageUrl} 
+                                      alt="Preview" 
+                                      className="w-full object-cover mb-3"
+                                      style={{ borderRadius: Math.max(0, cardBorderRadius - 4), aspectRatio: '16 / 9' }}
+                                    />
+                                  )}
+                                  <h3 className="font-semibold mb-1" style={{ fontSize: `${titleSize}px` }}>
+                                    {preview.title || 'Tooltip Title'}
+                                  </h3>
+                                  <p className="opacity-80 mb-3" style={{ fontSize: `${bodySize}px`, lineHeight: bodyLineHeight }}>
+                                    {preview.body || 'Tooltip description goes here...'}
+                                  </p>
+                                  {preview.buttonText && (
+                                    <div style={{ display: 'flex', justifyContent: buttonPosition === 'center' ? 'center' : buttonPosition === 'right' ? 'flex-end' : 'flex-start' }}>
+                                      <button style={{
+                                        backgroundColor: buttonColor,
+                                        color: buttonTextColor,
+                                        borderRadius: buttonBorderRadius,
+                                        padding: getButtonSizeStyles(buttonSize).padding,
+                                        width: buttonType === 'stretched' ? '100%' : 'auto',
+                                        border: 'none',
+                                        fontWeight: 500,
+                                        fontSize: getButtonSizeStyles(buttonSize).fontSize,
+                                      }}>
+                                        {preview.buttonText}
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })()}
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Fade indicators for horizontal scroll */}
+                    <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-gray-100 to-transparent pointer-events-none" />
+                    <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-gray-100 to-transparent pointer-events-none" />
+                    
+                    {/* Clear screenshot button */}
+                    <button
+                      onClick={() => { setScreenshot(null); setScreenshotElementRect(null); }}
+                      className="absolute top-2 right-10 bg-black/50 text-white px-2 py-1 rounded text-xs hover:bg-black/70 z-10"
+                    >
+                      Clear Screenshot
+                    </button>
                   </div>
+                ) : (
+                  /* Mock Preview Mode */
+                  <div className="relative p-6">
+                    {/* Mock Element */}
+                    <div 
+                      className="bg-gray-300 rounded-lg flex items-center justify-center text-gray-500 font-medium text-sm"
+                      style={{ width: 100, height: 100 }}
+                    >
+                      Element
+                    </div>
                   
                   {/* Beacon - positioned on element edge */}
                   {iconShape && (
@@ -1671,7 +1850,8 @@ export default function EditTooltipPage() {
                       </div>
                     );
                   })()}
-                </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
