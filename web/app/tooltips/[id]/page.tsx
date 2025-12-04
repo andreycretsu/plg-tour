@@ -64,7 +64,9 @@ export default function EditTooltipPage() {
   const [buttonColor, setButtonColor] = useState('#3b82f6');
   const [buttonTextColor, setButtonTextColor] = useState('#ffffff');
   const [buttonBorderRadius, setButtonBorderRadius] = useState(8);
-  const [buttonSize, setButtonSize] = useState<'s' | 'm' | 'l'>('m');
+  const [buttonSize, setButtonSize] = useState<'xxs' | 'xs' | 's' | 'm' | 'l' | 'xl'>('m');
+  const [buttonPosition, setButtonPosition] = useState<'left' | 'center' | 'right'>('left');
+  const [buttonType, setButtonType] = useState<'regular' | 'stretched'>('regular');
   
   // Display Frequency
   const [frequencyType, setFrequencyType] = useState<'once' | 'always' | 'count' | 'days'>('once');
@@ -148,6 +150,8 @@ export default function EditTooltipPage() {
         setButtonTextColor(t.button_text_color || '#ffffff');
         setButtonBorderRadius(t.button_border_radius || 8);
         setButtonSize(t.button_size || 'm');
+        setButtonPosition(t.button_position || 'left');
+        setButtonType(t.button_type || 'regular');
         setZIndex(t.z_index || 2147483647);
         setDelayMs(t.delay_ms || 0);
         setFrequencyType(t.frequency_type || 'once');
@@ -326,11 +330,14 @@ export default function EditTooltipPage() {
     return shadows[shadow] || shadows.medium;
   };
 
-  const getButtonSizeStyles = (size: 's' | 'm' | 'l') => {
-    const sizes = {
-      's': { padding: '4px 10px', fontSize: '11px' },
+  const getButtonSizeStyles = (size: string) => {
+    const sizes: Record<string, { padding: string; fontSize: string }> = {
+      'xxs': { padding: '2px 6px', fontSize: '10px' },
+      'xs': { padding: '4px 10px', fontSize: '11px' },
+      's': { padding: '6px 12px', fontSize: '12px' },
       'm': { padding: '8px 16px', fontSize: '13px' },
-      'l': { padding: '12px 24px', fontSize: '15px' },
+      'l': { padding: '10px 20px', fontSize: '14px' },
+      'xl': { padding: '12px 24px', fontSize: '15px' },
     };
     return sizes[size] || sizes.m;
   };
@@ -390,6 +397,8 @@ export default function EditTooltipPage() {
           buttonTextColor,
           buttonBorderRadius,
           buttonSize,
+          buttonPosition,
+          buttonType,
           zIndex,
           delayMs,
           frequencyType,
@@ -1247,21 +1256,50 @@ export default function EditTooltipPage() {
           <div className="card p-5 mb-5">
             <h2 className="text-base font-semibold text-gray-900 mb-4">Button Styling</h2>
             
+            {/* Size */}
+            <div className="mb-4">
+              <label className="label">Size</label>
+              <div className="flex gap-1">
+                {[
+                  { size: 'xxs', label: 'XXS' },
+                  { size: 'xs', label: 'XS' },
+                  { size: 's', label: 'S' },
+                  { size: 'm', label: 'M' },
+                  { size: 'l', label: 'L' },
+                  { size: 'xl', label: 'XL' },
+                ].map(({ size, label }) => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => setButtonSize(size as any)}
+                    className={`flex-1 py-2 rounded text-xs font-medium transition-colors ${
+                      buttonSize === size
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Position and Type */}
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="label">Size</label>
-                <div className="flex gap-2">
+                <label className="label">Position</label>
+                <div className="flex gap-1">
                   {[
-                    { size: 's', label: 'S' },
-                    { size: 'm', label: 'M' },
-                    { size: 'l', label: 'L' },
-                  ].map(({ size, label }) => (
+                    { pos: 'left', label: '←' },
+                    { pos: 'center', label: '•' },
+                    { pos: 'right', label: '→' },
+                  ].map(({ pos, label }) => (
                     <button
-                      key={size}
+                      key={pos}
                       type="button"
-                      onClick={() => setButtonSize(size as any)}
+                      onClick={() => setButtonPosition(pos as any)}
                       className={`flex-1 py-2 rounded text-sm font-medium transition-colors ${
-                        buttonSize === size
+                        buttonPosition === pos
                           ? 'bg-blue-600 text-white'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
@@ -1273,16 +1311,41 @@ export default function EditTooltipPage() {
               </div>
 
               <div>
-                <label className="label">Corner Radius (px)</label>
-                <input
-                  type="number"
-                  className="input"
-                  value={buttonBorderRadius}
-                  onChange={(e) => setButtonBorderRadius(parseInt(e.target.value) || 8)}
-                />
+                <label className="label">Type</label>
+                <div className="flex gap-1">
+                  {[
+                    { type: 'regular', label: 'Regular' },
+                    { type: 'stretched', label: 'Stretched' },
+                  ].map(({ type, label }) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setButtonType(type as any)}
+                      className={`flex-1 py-2 rounded text-xs font-medium transition-colors ${
+                        buttonType === type
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
+            {/* Corner Radius */}
+            <div className="mb-4">
+              <label className="label">Corner Radius (px)</label>
+              <input
+                type="number"
+                className="input"
+                value={buttonBorderRadius}
+                onChange={(e) => setButtonBorderRadius(parseInt(e.target.value) || 8)}
+              />
+            </div>
+
+            {/* Colors */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="label">Button Background</label>
@@ -1533,22 +1596,26 @@ export default function EditTooltipPage() {
                           {preview.body || 'Tooltip description goes here...'}
                         </p>
                         {preview.buttonText && (
-                          <button
-                            style={{
-                              backgroundColor: buttonColor,
-                              color: buttonTextColor,
-                              borderRadius: buttonBorderRadius,
-                              padding: getButtonSizeStyles(buttonSize).padding,
-                              width: textAlign === 'center' ? '100%' : 'auto',
-                              display: textAlign === 'center' ? 'block' : 'inline-block',
-                              border: 'none',
-                              fontWeight: 500,
-                              fontSize: getButtonSizeStyles(buttonSize).fontSize,
-                              cursor: 'pointer',
-                            }}
-                          >
-                            {preview.buttonText}
-                          </button>
+                          <div style={{ 
+                            display: 'flex', 
+                            justifyContent: buttonPosition === 'center' ? 'center' : buttonPosition === 'right' ? 'flex-end' : 'flex-start' 
+                          }}>
+                            <button
+                              style={{
+                                backgroundColor: buttonColor,
+                                color: buttonTextColor,
+                                borderRadius: buttonBorderRadius,
+                                padding: getButtonSizeStyles(buttonSize).padding,
+                                width: buttonType === 'stretched' ? '100%' : 'auto',
+                                border: 'none',
+                                fontWeight: 500,
+                                fontSize: getButtonSizeStyles(buttonSize).fontSize,
+                                cursor: 'pointer',
+                              }}
+                            >
+                              {preview.buttonText}
+                            </button>
+                          </div>
                         )}
                       </div>
                     );

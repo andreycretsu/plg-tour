@@ -106,6 +106,8 @@ export async function PUT(
       buttonTextColor,
       buttonBorderRadius,
       buttonSize,
+      buttonPosition,
+      buttonType,
       // Advanced
       zIndex,
       delayMs,
@@ -150,14 +152,16 @@ export async function PUT(
         button_text_color = COALESCE($30, button_text_color),
         button_border_radius = COALESCE($31, button_border_radius),
         button_size = COALESCE($32, button_size),
-        z_index = COALESCE($33, z_index),
-        delay_ms = COALESCE($34, delay_ms),
-        frequency_type = COALESCE($35, frequency_type),
-        frequency_count = COALESCE($36, frequency_count),
-        frequency_days = COALESCE($37, frequency_days),
-        show_once = COALESCE($38, show_once),
+        button_position = COALESCE($33, button_position),
+        button_type = COALESCE($34, button_type),
+        z_index = COALESCE($35, z_index),
+        delay_ms = COALESCE($36, delay_ms),
+        frequency_type = COALESCE($37, frequency_type),
+        frequency_count = COALESCE($38, frequency_count),
+        frequency_days = COALESCE($39, frequency_days),
+        show_once = COALESCE($40, show_once),
         updated_at = NOW()
-      WHERE id = $39
+      WHERE id = $41
       RETURNING *`,
       [
         name, urlPattern, selector, isActive,
@@ -167,7 +171,7 @@ export async function PUT(
         title, tooltipBody, imageUrl,
         cardWidth, cardPadding, cardBorderRadius, cardShadow, textAlign, cardTextColor, cardBgColor,
         titleSize, bodySize, bodyLineHeight,
-        buttonText, buttonColor, buttonTextColor, buttonBorderRadius, buttonSize,
+        buttonText, buttonColor, buttonTextColor, buttonBorderRadius, buttonSize, buttonPosition, buttonType,
         zIndex, delayMs,
         frequencyType, frequencyCount, frequencyDays, showOnce,
         tooltipId

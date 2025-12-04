@@ -9,11 +9,18 @@ interface ColorPickerProps {
 export default function ColorPicker({ value, onChange, showInput = true }: ColorPickerProps) {
   return (
     <div className="flex gap-2 items-center">
-      {/* Square color picker container */}
-      <div className="relative w-10 h-10 rounded-lg border border-gray-300 flex items-center justify-center bg-white overflow-hidden">
+      {/* Square color picker container - 42x42px with light gray bg */}
+      <div 
+        className="relative rounded-lg border border-gray-200 flex items-center justify-center overflow-hidden"
+        style={{ width: 42, height: 42, backgroundColor: '#f5f5f5' }}
+      >
         <div 
           className="w-5 h-5 rounded-full"
-          style={{ backgroundColor: value }}
+          style={{ 
+            backgroundColor: value,
+            border: '2px solid white',
+            boxShadow: '0 0 0 1px rgba(0,0,0,0.1)'
+          }}
         />
         <input
           type="color"
