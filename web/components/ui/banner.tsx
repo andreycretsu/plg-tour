@@ -7,8 +7,8 @@ import { X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button, type ButtonProps } from "@/components/ui/button"
 
-// SVG dot grid pattern encoded as data URL - emerald green, 20px cells
-const dotGridPattern = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Cg fill='none' stroke='%23059669' stroke-width='0.4' opacity='0.12'%3E%3Crect width='20' height='20' x='0' y='0'/%3E%3C/g%3E%3Ccircle cx='0' cy='0' r='1.2' fill='%23059669' opacity='0.25'/%3E%3Ccircle cx='20' cy='0' r='1.2' fill='%23059669' opacity='0.25'/%3E%3Ccircle cx='0' cy='20' r='1.2' fill='%23059669' opacity='0.25'/%3E%3Ccircle cx='20' cy='20' r='1.2' fill='%23059669' opacity='0.25'/%3E%3C/svg%3E")`
+// SVG dot grid pattern encoded as data URL - emerald green, 30px cells
+const dotGridPattern = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3E%3Cg fill='none' stroke='%23059669' stroke-width='0.4' opacity='0.12'%3E%3Crect width='30' height='30' x='0' y='0'/%3E%3C/g%3E%3Ccircle cx='0' cy='0' r='1.5' fill='%23059669' opacity='0.25'/%3E%3Ccircle cx='30' cy='0' r='1.5' fill='%23059669' opacity='0.25'/%3E%3Ccircle cx='0' cy='30' r='1.5' fill='%23059669' opacity='0.25'/%3E%3Ccircle cx='30' cy='30' r='1.5' fill='%23059669' opacity='0.25'/%3E%3C/svg%3E")`
 
 const bannerVariants = cva(
   "relative w-full flex items-center justify-between gap-4 px-4 py-3 text-sm transition-all overflow-hidden",
@@ -112,7 +112,7 @@ const Banner = React.forwardRef<HTMLDivElement, BannerProps>(
             className="absolute inset-0 pointer-events-none"
             style={{ 
               backgroundImage: dotGridPattern,
-              backgroundSize: '20px 20px',
+              backgroundSize: '30px 30px',
               backgroundPosition: '0 0',
               opacity: 0.7,
             }}
