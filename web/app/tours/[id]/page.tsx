@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import DashboardLayout from '@/components/DashboardLayout';
-import { Plus, Trash2, GripVertical, Save, Crosshair, AlertCircle, CheckCircle, ArrowLeft, Loader2, Settings, FileText, Languages, RefreshCw } from 'lucide-react';
+import FullScreenModal from '@/components/FullScreenModal';
+import { Plus, Trash2, GripVertical, Save, Crosshair, AlertCircle, CheckCircle, Loader2, Settings, FileText, Languages, RefreshCw, Copy } from 'lucide-react';
 import ImageUpload from '@/components/ImageUpload';
 
 interface Step {
@@ -46,6 +46,8 @@ export default function EditTourPage() {
   const [steps, setSteps] = useState<Step[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [duplicating, setDuplicating] = useState(false);
   const [extensionInstalled, setExtensionInstalled] = useState(false);
   const [pickingForStep, setPickingForStep] = useState<string | null>(null);
   const [pickerStatus, setPickerStatus] = useState<'idle' | 'waiting' | 'success'>('idle');
@@ -364,53 +366,105 @@ export default function EditTourPage() {
     }
   };
 
+  const deleteTour = async () => {
+    if (!confirm('Are you sure you want to delete this tour?')) return;
+    
+    setDeleting(true);
+    try {
+      const response = await fetch(`/api/tours/${tourId}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) throw new Error('Failed to delete');
+      
+      router.push('/tours');
+    } catch (error) {
+      alert('Error deleting tour: ' + error);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  const duplicateTour = async () => {
+    setDuplicating(true);
+    try {
+      const response = await fetch(`/api/tours/${tourId}/duplicate`, {
+        method: 'POST',
+      });
+      
+      if (!response.ok) throw new Error('Failed to duplicate');
+      
+      const newTour = await response.json();
+      router.push(`/tours/${newTour.id}`);
+    } catch (error) {
+      alert('Error duplicating tour: ' + error);
+    } finally {
+      setDuplicating(false);
+    }
+  };
+
   if (loading) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
-        </div>
-      </DashboardLayout>
+      <div className="fixed inset-0 flex items-center justify-center bg-gray-100">
+        <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+      </div>
     );
   }
 
   if (error) {
     return (
-      <DashboardLayout>
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-red-800 mb-2">Error Loading Tour</h2>
-            <p className="text-red-600 mb-4">{error}</p>
-            <button
-              onClick={() => router.push('/tours')}
-              className="btn btn-secondary"
-            >
-              Back to Tours
-            </button>
-          </div>
+      <div className="fixed inset-0 flex items-center justify-center bg-gray-100">
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center max-w-md">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-red-800 mb-2">Error Loading Tour</h2>
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={() => router.push('/tours')}
+            className="btn btn-secondary"
+          >
+            Back to Tours
+          </button>
         </div>
-      </DashboardLayout>
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
+    <FullScreenModal
+      title="Edit Tour"
+      onClose={() => router.push('/tours')}
+      actions={
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => router.push('/tours')}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
+            onClick={duplicateTour}
+            disabled={duplicating}
+            className="btn btn-secondary flex items-center gap-2"
           >
-            <ArrowLeft size={18} />
-            Back to Tours
+            <Copy size={16} />
+            {duplicating ? 'Duplicating...' : 'Duplicate'}
           </button>
-          <h1 className="text-3xl font-bold text-gray-900">Edit Tour</h1>
-          <p className="text-gray-600 mt-2">Update your product tour</p>
+          <button
+            onClick={deleteTour}
+            disabled={deleting}
+            className="btn btn-secondary text-red-600 hover:bg-red-50 flex items-center gap-2"
+          >
+            <Trash2 size={16} />
+            {deleting ? 'Deleting...' : 'Delete'}
+          </button>
+          <button
+            onClick={saveTour}
+            disabled={saving}
+            className="btn-primary flex items-center gap-2"
+          >
+            <Save size={18} />
+            {saving ? 'Saving...' : 'Save Changes'}
+          </button>
         </div>
-
-        {/* Extension Status */}
+      }
+    >
+      <div className="p-6 overflow-y-auto h-full">
+        <div className="max-w-4xl mx-auto">
+          {/* Extension Status */}
         <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${
           extensionInstalled 
             ? 'bg-green-50 border border-green-200' 
@@ -814,25 +868,9 @@ export default function EditTourPage() {
           </div>
         )}
 
-        {/* Actions */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => router.push('/tours')}
-            className="btn btn-secondary"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={saveTour}
-            disabled={saving}
-            className="btn btn-primary flex items-center gap-2"
-          >
-            <Save size={18} />
-            {saving ? 'Saving...' : 'Update Tour'}
-          </button>
         </div>
       </div>
-    </DashboardLayout>
+    </FullScreenModal>
   );
 }
 

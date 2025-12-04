@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import DashboardLayout from '@/components/DashboardLayout';
+import FullScreenModal from '@/components/FullScreenModal';
 import ImageUpload from '@/components/ImageUpload';
 import ColorPicker from '@/components/ColorPicker';
 import CenterSlider from '@/components/CenterSlider';
-import { Save, Crosshair, AlertCircle, CheckCircle, ArrowLeft, MousePointer, Hand, Languages, Settings, FileText, Star, Sparkles, Wand2, Circle } from 'lucide-react';
+import { Save, Crosshair, AlertCircle, CheckCircle, MousePointer, Hand, Languages, Settings, FileText, Star, Sparkles, Wand2, Circle } from 'lucide-react';
 
 export default function NewTooltipPage() {
   const router = useRouter();
@@ -340,7 +340,20 @@ export default function NewTooltipPage() {
   };
 
   return (
-    <DashboardLayout>
+    <FullScreenModal
+      title="New Tooltip"
+      onClose={() => router.push('/tooltips')}
+      actions={
+        <button
+          onClick={saveTooltip}
+          disabled={loading || !name || !urlPattern || !selector || !title}
+          className="btn-primary flex items-center gap-2"
+        >
+          <Save size={18} />
+          {loading ? 'Saving...' : 'Save Tooltip'}
+        </button>
+      }
+    >
       <style jsx global>{`
         @keyframes pulse {
           0%, 100% { transform: scale(1); opacity: 1; }
@@ -348,23 +361,9 @@ export default function NewTooltipPage() {
         }
       `}</style>
 
-      <div className="flex gap-6">
+      <div className="flex gap-6 p-6 h-full">
         {/* Left Column - Form */}
-        <div className="flex-1 max-w-2xl">
-          {/* Header */}
-          <div className="flex items-center gap-4 mb-6">
-            <button
-              onClick={() => router.push('/tooltips')}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <ArrowLeft size={20} />
-            </button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">New Tooltip</h1>
-              <p className="text-gray-600 text-sm">Create a contextual hint with beacon</p>
-            </div>
-          </div>
-
+        <div className="flex-1 max-w-2xl overflow-y-auto">
           {/* Extension Status */}
           <div className={`mb-4 p-3 rounded-lg flex items-center gap-3 ${
             extensionInstalled 
@@ -1113,23 +1112,6 @@ export default function NewTooltipPage() {
             </>
           )}
 
-          {/* Actions */}
-          <div className="flex items-center justify-between mb-8">
-            <button
-              onClick={() => router.push('/tooltips')}
-              className="btn btn-secondary"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={saveTooltip}
-              disabled={loading}
-              className="btn btn-primary flex items-center gap-2"
-            >
-              <Save size={18} />
-              {loading ? 'Saving...' : 'Save Tooltip'}
-            </button>
-          </div>
         </div>
 
         {/* Right Column - Preview */}
@@ -1251,6 +1233,6 @@ export default function NewTooltipPage() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </FullScreenModal>
   );
 }

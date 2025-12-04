@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import DashboardLayout from '@/components/DashboardLayout';
+import FullScreenModal from '@/components/FullScreenModal';
 import ImageUpload from '@/components/ImageUpload';
 import ColorPicker from '@/components/ColorPicker';
 import CenterSlider from '@/components/CenterSlider';
-import { Save, Crosshair, AlertCircle, CheckCircle, ArrowLeft, MousePointer, Hand, Trash2, Loader2, Languages, Globe, RefreshCw, Settings, FileText, Star, Sparkles, Wand2, Circle } from 'lucide-react';
+import { Save, Crosshair, AlertCircle, CheckCircle, MousePointer, Hand, Trash2, Loader2, Languages, Globe, RefreshCw, Settings, FileText, Star, Sparkles, Wand2, Circle, Copy } from 'lucide-react';
 
 export default function EditTooltipPage() {
   const router = useRouter();
@@ -16,6 +16,7 @@ export default function EditTooltipPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [duplicating, setDuplicating] = useState(false);
   const [extensionInstalled, setExtensionInstalled] = useState(false);
   const [pickingElement, setPickingElement] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
@@ -439,6 +440,24 @@ export default function EditTooltipPage() {
     }
   };
 
+  const duplicateTooltip = async () => {
+    setDuplicating(true);
+    try {
+      const response = await fetch(`/api/tooltips/${tooltipId}/duplicate`, {
+        method: 'POST',
+      });
+      
+      if (!response.ok) throw new Error('Failed to duplicate');
+      
+      const newTooltip = await response.json();
+      router.push(`/tooltips/${newTooltip.id}`);
+    } catch (error) {
+      alert('Error duplicating tooltip: ' + error);
+    } finally {
+      setDuplicating(false);
+    }
+  };
+
   // Animation is controlled by isPulsing state directly
 
   // Get beacon position for preview - properly centered
@@ -542,16 +561,45 @@ export default function EditTooltipPage() {
 
   if (loading) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="animate-spin text-blue-600" size={32} />
-        </div>
-      </DashboardLayout>
+      <div className="fixed inset-0 flex items-center justify-center bg-gray-100">
+        <Loader2 className="animate-spin text-blue-600" size={32} />
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
+    <FullScreenModal
+      title="Edit Tooltip"
+      onClose={() => router.push('/tooltips')}
+      actions={
+        <div className="flex items-center gap-2">
+          <button
+            onClick={duplicateTooltip}
+            disabled={duplicating}
+            className="btn btn-secondary flex items-center gap-2"
+          >
+            <Copy size={16} />
+            {duplicating ? 'Duplicating...' : 'Duplicate'}
+          </button>
+          <button
+            onClick={deleteTooltip}
+            disabled={deleting}
+            className="btn btn-secondary text-red-600 hover:bg-red-50 flex items-center gap-2"
+          >
+            <Trash2 size={16} />
+            {deleting ? 'Deleting...' : 'Delete'}
+          </button>
+          <button
+            onClick={saveTooltip}
+            disabled={saving}
+            className="btn-primary flex items-center gap-2"
+          >
+            <Save size={18} />
+            {saving ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
+      }
+    >
       <style jsx global>{`
         @keyframes pulse {
           0%, 100% { transform: scale(1); opacity: 1; }
@@ -559,33 +607,9 @@ export default function EditTooltipPage() {
         }
       `}</style>
 
-      <div className="flex gap-6">
+      <div className="flex gap-6 p-6 h-full">
         {/* Left Column - Form */}
-        <div className="flex-1 max-w-2xl">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push('/tooltips')}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <ArrowLeft size={20} />
-              </button>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Edit Tooltip</h1>
-                <p className="text-gray-600 text-sm">Modify tooltip settings</p>
-              </div>
-            </div>
-            <button
-              onClick={deleteTooltip}
-              disabled={deleting}
-              className="btn btn-secondary text-red-600 hover:bg-red-50 flex items-center gap-2"
-            >
-              <Trash2 size={16} />
-              {deleting ? 'Deleting...' : 'Delete'}
-            </button>
-          </div>
-
+        <div className="flex-1 max-w-2xl overflow-y-auto">
           {/* Status Toggle */}
           <div className="card p-4 mb-5 flex items-center justify-between">
             <div>
@@ -1626,7 +1650,7 @@ export default function EditTooltipPage() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </FullScreenModal>
   );
 }
 

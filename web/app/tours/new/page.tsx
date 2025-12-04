@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import DashboardLayout from '@/components/DashboardLayout';
+import FullScreenModal from '@/components/FullScreenModal';
 import { PreviewPanel } from '@/components/StepPreview';
 import ColorPicker from '@/components/ColorPicker';
 import { Plus, Trash2, GripVertical, Save, Crosshair, AlertCircle, CheckCircle, Eye, Layers, Settings, FileText, Languages } from 'lucide-react';
@@ -253,16 +253,23 @@ export default function NewTourPage() {
   const activeStep = steps.find(s => s.id === activePreviewStep);
 
   return (
-    <DashboardLayout>
-      <div className="flex gap-6">
+    <FullScreenModal
+      title="Create New Tour"
+      onClose={() => router.push('/tours')}
+      actions={
+        <button
+          onClick={saveTour}
+          disabled={saving || steps.length === 0 || !name || !urlPattern}
+          className="btn-primary flex items-center gap-2"
+        >
+          <Save size={18} />
+          {saving ? 'Saving...' : 'Save Tour'}
+        </button>
+      }
+    >
+      <div className="flex gap-6 p-6 h-full">
         {/* Main Form */}
-        <div className="flex-1 max-w-3xl">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Create New Tour</h1>
-            <p className="text-gray-600 mt-2">Build an interactive product tour</p>
-          </div>
-
+        <div className="flex-1 max-w-3xl overflow-y-auto">
           {/* Extension Status */}
           <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${
             extensionInstalled 
@@ -957,6 +964,6 @@ export default function NewTourPage() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </FullScreenModal>
   );
 }
