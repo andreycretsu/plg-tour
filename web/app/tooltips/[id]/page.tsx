@@ -52,10 +52,18 @@ export default function EditTooltipPage() {
   const [textAlign, setTextAlign] = useState<'left' | 'center' | 'right'>('left');
   const [cardTextColor, setCardTextColor] = useState('#1f2937');
   const [cardBgColor, setCardBgColor] = useState('#ffffff');
+  
+  // Typography
+  const [titleSize, setTitleSize] = useState(16);
+  const [bodySize, setBodySize] = useState(14);
+  const [bodyLineHeight, setBodyLineHeight] = useState(1.5);
+  
+  // Button settings
   const [buttonText, setButtonText] = useState('Got it');
   const [buttonColor, setButtonColor] = useState('#3b82f6');
   const [buttonTextColor, setButtonTextColor] = useState('#ffffff');
   const [buttonBorderRadius, setButtonBorderRadius] = useState(8);
+  const [buttonSize, setButtonSize] = useState<'s' | 'm' | 'l'>('m');
   
   // Display Frequency
   const [frequencyType, setFrequencyType] = useState<'once' | 'always' | 'count' | 'days'>('once');
@@ -129,10 +137,16 @@ export default function EditTooltipPage() {
         setTextAlign(t.text_align || 'left');
         setCardTextColor(t.card_text_color || '#1f2937');
         setCardBgColor(t.card_bg_color || '#ffffff');
+        // Typography
+        setTitleSize(t.title_size || 16);
+        setBodySize(t.body_size || 14);
+        setBodyLineHeight(t.body_line_height || 1.5);
+        // Button
         setButtonText(t.button_text || 'Got it');
         setButtonColor(t.button_color || '#3b82f6');
         setButtonTextColor(t.button_text_color || '#ffffff');
         setButtonBorderRadius(t.button_border_radius || 8);
+        setButtonSize(t.button_size || 'm');
         setZIndex(t.z_index || 2147483647);
         setDelayMs(t.delay_ms || 0);
         setFrequencyType(t.frequency_type || 'once');
@@ -311,6 +325,15 @@ export default function EditTooltipPage() {
     return shadows[shadow] || shadows.medium;
   };
 
+  const getButtonSizeStyles = (size: 's' | 'm' | 'l') => {
+    const sizes = {
+      's': { padding: '4px 10px', fontSize: '11px' },
+      'm': { padding: '8px 16px', fontSize: '13px' },
+      'l': { padding: '12px 24px', fontSize: '15px' },
+    };
+    return sizes[size] || sizes.m;
+  };
+
   const getShadowName = (shadowValue: string) => {
     if (!shadowValue || shadowValue === 'none') return 'none';
     if (shadowValue.includes('2px')) return 'small';
@@ -358,10 +381,14 @@ export default function EditTooltipPage() {
           textAlign,
           cardTextColor,
           cardBgColor,
+          titleSize,
+          bodySize,
+          bodyLineHeight,
           buttonText,
           buttonColor,
           buttonTextColor,
           buttonBorderRadius,
+          buttonSize,
           zIndex,
           delayMs,
           frequencyType,
@@ -1204,20 +1231,77 @@ export default function EditTooltipPage() {
             </div>
           </div>
 
+          {/* Typography */}
+          <div className="card p-5 mb-5">
+            <h2 className="text-base font-semibold text-gray-900 mb-4">Typography</h2>
+            
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              <div>
+                <label className="label">Title Size: {titleSize}px</label>
+                <input
+                  type="range"
+                  min="12"
+                  max="24"
+                  value={titleSize}
+                  onChange={(e) => setTitleSize(parseInt(e.target.value))}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                />
+              </div>
+
+              <div>
+                <label className="label">Body Size: {bodySize}px</label>
+                <input
+                  type="range"
+                  min="10"
+                  max="18"
+                  value={bodySize}
+                  onChange={(e) => setBodySize(parseInt(e.target.value))}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                />
+              </div>
+
+              <div>
+                <label className="label">Line Height: {bodyLineHeight}</label>
+                <input
+                  type="range"
+                  min="1"
+                  max="2"
+                  step="0.1"
+                  value={bodyLineHeight}
+                  onChange={(e) => setBodyLineHeight(parseFloat(e.target.value))}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Button Styling */}
           <div className="card p-5 mb-5">
             <h2 className="text-base font-semibold text-gray-900 mb-4">Button Styling</h2>
             
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="label">Button Text</label>
-                <input
-                  type="text"
-                  className="input"
-                  value={buttonText}
-                  onChange={(e) => setButtonText(e.target.value)}
-                  placeholder="Got it"
-                />
+                <label className="label">Size</label>
+                <div className="flex gap-2">
+                  {[
+                    { size: 's', label: 'S' },
+                    { size: 'm', label: 'M' },
+                    { size: 'l', label: 'L' },
+                  ].map(({ size, label }) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => setButtonSize(size as any)}
+                      className={`flex-1 py-2 rounded text-sm font-medium transition-colors ${
+                        buttonSize === size
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div>
@@ -1464,10 +1548,10 @@ export default function EditTooltipPage() {
                             }}
                           />
                         )}
-                        <h3 className="font-semibold text-sm mb-1">
+                        <h3 className="font-semibold mb-1" style={{ fontSize: `${titleSize}px` }}>
                           {preview.title || 'Tooltip Title'}
                         </h3>
-                        <p className="text-xs opacity-80 mb-3">
+                        <p className="opacity-80 mb-3" style={{ fontSize: `${bodySize}px`, lineHeight: bodyLineHeight }}>
                           {preview.body || 'Tooltip description goes here...'}
                         </p>
                         {preview.buttonText && (
@@ -1476,12 +1560,12 @@ export default function EditTooltipPage() {
                               backgroundColor: buttonColor,
                               color: buttonTextColor,
                               borderRadius: buttonBorderRadius,
-                              padding: '6px 12px',
+                              padding: getButtonSizeStyles(buttonSize).padding,
                               width: textAlign === 'center' ? '100%' : 'auto',
                               display: textAlign === 'center' ? 'block' : 'inline-block',
                               border: 'none',
                               fontWeight: 500,
-                              fontSize: '12px',
+                              fontSize: getButtonSizeStyles(buttonSize).fontSize,
                               cursor: 'pointer',
                             }}
                           >
