@@ -650,7 +650,8 @@
     const iconOffset = tooltip.icon_offset || 0;
     const iconOffsetY = tooltip.icon_offset_y || 0;
     let top, left;
-    const gap = 12; // Space between beacon and card
+    const gap = tooltip.card_gap || 12; // Space between beacon and card
+    const cardPosOffset = tooltip.card_offset_y || 0; // Card offset along axis
     const cardHeight = 250; // Estimated card height
     
     // First, calculate beacon position (same logic as createBeacon)
@@ -680,7 +681,7 @@
       case 'top':
         // Beacon on top, card below beacon
         top = beaconY + iconSize + gap;
-        left = beaconX - cardWidth / 2;
+        left = beaconX - cardWidth / 2 + cardPosOffset;
         // If no room below, put above
         if (top + cardHeight > window.innerHeight) {
           top = beaconY - gap - cardHeight;
@@ -689,7 +690,7 @@
       case 'bottom':
         // Beacon on bottom, card above beacon
         top = beaconY - gap - cardHeight;
-        left = beaconX - cardWidth / 2;
+        left = beaconX - cardWidth / 2 + cardPosOffset;
         // If no room above, put below
         if (top < 16) {
           top = beaconY + iconSize + gap;
@@ -697,7 +698,7 @@
         break;
       case 'left':
         // Beacon on left, card to right of beacon
-        top = beaconY - cardHeight / 2;
+        top = beaconY - cardHeight / 2 + cardPosOffset;
         left = beaconX + iconSize + gap;
         // If no room on right, put on left
         if (left + cardWidth > window.innerWidth - 16) {
@@ -707,7 +708,7 @@
       case 'right':
       default:
         // Beacon on right, card to left of beacon
-        top = beaconY - cardHeight / 2;
+        top = beaconY - cardHeight / 2 + cardPosOffset;
         left = beaconX - cardWidth - gap;
         // If no room on left, put on right
         if (left < 16) {

@@ -629,7 +629,8 @@
     const iconOffset = tooltip.icon_offset || 0;
     const iconOffsetY = tooltip.icon_offset_y || 0;
     let top, left;
-    const gap = 12; // Space between beacon and card
+    const gap = tooltip.card_gap || 12; // Space between beacon and card
+    const cardPosOffset = tooltip.card_offset_y || 0; // Card offset along axis
     const cardHeight = 250; // Estimated card height
     
     // First, calculate beacon position
@@ -658,20 +659,20 @@
     switch (edge) {
       case 'top':
         top = beaconY + iconSize + gap;
-        left = beaconX - cardWidth / 2;
+        left = beaconX - cardWidth / 2 + cardPosOffset;
         if (top + cardHeight > window.innerHeight) {
           top = beaconY - gap - cardHeight;
         }
         break;
       case 'bottom':
         top = beaconY - gap - cardHeight;
-        left = beaconX - cardWidth / 2;
+        left = beaconX - cardWidth / 2 + cardPosOffset;
         if (top < 16) {
           top = beaconY + iconSize + gap;
         }
         break;
       case 'left':
-        top = beaconY - cardHeight / 2;
+        top = beaconY - cardHeight / 2 + cardPosOffset;
         left = beaconX + iconSize + gap;
         if (left + cardWidth > window.innerWidth - 16) {
           left = beaconX - cardWidth - gap;
@@ -679,7 +680,7 @@
         break;
       case 'right':
       default:
-        top = beaconY - cardHeight / 2;
+        top = beaconY - cardHeight / 2 + cardPosOffset;
         left = beaconX - cardWidth - gap;
         if (left < 16) {
           left = beaconX + iconSize + gap;

@@ -42,10 +42,14 @@ export default function NewTooltipPage() {
   // Icon/Beacon settings - expanded types
   const [iconType, setIconType] = useState<string>('pulse_dot');
   const [iconEdge, setIconEdge] = useState<'top' | 'right' | 'bottom' | 'left'>('right');
-  const [iconOffset, setIconOffset] = useState(0);
-  const [iconOffsetY, setIconOffsetY] = useState(0); // Y-axis alignment
+  const [iconOffset, setIconOffset] = useState(0); // Beacon distance from element edge
+  const [iconOffsetY, setIconOffsetY] = useState(0); // Beacon position along edge
   const [iconSize, setIconSize] = useState(16); // Size in pixels
   const [iconColor, setIconColor] = useState('#3b82f6');
+  
+  // Card position settings (relative to beacon)
+  const [cardGap, setCardGap] = useState(12); // Distance between beacon and card
+  const [cardOffsetY, setCardOffsetY] = useState(0); // Card offset along the axis
   
   // Card settings
   const [title, setTitle] = useState('');
@@ -162,6 +166,9 @@ export default function NewTooltipPage() {
           iconOffsetY,
           iconSize,
           iconColor,
+          // Card position relative to beacon
+          cardGap,
+          cardOffsetY,
           title,
           body,
           imageUrl: imageUrl || null,
@@ -616,53 +623,98 @@ export default function NewTooltipPage() {
               </div>
             </div>
 
-            {/* Distance Slider (X-axis / perpendicular to edge) */}
-            <div className="mb-4">
-              <label className="label">Distance from Edge: {iconOffset}px</label>
-              <div className="relative">
-                <input
-                  type="range"
-                  min="-30"
-                  max="30"
-                  value={iconOffset}
-                  onChange={(e) => {
-                    let val = parseInt(e.target.value);
-                    // Magnetic snap to 0 (edge)
-                    if (val >= -3 && val <= 3) val = 0;
-                    setIconOffset(val);
-                  }}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                />
-                {/* Center indicator dot at 0 */}
-                <div 
-                  className="absolute left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-400 rounded-full pointer-events-none border-2 border-white"
-                  style={{ top: '50%', transform: 'translate(-50%, -50%)' }}
-                />
-              </div>
-            </div>
+            {/* Two columns for positioning */}
+            <div className="grid grid-cols-2 gap-6 mb-4">
+              {/* Left column: Beacon Position (relative to element) */}
+              <div className="border border-gray-200 rounded-lg p-4">
+                <h3 className="text-sm font-medium text-gray-700 mb-3">📍 Beacon Position</h3>
+                <p className="text-xs text-gray-500 mb-3">Distance from the selected element</p>
+                
+                <div className="mb-3">
+                  <label className="label text-xs">From Edge: {iconOffset}px</label>
+                  <div className="relative">
+                    <input
+                      type="range"
+                      min="-30"
+                      max="30"
+                      value={iconOffset}
+                      onChange={(e) => {
+                        let val = parseInt(e.target.value);
+                        if (val >= -3 && val <= 3) val = 0;
+                        setIconOffset(val);
+                      }}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                    />
+                    <div 
+                      className="absolute left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-400 rounded-full pointer-events-none border-2 border-white"
+                      style={{ top: '50%', transform: 'translate(-50%, -50%)' }}
+                    />
+                  </div>
+                </div>
 
-            {/* Y-axis Slider (along the edge) */}
-            <div className="mb-4">
-              <label className="label">Position Along Edge: {iconOffsetY}px</label>
-              <div className="relative">
-                <input
-                  type="range"
-                  min="-50"
-                  max="50"
-                  value={iconOffsetY}
-                  onChange={(e) => {
-                    let val = parseInt(e.target.value);
-                    // Magnetic snap to center (0)
-                    if (val >= -5 && val <= 5) val = 0;
-                    setIconOffsetY(val);
-                  }}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-                />
-                {/* Center indicator dot */}
-                <div 
-                  className="absolute left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-400 rounded-full pointer-events-none border-2 border-white"
-                  style={{ top: '50%', transform: 'translate(-50%, -50%)' }}
-                />
+                <div>
+                  <label className="label text-xs">Along Edge: {iconOffsetY}px</label>
+                  <div className="relative">
+                    <input
+                      type="range"
+                      min="-50"
+                      max="50"
+                      value={iconOffsetY}
+                      onChange={(e) => {
+                        let val = parseInt(e.target.value);
+                        if (val >= -5 && val <= 5) val = 0;
+                        setIconOffsetY(val);
+                      }}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                    />
+                    <div 
+                      className="absolute left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-400 rounded-full pointer-events-none border-2 border-white"
+                      style={{ top: '50%', transform: 'translate(-50%, -50%)' }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Right column: Card Position (relative to beacon) */}
+              <div className="border border-gray-200 rounded-lg p-4">
+                <h3 className="text-sm font-medium text-gray-700 mb-3">💬 Card Position</h3>
+                <p className="text-xs text-gray-500 mb-3">Distance from the beacon</p>
+                
+                <div className="mb-3">
+                  <label className="label text-xs">Gap from Beacon: {cardGap}px</label>
+                  <div className="relative">
+                    <input
+                      type="range"
+                      min="0"
+                      max="40"
+                      value={cardGap}
+                      onChange={(e) => setCardGap(parseInt(e.target.value))}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="label text-xs">Card Offset: {cardOffsetY}px</label>
+                  <div className="relative">
+                    <input
+                      type="range"
+                      min="-50"
+                      max="50"
+                      value={cardOffsetY}
+                      onChange={(e) => {
+                        let val = parseInt(e.target.value);
+                        if (val >= -5 && val <= 5) val = 0;
+                        setCardOffsetY(val);
+                      }}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                    />
+                    <div 
+                      className="absolute left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-400 rounded-full pointer-events-none border-2 border-white"
+                      style={{ top: '50%', transform: 'translate(-50%, -50%)' }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 

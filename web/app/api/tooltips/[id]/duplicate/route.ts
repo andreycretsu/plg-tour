@@ -44,7 +44,7 @@ export async function POST(
       `INSERT INTO tooltips (
         workspace_id, name, url_pattern, selector, is_active,
         trigger_type, dismiss_type, icon_type, icon_edge, icon_offset, icon_offset_y,
-        icon_size, icon_color, title, body, image_url,
+        icon_size, icon_color, card_gap, card_offset_y, title, body, image_url,
         card_width, card_padding, card_border_radius, card_shadow, text_align,
         card_text_color, card_bg_color, button_text, button_color, button_text_color,
         button_border_radius, z_index, delay_ms, frequency_type, frequency_count,
@@ -52,11 +52,11 @@ export async function POST(
       ) VALUES (
         $1, $2, $3, $4, false,
         $5, $6, $7, $8, $9, $10,
-        $11, $12, $13, $14, $15,
-        $16, $17, $18, $19, $20,
-        $21, $22, $23, $24, $25,
-        $26, $27, $28, $29, $30,
-        $31, $32
+        $11, $12, $13, $14, $15, $16, $17,
+        $18, $19, $20, $21, $22,
+        $23, $24, $25, $26, $27,
+        $28, $29, $30, $31, $32,
+        $33, $34
       ) RETURNING *`,
       [
         tooltip.workspace_id,
@@ -71,6 +71,8 @@ export async function POST(
         tooltip.icon_offset_y,
         tooltip.icon_size,
         tooltip.icon_color,
+        tooltip.card_gap || 12,
+        tooltip.card_offset_y || 0,
         tooltip.title,
         tooltip.body,
         tooltip.image_url,

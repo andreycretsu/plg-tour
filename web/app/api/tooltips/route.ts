@@ -95,6 +95,9 @@ export async function POST(request: NextRequest) {
       iconOffsetY = 0,
       iconSize = 16, // Size in pixels
       iconColor = '#3b82f6',
+      // Card position (relative to beacon)
+      cardGap = 12,
+      cardOffsetY: cardPosOffsetY = 0,
       // Card content
       title,
       body: tooltipBody,
@@ -135,17 +138,19 @@ export async function POST(request: NextRequest) {
         workspace_id, user_id, name, url_pattern, selector,
         trigger_type, dismiss_type,
         icon_type, icon_edge, icon_offset, icon_offset_y, icon_size, icon_color,
+        card_gap, card_offset_y,
         title, body, image_url,
         card_width, card_padding, card_border_radius, card_shadow, text_align, card_text_color, card_bg_color,
         button_text, button_color, button_text_color, button_border_radius,
         z_index, delay_ms,
         frequency_type, frequency_count, frequency_days, show_once
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35)
       RETURNING *`,
       [
         workspaceId, payload.userId, name, urlPattern, selector,
         triggerType, dismissType,
         iconType, iconEdge, iconOffset, iconOffsetY, iconSize, iconColor,
+        cardGap, cardPosOffsetY,
         title, tooltipBody, imageUrl,
         cardWidth, cardPadding, cardBorderRadius, cardShadow, textAlign, cardTextColor, cardBgColor,
         buttonText, buttonColor, buttonTextColor, buttonBorderRadius,
