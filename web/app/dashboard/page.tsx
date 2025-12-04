@@ -4,7 +4,16 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Plus, Target, Eye } from 'lucide-react';
+import { Plus, Target, Eye, Route } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -133,15 +142,25 @@ export default function DashboardPage() {
           </div>
 
           {tours.length === 0 ? (
-            <div className="card p-12 text-center">
-              <Target className="mx-auto text-gray-400 mb-4" size={48} />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No tours yet</h3>
-              <p className="text-gray-600 mb-6">Create your first tour to get started</p>
-              <Link href="/tours/new" className="btn btn-primary">
-                <Plus size={20} />
-                Create Tour
-              </Link>
-            </div>
+            <Empty className="card border border-dashed py-12">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Route />
+                </EmptyMedia>
+                <EmptyTitle>No Tours Yet</EmptyTitle>
+                <EmptyDescription>
+                  Create your first product tour to get started with user onboarding.
+                </EmptyDescription>
+              </EmptyHeader>
+              <EmptyContent>
+                <Button asChild>
+                  <Link href="/tours/new">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create Tour
+                  </Link>
+                </Button>
+              </EmptyContent>
+            </Empty>
           ) : (
             <div className="card divide-y">
               {tours.slice(0, 5).map((tour) => (

@@ -6,6 +6,15 @@ import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, MessageCircle, Trash2, Edit, ToggleLeft, ToggleRight, MousePointer, Hand, Copy, Sparkles, Eye } from 'lucide-react';
 import { Banner, PromoBanner } from '@/components/ui/banner';
+import { Button } from '@/components/ui/button';
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
 
 interface Tooltip {
   id: number;
@@ -150,20 +159,25 @@ export default function TooltipsPage() {
             <p className="text-gray-500 mt-4">Loading tooltips...</p>
           </div>
         ) : tooltips.length === 0 ? (
-          <div className="card p-12 text-center">
-            <MessageCircle size={48} className="mx-auto text-gray-300 mb-4" />
-            <h2 className="text-xl font-semibold text-gray-700 mb-2">No tooltips yet</h2>
-            <p className="text-gray-500 mb-6">
-              Create your first tooltip to add contextual hints to your product.
-            </p>
-            <Link
-              href="/tooltips/new"
-              className="btn btn-primary inline-flex items-center gap-2"
-            >
-              <Plus size={18} />
-              Create Tooltip
-            </Link>
-          </div>
+          <Empty className="card border border-dashed py-16">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <MessageCircle />
+              </EmptyMedia>
+              <EmptyTitle>No Tooltips Yet</EmptyTitle>
+              <EmptyDescription>
+                Create your first tooltip to add contextual hints and feature discovery to your product.
+              </EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <Button asChild>
+                <Link href="/tooltips/new">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Tooltip
+                </Link>
+              </Button>
+            </EmptyContent>
+          </Empty>
         ) : (
           <div className="space-y-4">
             {tooltips.map((tooltip) => (

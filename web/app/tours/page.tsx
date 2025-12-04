@@ -4,7 +4,16 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Plus, Search, Trash2, Eye, EyeOff, Copy, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Plus, Search, Trash2, Eye, EyeOff, Copy, ToggleLeft, ToggleRight, Route } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
 
 export default function ToursPage() {
   const router = useRouter();
@@ -122,15 +131,29 @@ export default function ToursPage() {
 
         {/* Tours Table */}
         {filteredTours.length === 0 ? (
-          <div className="card p-12 text-center">
-            <div className="text-gray-400 mb-4">No tours found</div>
+          <Empty className="card border border-dashed py-16">
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <Route />
+              </EmptyMedia>
+              <EmptyTitle>{tours.length === 0 ? 'No Tours Yet' : 'No Results Found'}</EmptyTitle>
+              <EmptyDescription>
+                {tours.length === 0 
+                  ? 'Create your first product tour to guide users through your app.'
+                  : 'Try adjusting your search to find what you\'re looking for.'}
+              </EmptyDescription>
+            </EmptyHeader>
             {tours.length === 0 && (
-              <Link href="/tours/new" className="btn btn-primary inline-flex items-center gap-2">
-                <Plus size={20} />
-                Create Your First Tour
-              </Link>
+              <EmptyContent>
+                <Button asChild>
+                  <Link href="/tours/new">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create Your First Tour
+                  </Link>
+                </Button>
+              </EmptyContent>
             )}
-          </div>
+          </Empty>
         ) : (
           <div className="card overflow-hidden">
             <table className="w-full">
