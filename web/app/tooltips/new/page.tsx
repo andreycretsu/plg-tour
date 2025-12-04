@@ -6,7 +6,7 @@ import FullScreenModal from '@/components/FullScreenModal';
 import ImageUpload from '@/components/ImageUpload';
 import ColorPicker from '@/components/ColorPicker';
 import CenterSlider from '@/components/CenterSlider';
-import { Save, Crosshair, AlertCircle, CheckCircle, MousePointer, Hand, Languages, Settings, FileText, Star, Sparkles, Wand2, Circle, Type, Palette, Repeat, Target, Zap } from 'lucide-react';
+import { Save, Crosshair, AlertCircle, CheckCircle, MousePointer, Hand, Languages, Settings, FileText, Star, Sparkles, Wand2, Circle, Type, Palette, Repeat, Target, Zap, Camera, Loader2 } from 'lucide-react';
 
 // Shadcn UI components
 import { Input } from '@/components/ui/input';
@@ -37,6 +37,12 @@ export default function NewTooltipPage() {
   const [showPreview, setShowPreview] = useState(true);
   const [activeStep, setActiveStep] = useState(1);
   const [previewLang, setPreviewLang] = useState('en');
+  
+  // Screenshot preview state
+  const [screenshot, setScreenshot] = useState<string | null>(null);
+  const [screenshotElementRect, setScreenshotElementRect] = useState<{x: number, y: number, width: number, height: number} | null>(null);
+  const [screenshotViewport, setScreenshotViewport] = useState<{width: number, height: number} | null>(null);
+  const [capturingScreenshot, setCapturingScreenshot] = useState(false);
   
   const LANGUAGES = [
     { code: 'en', name: 'English', native: 'English' },
@@ -125,6 +131,16 @@ export default function NewTooltipPage() {
       if (event.data.type === 'PICKER_CANCELLED') {
         setPickingElement(false);
       }
+      if (event.data.type === 'SCREENSHOT_CAPTURED') {
+        setCapturingScreenshot(false);
+        if (event.data.success) {
+          setScreenshot(event.data.screenshot);
+          setScreenshotElementRect(event.data.elementRect);
+          setScreenshotViewport(event.data.viewport);
+        } else {
+          alert('Failed to capture screenshot: ' + event.data.error);
+        }
+      }
     };
 
     window.addEventListener('message', handleMessage);
@@ -159,6 +175,30 @@ export default function NewTooltipPage() {
       source: 'tourlayer-webapp', 
       type: 'START_PICKER',
       targetUrl
+    }, '*');
+  };
+
+  const capturePreviewScreenshot = () => {
+    if (!extensionInstalled) {
+      alert('Please install the TourLayer Chrome extension first!');
+      return;
+    }
+
+    let targetUrl = urlPattern.replace(/\*+/g, '').trim();
+    if (!targetUrl) {
+      alert('Please enter a URL pattern first!');
+      return;
+    }
+    if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+      targetUrl = 'https://' + targetUrl;
+    }
+    
+    setCapturingScreenshot(true);
+    window.postMessage({ 
+      source: 'tourlayer-webapp', 
+      type: 'CAPTURE_SCREENSHOT',
+      targetUrl,
+      selector: selector || undefined
     }, '*');
   };
 
@@ -1165,98 +1205,121 @@ export default function NewTooltipPage() {
         {/* Right Column - Preview */}
         <div className="flex-1 min-w-[400px]">
           <div className="sticky top-0 h-screen py-6 flex flex-col">
+            {/* Capture Preview Button */}
+            <div className="flex items-center justify-between mb-3 px-2">
+              <span className="text-sm font-medium text-gray-700">Preview</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={capturePreviewScreenshot}
+                disabled={capturingScreenshot || !urlPattern}
+              >
+                {capturingScreenshot ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    Capturing...
+                  </>
+                ) : (
+                  <>
+                    <Camera size={14} />
+                    Capture Live Preview
+                  </>
+                )}
+              </Button>
+            </div>
+
             {/* Preview Area */}
             {showPreview && (
               <div 
-                className="rounded-xl p-6 flex-1 flex items-center justify-center h-full overflow-hidden"
-                style={{ backgroundColor: '#f3f4f6', minHeight: 'calc(100vh - 48px)' }}
+                className="rounded-xl flex-1 flex items-center justify-center h-full overflow-hidden relative"
+                style={{ backgroundColor: '#f3f4f6', minHeight: 'calc(100vh - 100px)' }}
               >
-                {/* Preview container - positions calculated from beacon */}
-                <div className="relative">
-                  {/* Mock Element */}
-                  <div 
-                    className="bg-gray-300 rounded-lg flex items-center justify-center text-gray-500 font-medium text-sm"
-                    style={{ width: 100, height: 100 }}
-                  >
-                    Element
-                  </div>
-                  
-                  {/* Beacon - positioned on element edge */}
-                  {iconShape && (
-                    <div style={getBeaconPreviewStyle()}>
-                      {renderBeaconIcon()}
-                    </div>
-                  )}
-
-                  {/* Card - positioned relative to beacon */}
-                  {(() => {
-                    const elementSize = 100;
-                    const halfElement = elementSize / 2;
-                    const halfBeacon = iconSize / 2;
+                {/* Screenshot Preview Mode */}
+                {screenshot ? (
+                  <div className="relative w-full h-full overflow-auto">
+                    {/* Screenshot as background */}
+                    <img 
+                      src={screenshot} 
+                      alt="Page screenshot" 
+                      className="w-full h-auto"
+                      style={{ minWidth: screenshotViewport?.width || 'auto' }}
+                    />
                     
-                    // Calculate card position based on beacon position + cardGap
-                    let cardStyle: React.CSSProperties = {
-                      position: 'absolute',
-                      width: cardWidth,
-                      backgroundColor: cardBgColor,
-                      color: cardTextColor,
-                      borderRadius: cardBorderRadius,
-                      padding: cardPadding,
-                      boxShadow: getShadowValue(cardShadow),
-                      textAlign: textAlign,
-                    };
-
-                    // Position card based on edge - distance from beacon, not element
-                    switch (iconEdge) {
-                      case 'top':
-                        // Beacon is above element, card is above beacon
-                        cardStyle.bottom = elementSize + iconOffset + iconSize + cardGap;
-                        cardStyle.left = halfElement - cardWidth / 2 + cardOffsetY;
-                        break;
-                      case 'bottom':
-                        // Beacon is below element, card is below beacon
-                        cardStyle.top = elementSize + iconOffset + iconSize + cardGap;
-                        cardStyle.left = halfElement - cardWidth / 2 + cardOffsetY;
-                        break;
-                      case 'left':
-                        // Beacon is left of element, card is left of beacon
-                        cardStyle.right = elementSize + iconOffset + iconSize + cardGap;
-                        cardStyle.top = halfElement - 100 + cardOffsetY; // -100 to roughly center card vertically
-                        break;
-                      case 'right':
-                      default:
-                        // Beacon is right of element, card is right of beacon
-                        cardStyle.left = elementSize + iconOffset + iconSize + cardGap;
-                        cardStyle.top = halfElement - 100 + cardOffsetY;
-                        break;
-                    }
-
-                    return (
-                      <div style={cardStyle}>
-                        {imageUrl && (
-                          <img 
-                            src={imageUrl} 
-                            alt="Preview" 
-                            className="w-full object-cover mb-3"
-                            style={{ 
-                              borderRadius: Math.max(0, cardBorderRadius - 4),
-                              aspectRatio: '16 / 9'
+                    {/* Element highlight + Tooltip overlay */}
+                    {screenshotElementRect && (
+                      <>
+                        {/* Element highlight box */}
+                        <div
+                          className="absolute border-2 border-blue-500 bg-blue-500/10 rounded pointer-events-none"
+                          style={{
+                            left: screenshotElementRect.x,
+                            top: screenshotElementRect.y,
+                            width: screenshotElementRect.width,
+                            height: screenshotElementRect.height,
+                          }}
+                        />
+                        
+                        {/* Beacon */}
+                        {iconShape && (
+                          <div
+                            className="absolute pointer-events-none"
+                            style={{
+                              left: iconEdge === 'left' 
+                                ? screenshotElementRect.x - iconSize - iconOffset
+                                : iconEdge === 'right'
+                                ? screenshotElementRect.x + screenshotElementRect.width + iconOffset
+                                : screenshotElementRect.x + screenshotElementRect.width / 2 - iconSize / 2 + iconOffsetY,
+                              top: iconEdge === 'top'
+                                ? screenshotElementRect.y - iconSize - iconOffset
+                                : iconEdge === 'bottom'
+                                ? screenshotElementRect.y + screenshotElementRect.height + iconOffset
+                                : screenshotElementRect.y + screenshotElementRect.height / 2 - iconSize / 2 + iconOffsetY,
                             }}
-                          />
+                          >
+                            {renderBeaconIcon()}
+                          </div>
                         )}
-                        <h3 className="font-semibold mb-1" style={{ fontSize: `${titleSize}px` }}>
-                          {title || 'Tooltip Title'}
-                        </h3>
-                        <p className="opacity-80 mb-3" style={{ fontSize: `${bodySize}px`, lineHeight: bodyLineHeight }}>
-                          {body || 'Tooltip description goes here...'}
-                        </p>
-                        {buttonText && (
-                          <div style={{ 
-                            display: 'flex', 
-                            justifyContent: buttonPosition === 'center' ? 'center' : buttonPosition === 'right' ? 'flex-end' : 'flex-start' 
-                          }}>
-                            <button
-                              style={{
+                        
+                        {/* Tooltip Card */}
+                        <div
+                          className="absolute pointer-events-none"
+                          style={{
+                            left: iconEdge === 'right'
+                              ? screenshotElementRect.x + screenshotElementRect.width + iconOffset + iconSize + cardGap
+                              : iconEdge === 'left'
+                              ? screenshotElementRect.x - iconOffset - iconSize - cardGap - cardWidth
+                              : screenshotElementRect.x + screenshotElementRect.width / 2 - cardWidth / 2,
+                            top: iconEdge === 'bottom'
+                              ? screenshotElementRect.y + screenshotElementRect.height + iconOffset + iconSize + cardGap
+                              : iconEdge === 'top'
+                              ? screenshotElementRect.y - iconOffset - iconSize - cardGap - 200
+                              : screenshotElementRect.y + screenshotElementRect.height / 2 - 100,
+                            width: cardWidth,
+                            backgroundColor: cardBgColor,
+                            color: cardTextColor,
+                            borderRadius: cardBorderRadius,
+                            padding: cardPadding,
+                            boxShadow: getShadowValue(cardShadow),
+                            textAlign: textAlign,
+                          }}
+                        >
+                          {imageUrl && (
+                            <img 
+                              src={imageUrl} 
+                              alt="Preview" 
+                              className="w-full object-cover mb-3"
+                              style={{ borderRadius: Math.max(0, cardBorderRadius - 4), aspectRatio: '16 / 9' }}
+                            />
+                          )}
+                          <h3 className="font-semibold mb-1" style={{ fontSize: `${titleSize}px` }}>
+                            {title || 'Tooltip Title'}
+                          </h3>
+                          <p className="opacity-80 mb-3" style={{ fontSize: `${bodySize}px`, lineHeight: bodyLineHeight }}>
+                            {body || 'Tooltip description goes here...'}
+                          </p>
+                          {buttonText && (
+                            <div style={{ display: 'flex', justifyContent: buttonPosition === 'center' ? 'center' : buttonPosition === 'right' ? 'flex-end' : 'flex-start' }}>
+                              <button style={{
                                 backgroundColor: buttonColor,
                                 color: buttonTextColor,
                                 borderRadius: buttonBorderRadius,
@@ -1265,17 +1328,114 @@ export default function NewTooltipPage() {
                                 border: 'none',
                                 fontWeight: 500,
                                 fontSize: getButtonSizeStyles(buttonSize).fontSize,
-                                cursor: 'pointer',
-                              }}
-                            >
-                              {buttonText}
-                            </button>
-                          </div>
-                        )}
+                              }}>
+                                {buttonText}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
+                    
+                    {/* Clear screenshot button */}
+                    <button
+                      onClick={() => { setScreenshot(null); setScreenshotElementRect(null); }}
+                      className="absolute top-2 right-2 bg-black/50 text-white px-2 py-1 rounded text-xs hover:bg-black/70"
+                    >
+                      Clear Screenshot
+                    </button>
+                  </div>
+                ) : (
+                  /* Mock Preview Mode */
+                  <div className="relative p-6">
+                    {/* Mock Element */}
+                    <div 
+                      className="bg-gray-300 rounded-lg flex items-center justify-center text-gray-500 font-medium text-sm"
+                      style={{ width: 100, height: 100 }}
+                    >
+                      Element
+                    </div>
+                    
+                    {/* Beacon - positioned on element edge */}
+                    {iconShape && (
+                      <div style={getBeaconPreviewStyle()}>
+                        {renderBeaconIcon()}
                       </div>
-                    );
-                  })()}
-                </div>
+                    )}
+
+                    {/* Card - positioned relative to beacon */}
+                    {(() => {
+                      const elementSize = 100;
+                      const halfElement = elementSize / 2;
+                      
+                      let cardStyle: React.CSSProperties = {
+                        position: 'absolute',
+                        width: cardWidth,
+                        backgroundColor: cardBgColor,
+                        color: cardTextColor,
+                        borderRadius: cardBorderRadius,
+                        padding: cardPadding,
+                        boxShadow: getShadowValue(cardShadow),
+                        textAlign: textAlign,
+                      };
+
+                      switch (iconEdge) {
+                        case 'top':
+                          cardStyle.bottom = elementSize + iconOffset + iconSize + cardGap;
+                          cardStyle.left = halfElement - cardWidth / 2 + cardOffsetY;
+                          break;
+                        case 'bottom':
+                          cardStyle.top = elementSize + iconOffset + iconSize + cardGap;
+                          cardStyle.left = halfElement - cardWidth / 2 + cardOffsetY;
+                          break;
+                        case 'left':
+                          cardStyle.right = elementSize + iconOffset + iconSize + cardGap;
+                          cardStyle.top = halfElement - 100 + cardOffsetY;
+                          break;
+                        case 'right':
+                        default:
+                          cardStyle.left = elementSize + iconOffset + iconSize + cardGap;
+                          cardStyle.top = halfElement - 100 + cardOffsetY;
+                          break;
+                      }
+
+                      return (
+                        <div style={cardStyle}>
+                          {imageUrl && (
+                            <img 
+                              src={imageUrl} 
+                              alt="Preview" 
+                              className="w-full object-cover mb-3"
+                              style={{ borderRadius: Math.max(0, cardBorderRadius - 4), aspectRatio: '16 / 9' }}
+                            />
+                          )}
+                          <h3 className="font-semibold mb-1" style={{ fontSize: `${titleSize}px` }}>
+                            {title || 'Tooltip Title'}
+                          </h3>
+                          <p className="opacity-80 mb-3" style={{ fontSize: `${bodySize}px`, lineHeight: bodyLineHeight }}>
+                            {body || 'Tooltip description goes here...'}
+                          </p>
+                          {buttonText && (
+                            <div style={{ display: 'flex', justifyContent: buttonPosition === 'center' ? 'center' : buttonPosition === 'right' ? 'flex-end' : 'flex-start' }}>
+                              <button style={{
+                                backgroundColor: buttonColor,
+                                color: buttonTextColor,
+                                borderRadius: buttonBorderRadius,
+                                padding: getButtonSizeStyles(buttonSize).padding,
+                                width: buttonType === 'stretched' ? '100%' : 'auto',
+                                border: 'none',
+                                fontWeight: 500,
+                                fontSize: getButtonSizeStyles(buttonSize).fontSize,
+                              }}>
+                                {buttonText}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -43,6 +43,21 @@
         });
         break;
 
+      case 'CAPTURE_SCREENSHOT':
+        // Forward screenshot request to background script
+        chrome.runtime.sendMessage({ 
+          type: 'CAPTURE_SCREENSHOT',
+          targetUrl: message.targetUrl,
+          selector: message.selector
+        }, (response) => {
+          window.postMessage({
+            source: 'tourlayer-extension',
+            type: 'SCREENSHOT_CAPTURED',
+            ...response
+          }, '*');
+        });
+        break;
+
       case 'PING':
         window.postMessage({
           source: 'tourlayer-extension',

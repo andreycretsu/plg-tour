@@ -73,6 +73,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     case 'VALIDATE_TOKEN':
       validateToken(message.token).then(sendResponse);
       return true;
+
+    case 'CAPTURE_SCREENSHOT':
+      captureScreenshot(message.targetUrl, message.selector).then(sendResponse);
+      return true;
   }
 });
 
@@ -223,6 +227,106 @@ async function broadcastToWebApp(message) {
     }
   } catch (error) {
     console.error('Failed to broadcast:', error);
+  }
+}
+
+// Capture screenshot of a URL with optional element highlight
+async function captureScreenshot(targetUrl, selector) {
+  try {
+    console.log('Capturing screenshot for:', targetUrl, 'selector:', selector);
+    
+    // Find existing tab with the URL or create new one
+    let tab;
+    const existingTabs = await chrome.tabs.query({ url: targetUrl + '*' });
+    
+    if (existingTabs.length > 0) {
+      tab = existingTabs[0];
+      await chrome.tabs.update(tab.id, { active: true });
+    } else {
+      // Create a new tab with the target URL
+      tab = await chrome.tabs.create({ 
+        url: targetUrl,
+        active: true 
+      });
+      
+      // Wait for the tab to finish loading
+      await new Promise((resolve) => {
+        const listener = (tabId, changeInfo) => {
+          if (tabId === tab.id && changeInfo.status === 'complete') {
+            chrome.tabs.onUpdated.removeListener(listener);
+            resolve();
+          }
+        };
+        chrome.tabs.onUpdated.addListener(listener);
+        
+        // Timeout after 15 seconds
+        setTimeout(() => {
+          chrome.tabs.onUpdated.removeListener(listener);
+          resolve();
+        }, 15000);
+      });
+    }
+    
+    // Small delay to ensure page is fully rendered
+    await new Promise(r => setTimeout(r, 800));
+    
+    // Get element position if selector provided
+    let elementRect = null;
+    if (selector) {
+      try {
+        const results = await chrome.scripting.executeScript({
+          target: { tabId: tab.id },
+          func: (sel) => {
+            const el = document.querySelector(sel);
+            if (el) {
+              const rect = el.getBoundingClientRect();
+              return {
+                x: rect.x,
+                y: rect.y,
+                width: rect.width,
+                height: rect.height,
+                top: rect.top,
+                left: rect.left
+              };
+            }
+            return null;
+          },
+          args: [selector]
+        });
+        elementRect = results[0]?.result;
+      } catch (e) {
+        console.log('Could not get element rect:', e);
+      }
+    }
+    
+    // Capture the screenshot
+    const screenshot = await chrome.tabs.captureVisibleTab(tab.windowId, {
+      format: 'png',
+      quality: 90
+    });
+    
+    // Get viewport dimensions
+    const viewportResults = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: () => ({
+        width: window.innerWidth,
+        height: window.innerHeight,
+        scrollX: window.scrollX,
+        scrollY: window.scrollY
+      })
+    });
+    const viewport = viewportResults[0]?.result;
+    
+    return { 
+      success: true, 
+      screenshot,
+      elementRect,
+      viewport,
+      url: tab.url
+    };
+  } catch (error) {
+    console.error('Failed to capture screenshot:', error);
+    return { success: false, error: error.message };
   }
 }
 
