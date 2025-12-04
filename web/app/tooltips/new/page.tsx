@@ -6,13 +6,26 @@ import FullScreenModal from '@/components/FullScreenModal';
 import ImageUpload from '@/components/ImageUpload';
 import ColorPicker from '@/components/ColorPicker';
 import CenterSlider from '@/components/CenterSlider';
-import { Save, Crosshair, AlertCircle, CheckCircle, MousePointer, Hand, Languages, Settings, FileText, Star, Sparkles, Wand2, Circle } from 'lucide-react';
+import { Save, Crosshair, AlertCircle, CheckCircle, MousePointer, Hand, Languages, Settings, FileText, Star, Sparkles, Wand2, Circle, Type, Palette, Repeat, Target, Zap } from 'lucide-react';
 
 // Shadcn UI components
 import { Input } from '@/components/ui/input';
 import { Field, FieldLabel, FieldGroup, FieldDescription } from '@/components/ui/field';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
+import { Stepper, StepContent } from '@/components/ui/stepper';
+
+// Define wizard steps
+const WIZARD_STEPS = [
+  { id: 1, title: 'Content', icon: FileText },
+  { id: 2, title: 'Targeting', icon: Target },
+  { id: 3, title: 'Trigger', icon: Zap },
+  { id: 4, title: 'Beacon', icon: Circle },
+  { id: 5, title: 'Card Style', icon: Palette },
+  { id: 6, title: 'Typography', icon: Type },
+  { id: 7, title: 'Button', icon: Settings },
+  { id: 8, title: 'Frequency', icon: Repeat },
+];
 
 export default function NewTooltipPage() {
   const router = useRouter();
@@ -20,7 +33,7 @@ export default function NewTooltipPage() {
   const [extensionInstalled, setExtensionInstalled] = useState(false);
   const [pickingElement, setPickingElement] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
-  const [activeTab, setActiveTab] = useState<'customisation' | 'content'>('content');
+  const [activeStep, setActiveStep] = useState(1);
   const [previewLang, setPreviewLang] = useState('en');
   
   const LANGUAGES = [
@@ -367,60 +380,45 @@ export default function NewTooltipPage() {
         }
       `}</style>
 
-      <div className="flex gap-6 p-6 h-full">
-        {/* Left Column - Form */}
-        <div className="flex-1 max-w-2xl overflow-y-auto">
+      <div className="flex h-full">
+        {/* Left Sidebar - Stepper */}
+        <div className="w-52 border-r border-gray-200 bg-gray-50/50 p-4 overflow-y-auto shrink-0">
           {/* Extension Status */}
-          <div className={`mb-4 p-3 rounded-lg flex items-center gap-3 ${
+          <div className={`mb-4 p-2 rounded-lg flex items-center gap-2 ${
             extensionInstalled 
               ? 'bg-green-50 border border-green-200' 
               : 'bg-yellow-50 border border-yellow-200'
           }`}>
             {extensionInstalled ? (
-              <>
-                <CheckCircle className="text-green-600" size={18} />
-                <p className="text-sm text-green-700">Extension connected - use visual picker!</p>
-              </>
+              <CheckCircle className="text-green-600 shrink-0" size={14} />
             ) : (
-              <>
-                <AlertCircle className="text-yellow-600" size={18} />
-                <p className="text-sm text-yellow-700">Install extension for visual picker</p>
-              </>
+              <AlertCircle className="text-yellow-600 shrink-0" size={14} />
             )}
+            <p className={`text-xs ${extensionInstalled ? 'text-green-700' : 'text-yellow-700'}`}>
+              {extensionInstalled ? 'Extension ready' : 'Install extension'}
+            </p>
           </div>
 
-          {/* Tabs */}
-          <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-lg">
-            <button
-              onClick={() => setActiveTab('content')}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all ${
-                activeTab === 'content'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <FileText size={18} />
-              Content
-            </button>
-            <button
-              onClick={() => setActiveTab('customisation')}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all ${
-                activeTab === 'customisation'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <Settings size={18} />
-              Customisation
-            </button>
-          </div>
+          {/* Vertical Stepper */}
+          <Stepper
+            steps={WIZARD_STEPS}
+            currentStep={activeStep}
+            onStepClick={setActiveStep}
+          />
+        </div>
 
-          {/* CONTENT TAB */}
-          {activeTab === 'content' && (
-            <>
-              {/* Card Content */}
-              <div className="card p-5 mb-5">
-                <h2 className="text-base font-semibold text-gray-900 mb-4">Content</h2>
+        {/* Middle Column - Form Content */}
+        <div className="flex-1 max-w-xl overflow-y-auto p-6">
+          {/* Step 1: Content */}
+          {activeStep === 1 && (
+            <StepContent
+              currentStep={activeStep}
+              onNext={() => setActiveStep(2)}
+              isFirst={true}
+              nextLabel="Next: Targeting"
+            >
+              <div className="card p-5">
+                <h2 className="text-base font-semibold text-gray-900 mb-4">Tooltip Content</h2>
                 
                 {/* Available Variables */}
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
@@ -485,133 +483,150 @@ export default function NewTooltipPage() {
                     />
                   </div>
                 </div>
-              </div>
 
-              {/* Translations Info */}
-              <div className="card p-5 mb-5 bg-blue-50 border-blue-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <Languages size={20} className="text-blue-600" />
-                  <h2 className="text-base font-semibold text-gray-900">Translations</h2>
+                {/* Translations Info */}
+                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Languages size={16} className="text-blue-600" />
+                    <span className="text-sm font-medium text-gray-900">Translations</span>
+                  </div>
+                  <p className="text-xs text-blue-700">
+                    Save first, then auto-translate to 10+ languages.
+                  </p>
                 </div>
-                <p className="text-sm text-blue-700">
-                  Save this tooltip first, then you can auto-translate to 10+ languages on the Edit page.
-                </p>
               </div>
-            </>
+            </StepContent>
           )}
 
-          {/* CUSTOMISATION TAB */}
-          {activeTab === 'customisation' && (
-            <>
-              {/* Targeting Section */}
-          <div className="card p-5 mb-5">
-            <h2 className="text-base font-semibold text-gray-900 mb-4">Targeting</h2>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="label">Tooltip Name</label>
-                <input
-                  type="text"
-                  className="input"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g., Feature Discovery"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="label">Website URL</label>
-                  <input
-                    type="text"
-                    className="input"
-                    value={urlPattern}
-                    onChange={(e) => setUrlPattern(e.target.value)}
-                    placeholder="https://app.example.com/*"
-                  />
-                </div>
-
-                <div>
-                  <label className="label">Element Selector</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      className="input flex-1"
-                      value={selector}
-                      onChange={(e) => setSelector(e.target.value)}
-                      placeholder=".my-button"
+          {/* Step 2: Targeting */}
+          {activeStep === 2 && (
+            <StepContent
+              currentStep={activeStep}
+              onBack={() => setActiveStep(1)}
+              onNext={() => setActiveStep(3)}
+              nextLabel="Next: Trigger"
+            >
+              <div className="card p-5">
+                <h2 className="text-base font-semibold text-gray-900 mb-4">Targeting</h2>
+                
+                <FieldGroup>
+                  <Field>
+                    <FieldLabel>Tooltip Name</FieldLabel>
+                    <Input
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g., Feature Discovery"
                     />
-                    <button
-                      onClick={startPicker}
-                      disabled={!extensionInstalled || pickingElement}
-                      className={`px-3 py-2 rounded-lg flex items-center gap-1 text-sm font-medium transition-colors ${
-                        extensionInstalled 
-                          ? 'bg-purple-600 hover:bg-purple-700 text-white' 
-                          : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                      }`}
-                    >
-                      <Crosshair size={14} />
-                      {pickingElement ? '...' : 'Pick'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+                  </Field>
 
-          {/* Trigger Settings */}
-          <div className="card p-5 mb-5">
-            <h2 className="text-base font-semibold text-gray-900 mb-4">Trigger Settings</h2>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="label">Trigger On</label>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setTriggerType('click')}
-                    className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-2 text-sm transition-colors ${
-                      triggerType === 'click' 
-                        ? 'bg-blue-600 text-white' 
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    <MousePointer size={14} />
-                    Click
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTriggerType('hover')}
-                    className={`flex-1 py-2 px-3 rounded-lg flex items-center justify-center gap-2 text-sm transition-colors ${
-                      triggerType === 'hover' 
-                        ? 'bg-blue-600 text-white' 
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    <Hand size={14} />
-                    Hover
-                  </button>
-                </div>
-              </div>
+                  <Field>
+                    <FieldLabel>Website URL</FieldLabel>
+                    <Input
+                      value={urlPattern}
+                      onChange={(e) => setUrlPattern(e.target.value)}
+                      placeholder="https://app.example.com/*"
+                    />
+                    <FieldDescription>Use * as wildcard</FieldDescription>
+                  </Field>
 
-              <div>
-                <label className="label">Dismiss When</label>
-                <select
-                  className="input"
-                  value={dismissType}
-                  onChange={(e) => setDismissType(e.target.value as any)}
-                >
-                  <option value="button">Click Button</option>
-                  <option value="click_element">Click Target Element</option>
-                  <option value="click_outside">Click Outside</option>
-                </select>
+                  <Field>
+                    <FieldLabel>Element Selector</FieldLabel>
+                    <div className="flex gap-2">
+                      <Input
+                        className="flex-1"
+                        value={selector}
+                        onChange={(e) => setSelector(e.target.value)}
+                        placeholder=".my-button"
+                      />
+                      <button
+                        onClick={startPicker}
+                        disabled={!extensionInstalled || pickingElement}
+                        className={`px-3 py-2 rounded-md flex items-center gap-1 text-sm font-medium transition-colors ${
+                          extensionInstalled 
+                            ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        }`}
+                      >
+                        <Crosshair size={14} />
+                        Pick
+                      </button>
+                    </div>
+                  </Field>
+                </FieldGroup>
               </div>
-            </div>
-          </div>
+            </StepContent>
+          )}
 
-          {/* Beacon Settings */}
-          <div className="card p-5 mb-5">
-            <h2 className="text-base font-semibold text-gray-900 mb-4">Beacon Settings</h2>
+          {/* Step 3: Trigger */}
+          {activeStep === 3 && (
+            <StepContent
+              currentStep={activeStep}
+              onBack={() => setActiveStep(2)}
+              onNext={() => setActiveStep(4)}
+              nextLabel="Next: Beacon"
+            >
+              <div className="card p-5">
+                <h2 className="text-base font-semibold text-gray-900 mb-4">Trigger Settings</h2>
+                
+                <FieldGroup>
+                  <Field>
+                    <FieldLabel>Trigger On</FieldLabel>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setTriggerType('click')}
+                        className={`flex-1 py-2 px-3 rounded-md flex items-center justify-center gap-2 text-sm transition-colors ${
+                          triggerType === 'click' 
+                            ? 'bg-primary text-primary-foreground' 
+                            : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                        }`}
+                      >
+                        <MousePointer size={14} />
+                        Click
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTriggerType('hover')}
+                        className={`flex-1 py-2 px-3 rounded-md flex items-center justify-center gap-2 text-sm transition-colors ${
+                          triggerType === 'hover' 
+                            ? 'bg-primary text-primary-foreground' 
+                            : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                        }`}
+                      >
+                        <Hand size={14} />
+                        Hover
+                      </button>
+                    </div>
+                  </Field>
+
+                  <Field>
+                    <FieldLabel>Dismiss When</FieldLabel>
+                    <Select value={dismissType} onValueChange={(v) => setDismissType(v as any)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="button">Click Button</SelectItem>
+                        <SelectItem value="click_element">Click Target Element</SelectItem>
+                        <SelectItem value="click_outside">Click Outside</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                </FieldGroup>
+              </div>
+            </StepContent>
+          )}
+
+          {/* Step 4: Beacon */}
+          {activeStep === 4 && (
+            <StepContent
+              currentStep={activeStep}
+              onBack={() => setActiveStep(3)}
+              onNext={() => setActiveStep(5)}
+              nextLabel="Next: Card Style"
+            >
+              <div className="card p-5">
+                <h2 className="text-base font-semibold text-gray-900 mb-4">Beacon Settings</h2>
             
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
@@ -765,17 +780,26 @@ export default function NewTooltipPage() {
               </div>
             </div>
 
-            <div>
-              <label className="label">Beacon Color</label>
-              <ColorPicker value={iconColor} onChange={setIconColor} />
-            </div>
-          </div>
+                <Field>
+                  <FieldLabel>Beacon Color</FieldLabel>
+                  <ColorPicker value={iconColor} onChange={setIconColor} />
+                </Field>
+              </div>
+            </StepContent>
+          )}
 
-          {/* Card Styling */}
-          <div className="card p-5 mb-5">
-            <h2 className="text-base font-semibold text-gray-900 mb-4">Card Styling</h2>
-            
-            <FieldGroup>
+          {/* Step 5: Card Style */}
+          {activeStep === 5 && (
+            <StepContent
+              currentStep={activeStep}
+              onBack={() => setActiveStep(4)}
+              onNext={() => setActiveStep(6)}
+              nextLabel="Next: Typography"
+            >
+              <div className="card p-5">
+                <h2 className="text-base font-semibold text-gray-900 mb-4">Card Styling</h2>
+                
+                <FieldGroup>
               <div className="grid grid-cols-3 gap-4">
                 <Field>
                   <FieldLabel>Width (px)</FieldLabel>
@@ -855,13 +879,22 @@ export default function NewTooltipPage() {
                 </Field>
               </div>
             </FieldGroup>
-          </div>
+              </div>
+            </StepContent>
+          )}
 
-          {/* Typography */}
-          <div className="card p-5 mb-5">
-            <h2 className="text-base font-semibold text-gray-900 mb-4">Typography</h2>
-            
-            <FieldGroup>
+          {/* Step 6: Typography */}
+          {activeStep === 6 && (
+            <StepContent
+              currentStep={activeStep}
+              onBack={() => setActiveStep(5)}
+              onNext={() => setActiveStep(7)}
+              nextLabel="Next: Button"
+            >
+              <div className="card p-5">
+                <h2 className="text-base font-semibold text-gray-900 mb-4">Typography</h2>
+                
+                <FieldGroup>
               <div className="grid grid-cols-3 gap-4">
                 <Field>
                   <FieldLabel>Title Size: {titleSize}px</FieldLabel>
@@ -896,14 +929,23 @@ export default function NewTooltipPage() {
                   />
                 </Field>
               </div>
-            </FieldGroup>
-          </div>
+                </FieldGroup>
+              </div>
+            </StepContent>
+          )}
 
-          {/* Button Styling */}
-          <div className="card p-5 mb-5">
-            <h2 className="text-base font-semibold text-gray-900 mb-4">Button Styling</h2>
-            
-            <FieldGroup>
+          {/* Step 7: Button Styling */}
+          {activeStep === 7 && (
+            <StepContent
+              currentStep={activeStep}
+              onBack={() => setActiveStep(6)}
+              onNext={() => setActiveStep(8)}
+              nextLabel="Next: Frequency"
+            >
+              <div className="card p-5">
+                <h2 className="text-base font-semibold text-gray-900 mb-4">Button Styling</h2>
+                
+                <FieldGroup>
               {/* Size */}
               <Field>
                 <FieldLabel>Size</FieldLabel>
@@ -1004,12 +1046,20 @@ export default function NewTooltipPage() {
                   <ColorPicker value={buttonTextColor} onChange={setButtonTextColor} />
                 </Field>
               </div>
-            </FieldGroup>
-          </div>
+                </FieldGroup>
+              </div>
+            </StepContent>
+          )}
 
-          {/* Display Frequency */}
-          <div className="card p-5 mb-5">
-            <h2 className="text-base font-semibold text-gray-900 mb-4">Display Frequency</h2>
+          {/* Step 8: Display Frequency */}
+          {activeStep === 8 && (
+            <StepContent
+              currentStep={activeStep}
+              onBack={() => setActiveStep(7)}
+              isLast={true}
+            >
+              <div className="card p-5">
+                <h2 className="text-base font-semibold text-gray-900 mb-4">Display Frequency</h2>
             <p className="text-sm text-gray-500 mb-4">Control how often users see this tooltip</p>
             
             <div className="space-y-4">
@@ -1106,37 +1156,34 @@ export default function NewTooltipPage() {
                 </div>
               )}
             </div>
-          </div>
 
-          {/* Advanced Settings */}
-          <div className="card p-5 mb-5">
-            <h2 className="text-base font-semibold text-gray-900 mb-4">Advanced</h2>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="label">Z-Index</label>
-                <input
-                  type="number"
-                  className="input"
-                  value={zIndex}
-                  onChange={(e) => setZIndex(parseInt(e.target.value) || 2147483647)}
-                />
-                <p className="text-xs text-gray-500 mt-1">Higher = appears above other elements</p>
-              </div>
+                {/* Advanced Settings inline */}
+                <div className="mt-6 pt-6 border-t">
+                  <h3 className="text-sm font-medium text-gray-700 mb-4">Advanced Options</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field>
+                      <FieldLabel>Z-Index</FieldLabel>
+                      <Input
+                        type="number"
+                        value={zIndex}
+                        onChange={(e) => setZIndex(parseInt(e.target.value) || 2147483647)}
+                      />
+                      <FieldDescription>Higher = above other elements</FieldDescription>
+                    </Field>
 
-              <div>
-                <label className="label">Delay Before Showing (ms)</label>
-                <input
-                  type="number"
-                  className="input"
-                  value={delayMs}
-                  onChange={(e) => setDelayMs(parseInt(e.target.value) || 0)}
-                />
-                <p className="text-xs text-gray-500 mt-1">Wait before showing (1000ms = 1 second)</p>
+                    <Field>
+                      <FieldLabel>Delay (ms)</FieldLabel>
+                      <Input
+                        type="number"
+                        value={delayMs}
+                        onChange={(e) => setDelayMs(parseInt(e.target.value) || 0)}
+                      />
+                      <FieldDescription>1000ms = 1 second</FieldDescription>
+                    </Field>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-            </>
+            </StepContent>
           )}
 
         </div>
