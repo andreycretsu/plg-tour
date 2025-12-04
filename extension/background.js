@@ -325,6 +325,9 @@ async function captureScreenshot(targetUrl, selector) {
     });
     const viewport = viewportResults[0]?.result;
     
+    // Switch back to the web app tab
+    await switchToWebAppTab();
+    
     return { 
       success: true, 
       screenshot,
@@ -334,6 +337,8 @@ async function captureScreenshot(targetUrl, selector) {
     };
   } catch (error) {
     console.error('Failed to capture screenshot:', error);
+    // Still try to switch back on error
+    await switchToWebAppTab();
     return { success: false, error: error.message };
   }
 }
