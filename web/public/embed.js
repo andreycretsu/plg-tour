@@ -57,12 +57,14 @@
 
   // Get user's language (userLocale config > browser detection > English default)
   function getUserLanguage() {
-    const supported = ['en', 'uk', 'pl', 'es', 'pt', 'de', 'ru', 'fr', 'it', 'ja', 'zh'];
+    const supported = ['en', 'uk', 'pl', 'es', 'pt', 'de', 'ru', 'fr', 'it', 'ja', 'zh', 'hu', 'sk'];
     
     // 1. Check if userLocale is explicitly set in config
     if (userConfig.userLocale) {
-      const locale = userConfig.userLocale.toLowerCase();
+      // Handle both formats: 'de' and 'de-DE'
+      const locale = userConfig.userLocale.split('-')[0].toLowerCase();
       if (supported.includes(locale)) {
+        console.log('TourLayer: Using configured locale:', locale);
         return locale;
       }
     }
@@ -72,7 +74,9 @@
     const code = browserLang.split('-')[0].toLowerCase();
     
     // 3. Return supported language or default to English
-    return supported.includes(code) ? code : 'en';
+    const finalLang = supported.includes(code) ? code : 'en';
+    console.log('TourLayer: Detected language:', finalLang, '(from:', browserLang, ')');
+    return finalLang;
   }
   
   // Alias for backwards compatibility
