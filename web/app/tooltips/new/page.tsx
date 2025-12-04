@@ -1236,16 +1236,18 @@ export default function NewTooltipPage() {
               >
                 {/* Screenshot Preview Mode */}
                 {screenshot ? (
-                  <div className="relative w-full h-full overflow-auto">
-                    {/* Screenshot as background */}
-                    <img 
-                      src={screenshot} 
-                      alt="Page screenshot" 
-                      className="w-full h-auto"
-                      style={{ minWidth: screenshotViewport?.width || 'auto' }}
-                    />
+                  <div className="relative w-full h-full">
+                    {/* Scrollable screenshot container */}
+                    <div className="w-full h-full overflow-auto">
+                      {/* Screenshot as background */}
+                      <div className="relative" style={{ minWidth: screenshotViewport?.width || 'auto' }}>
+                        <img 
+                          src={screenshot} 
+                          alt="Page screenshot" 
+                          className="w-full h-auto block"
+                        />
                     
-                    {/* Element highlight + Tooltip overlay */}
+                        {/* Element highlight + Tooltip overlay */}
                     {screenshotElementRect && (
                       <>
                         {/* Element highlight box */}
@@ -1336,11 +1338,17 @@ export default function NewTooltipPage() {
                         </div>
                       </>
                     )}
+                      </div>
+                    </div>
+                    
+                    {/* Fade indicators for horizontal scroll */}
+                    <div className="absolute inset-y-0 left-0 w-8 bg-gradient-to-r from-gray-100 to-transparent pointer-events-none" />
+                    <div className="absolute inset-y-0 right-0 w-8 bg-gradient-to-l from-gray-100 to-transparent pointer-events-none" />
                     
                     {/* Clear screenshot button */}
                     <button
                       onClick={() => { setScreenshot(null); setScreenshotElementRect(null); }}
-                      className="absolute top-2 right-2 bg-black/50 text-white px-2 py-1 rounded text-xs hover:bg-black/70"
+                      className="absolute top-2 right-10 bg-black/50 text-white px-2 py-1 rounded text-xs hover:bg-black/70 z-10"
                     >
                       Clear Screenshot
                     </button>
