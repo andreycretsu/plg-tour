@@ -1266,7 +1266,7 @@ export default function EditTooltipPage() {
               <div className="space-y-3">
                 <Label>Title Size: {titleSize}px</Label>
                 <Slider
-                  value={[titleSize]}
+                  value={[Number(titleSize)]}
                   onValueChange={([value]) => setTitleSize(value)}
                   min={12}
                   max={24}
@@ -1277,7 +1277,7 @@ export default function EditTooltipPage() {
               <div className="space-y-3">
                 <Label>Body Size: {bodySize}px</Label>
                 <Slider
-                  value={[bodySize]}
+                  value={[Number(bodySize)]}
                   onValueChange={([value]) => setBodySize(value)}
                   min={10}
                   max={18}
@@ -1286,9 +1286,9 @@ export default function EditTooltipPage() {
               </div>
 
               <div className="space-y-3">
-                <Label>Line Height: {bodyLineHeight.toFixed(2)}</Label>
+                <Label>Line Height: {Number(bodyLineHeight).toFixed(2)}</Label>
                 <Slider
-                  value={[bodyLineHeight * 100]}
+                  value={[Number(bodyLineHeight) * 100]}
                   onValueChange={([value]) => setBodyLineHeight(value / 100)}
                   min={100}
                   max={200}
