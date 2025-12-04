@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import ImageUpload from '@/components/ImageUpload';
 import ColorPicker from '@/components/ColorPicker';
-import { Save, Crosshair, AlertCircle, CheckCircle, ArrowLeft, MousePointer, Hand, Trash2, Loader2 } from 'lucide-react';
+import { Save, Crosshair, AlertCircle, CheckCircle, ArrowLeft, MousePointer, Hand, Trash2, Loader2, Languages, Globe, RefreshCw } from 'lucide-react';
 
 export default function EditTooltipPage() {
   const router = useRouter();
@@ -61,6 +61,27 @@ export default function EditTooltipPage() {
   // Advanced
   const [zIndex, setZIndex] = useState(2147483647);
   const [delayMs, setDelayMs] = useState(0);
+
+  // Translations
+  const [activeTab, setActiveTab] = useState<'content' | 'translations'>('content');
+  const [previewLang, setPreviewLang] = useState('en');
+  const [translations, setTranslations] = useState<Record<string, { title: string; body: string; buttonText: string }>>({});
+  const [translating, setTranslating] = useState(false);
+  const [editingLang, setEditingLang] = useState<string | null>(null);
+  
+  const LANGUAGES = [
+    { code: 'en', name: 'English', native: 'English' },
+    { code: 'uk', name: 'Ukrainian', native: 'Українська' },
+    { code: 'pl', name: 'Polish', native: 'Polski' },
+    { code: 'es', name: 'Spanish', native: 'Español' },
+    { code: 'pt', name: 'Portuguese', native: 'Português' },
+    { code: 'de', name: 'German', native: 'Deutsch' },
+    { code: 'ru', name: 'Russian', native: 'Русский' },
+    { code: 'fr', name: 'French', native: 'Français' },
+    { code: 'it', name: 'Italian', native: 'Italiano' },
+    { code: 'ja', name: 'Japanese', native: '日本語' },
+    { code: 'zh', name: 'Chinese', native: '中文' },
+  ];
 
   // Load tooltip data
   useEffect(() => {
@@ -118,6 +139,102 @@ export default function EditTooltipPage() {
     
     loadTooltip();
   }, [tooltipId, router]);
+
+  // Load translations
+  useEffect(() => {
+    const loadTranslations = async () => {
+      try {
+        const response = await fetch(`/api/translations?contentType=tooltip&contentId=${tooltipId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setTranslations(data.translations || {});
+        }
+      } catch (error) {
+        console.error('Failed to load translations:', error);
+      }
+    };
+    
+    if (tooltipId) {
+      loadTranslations();
+    }
+  }, [tooltipId]);
+
+  // Auto-translate to all languages
+  const handleAutoTranslate = async () => {
+    if (!title) {
+      alert('Please add a title before translating');
+      return;
+    }
+
+    setTranslating(true);
+    try {
+      const response = await fetch('/api/translations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contentType: 'tooltip',
+          contentId: parseInt(tooltipId),
+          title,
+          body,
+          buttonText,
+          sourceLanguage: 'en'
+        }),
+      });
+
+      if (!response.ok) throw new Error('Translation failed');
+
+      const data = await response.json();
+      alert(`Translated to ${data.translatedTo?.length || 0} languages!`);
+      
+      // Reload translations
+      const reloadResponse = await fetch(`/api/translations?contentType=tooltip&contentId=${tooltipId}`);
+      if (reloadResponse.ok) {
+        const reloadData = await reloadResponse.json();
+        setTranslations(reloadData.translations || {});
+      }
+    } catch (error) {
+      alert('Error translating: ' + error);
+    } finally {
+      setTranslating(false);
+    }
+  };
+
+  // Save single translation
+  const saveTranslation = async (langCode: string, data: { title: string; body: string; buttonText: string }) => {
+    try {
+      await fetch('/api/translations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contentType: 'tooltip',
+          contentId: parseInt(tooltipId),
+          ...data,
+          sourceLanguage: langCode // This will just save it directly
+        }),
+      });
+      
+      setTranslations(prev => ({ ...prev, [langCode]: data }));
+      setEditingLang(null);
+    } catch (error) {
+      alert('Error saving translation: ' + error);
+    }
+  };
+
+  // Get preview content based on selected language
+  const getPreviewContent = () => {
+    if (previewLang === 'en') {
+      return { title, body, buttonText };
+    }
+    const trans = translations[previewLang];
+    if (trans) {
+      return {
+        title: trans.title || title,
+        body: trans.body || body,
+        buttonText: trans.buttonText || buttonText
+      };
+    }
+    return { title, body, buttonText };
+  };
 
   // Extension communication
   useEffect(() => {
@@ -765,6 +882,137 @@ export default function EditTooltipPage() {
             </div>
           </div>
 
+          {/* Translations */}
+          <div className="card p-5 mb-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Languages size={20} className="text-blue-600" />
+                <h2 className="text-base font-semibold text-gray-900">Translations</h2>
+              </div>
+              <button
+                type="button"
+                onClick={handleAutoTranslate}
+                disabled={translating || !title}
+                className="btn btn-secondary btn-sm flex items-center gap-2"
+              >
+                {translating ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    Translating...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw size={14} />
+                    Auto-translate All
+                  </>
+                )}
+              </button>
+            </div>
+            
+            <p className="text-sm text-gray-500 mb-4">
+              Auto-translate your content to multiple languages. Visitors will see content in their browser's language.
+            </p>
+
+            {/* Preview Language Selector */}
+            <div className="mb-4">
+              <label className="label">Preview Language</label>
+              <select
+                value={previewLang}
+                onChange={(e) => setPreviewLang(e.target.value)}
+                className="input"
+              >
+                {LANGUAGES.map(lang => (
+                  <option key={lang.code} value={lang.code}>
+                    {lang.native} ({lang.name}) {translations[lang.code] ? '✓' : lang.code === 'en' ? '(source)' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Translation Status Grid */}
+            <div className="grid grid-cols-3 gap-2">
+              {LANGUAGES.filter(l => l.code !== 'en').map(lang => {
+                const hasTranslation = !!translations[lang.code];
+                const isEditing = editingLang === lang.code;
+                
+                return (
+                  <div
+                    key={lang.code}
+                    className={`p-3 rounded-lg border ${
+                      hasTranslation 
+                        ? 'border-green-200 bg-green-50' 
+                        : 'border-gray-200 bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium">{lang.native}</span>
+                      {hasTranslation && <CheckCircle size={14} className="text-green-500" />}
+                    </div>
+                    <div className="flex gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setPreviewLang(lang.code)}
+                        className="text-xs text-blue-600 hover:underline"
+                      >
+                        Preview
+                      </button>
+                      <span className="text-gray-300">|</span>
+                      <button
+                        type="button"
+                        onClick={() => setEditingLang(isEditing ? null : lang.code)}
+                        className="text-xs text-blue-600 hover:underline"
+                      >
+                        {isEditing ? 'Cancel' : 'Edit'}
+                      </button>
+                    </div>
+                    
+                    {/* Inline Edit Form */}
+                    {isEditing && (
+                      <div className="mt-3 space-y-2 border-t border-gray-200 pt-3">
+                        <input
+                          type="text"
+                          placeholder="Translated title"
+                          className="input text-sm"
+                          defaultValue={translations[lang.code]?.title || ''}
+                          id={`trans-title-${lang.code}`}
+                        />
+                        <textarea
+                          placeholder="Translated body"
+                          className="input text-sm min-h-[60px]"
+                          defaultValue={translations[lang.code]?.body || ''}
+                          id={`trans-body-${lang.code}`}
+                        />
+                        <input
+                          type="text"
+                          placeholder="Button text"
+                          className="input text-sm"
+                          defaultValue={translations[lang.code]?.buttonText || ''}
+                          id={`trans-btn-${lang.code}`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const titleEl = document.getElementById(`trans-title-${lang.code}`) as HTMLInputElement;
+                            const bodyEl = document.getElementById(`trans-body-${lang.code}`) as HTMLTextAreaElement;
+                            const btnEl = document.getElementById(`trans-btn-${lang.code}`) as HTMLInputElement;
+                            saveTranslation(lang.code, {
+                              title: titleEl?.value || '',
+                              body: bodyEl?.value || '',
+                              buttonText: btnEl?.value || ''
+                            });
+                          }}
+                          className="btn btn-primary btn-sm w-full"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Display Frequency */}
           <div className="card p-5 mb-5">
             <h2 className="text-base font-semibold text-gray-900 mb-4">Display Frequency</h2>
@@ -942,51 +1190,62 @@ export default function EditTooltipPage() {
                   </div>
 
                   {/* Tooltip Card Preview */}
-                  <div 
-                    className="flex-shrink-0"
-                    style={{
-                      width: cardWidth,
-                      backgroundColor: cardBgColor,
-                      color: cardTextColor,
-                      borderRadius: cardBorderRadius,
-                      padding: cardPadding,
-                      boxShadow: getShadowValue(cardShadow),
-                      textAlign: textAlign,
-                    }}
-                  >
-                    {imageUrl && (
-                      <img 
-                        src={imageUrl} 
-                        alt="Preview" 
-                        className="w-full h-24 object-cover mb-3"
-                        style={{ borderRadius: Math.max(0, cardBorderRadius - 4) }}
-                      />
-                    )}
-                    <h3 className="font-semibold text-sm mb-1">
-                      {title || 'Tooltip Title'}
-                    </h3>
-                    <p className="text-xs opacity-80 mb-3">
-                      {body || 'Tooltip description goes here...'}
-                    </p>
-                    {buttonText && (
-                      <button
+                  {(() => {
+                    const preview = getPreviewContent();
+                    return (
+                      <div 
+                        className="flex-shrink-0"
                         style={{
-                          backgroundColor: buttonColor,
-                          color: buttonTextColor,
-                          borderRadius: buttonBorderRadius,
-                          padding: '6px 12px',
-                          width: textAlign === 'center' ? '100%' : 'auto',
-                          display: textAlign === 'center' ? 'block' : 'inline-block',
-                          border: 'none',
-                          fontWeight: 500,
-                          fontSize: '12px',
-                          cursor: 'pointer',
+                          width: cardWidth,
+                          backgroundColor: cardBgColor,
+                          color: cardTextColor,
+                          borderRadius: cardBorderRadius,
+                          padding: cardPadding,
+                          boxShadow: getShadowValue(cardShadow),
+                          textAlign: textAlign,
                         }}
                       >
-                        {buttonText}
-                      </button>
-                    )}
-                  </div>
+                        {/* Language Badge */}
+                        {previewLang !== 'en' && (
+                          <div className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded inline-block mb-2">
+                            {LANGUAGES.find(l => l.code === previewLang)?.native}
+                          </div>
+                        )}
+                        {imageUrl && (
+                          <img 
+                            src={imageUrl} 
+                            alt="Preview" 
+                            className="w-full h-24 object-cover mb-3"
+                            style={{ borderRadius: Math.max(0, cardBorderRadius - 4) }}
+                          />
+                        )}
+                        <h3 className="font-semibold text-sm mb-1">
+                          {preview.title || 'Tooltip Title'}
+                        </h3>
+                        <p className="text-xs opacity-80 mb-3">
+                          {preview.body || 'Tooltip description goes here...'}
+                        </p>
+                        {preview.buttonText && (
+                          <button
+                            style={{
+                              backgroundColor: buttonColor,
+                              color: buttonTextColor,
+                              borderRadius: buttonBorderRadius,
+                              padding: '6px 12px',
+                              width: textAlign === 'center' ? '100%' : 'auto',
+                              display: textAlign === 'center' ? 'block' : 'inline-block',
+                              border: 'none',
+                              fontWeight: 500,
+                              fontSize: '12px',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            {preview.buttonText}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             )}

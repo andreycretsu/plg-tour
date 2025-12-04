@@ -76,7 +76,8 @@ export default function SettingsPage() {
 <script>
   window.TourLayerConfig = {
     token: '${apiToken}',
-    userId: 'YOUR_USER_ID'  // Your app's logged-in user ID
+    userId: 'YOUR_USER_ID',     // Your app's logged-in user ID
+    userLocale: 'en'            // User's language (en, uk, pl, es, pt, de, ru, fr, it, ja, zh)
   };
 </script>
 <script src="https://plg-tour.vercel.app/embed.js"></script>`;

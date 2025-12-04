@@ -45,7 +45,8 @@
   let userConfig = {
     userId: null,
     userEmail: null,
-    userName: null
+    userName: null,
+    userLocale: null // Override browser language detection
   };
   
   // Cache for server-side view data
@@ -54,14 +55,29 @@
     tooltips: {}
   };
 
-  // Detect browser language
-  function getBrowserLanguage() {
-    const lang = navigator.language || navigator.userLanguage || 'en';
-    // Extract just the language code (e.g., 'en-US' -> 'en')
-    const code = lang.split('-')[0].toLowerCase();
-    // Map to supported languages
+  // Get user's language (userLocale config > browser detection > English default)
+  function getUserLanguage() {
     const supported = ['en', 'uk', 'pl', 'es', 'pt', 'de', 'ru', 'fr', 'it', 'ja', 'zh'];
+    
+    // 1. Check if userLocale is explicitly set in config
+    if (userConfig.userLocale) {
+      const locale = userConfig.userLocale.toLowerCase();
+      if (supported.includes(locale)) {
+        return locale;
+      }
+    }
+    
+    // 2. Fall back to browser language detection
+    const browserLang = navigator.language || navigator.userLanguage || 'en';
+    const code = browserLang.split('-')[0].toLowerCase();
+    
+    // 3. Return supported language or default to English
     return supported.includes(code) ? code : 'en';
+  }
+  
+  // Alias for backwards compatibility
+  function getBrowserLanguage() {
+    return getUserLanguage();
   }
 
   // Get API token and user config
@@ -74,9 +90,10 @@
       userConfig.userId = window.TourLayerConfig.userId || null;
       userConfig.userEmail = window.TourLayerConfig.userEmail || null;
       userConfig.userName = window.TourLayerConfig.userName || null;
+      userConfig.userLocale = window.TourLayerConfig.userLocale || null;
       
       if (token) {
-        console.log('TourLayer: Config found in TourLayerConfig', userConfig.userId ? '(with user tracking)' : '(anonymous)');
+        console.log('TourLayer: Config found in TourLayerConfig', userConfig.userId ? '(with user tracking)' : '(anonymous)', userConfig.userLocale ? `(locale: ${userConfig.userLocale})` : '');
         return token;
       }
     }
