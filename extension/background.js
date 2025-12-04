@@ -241,7 +241,6 @@ async function captureScreenshot(targetUrl, selector) {
     
     if (existingTabs.length > 0) {
       tab = existingTabs[0];
-      await chrome.tabs.update(tab.id, { active: true });
     } else {
       // Create a new tab with the target URL
       tab = await chrome.tabs.create({ 
@@ -267,12 +266,16 @@ async function captureScreenshot(targetUrl, selector) {
       });
     }
     
-    // Small delay to ensure page is fully rendered
-    await new Promise(r => setTimeout(r, 800));
-    
-    // Focus the window (required for captureVisibleTab in MV3)
+    // Make the tab active and focus its window
+    await chrome.tabs.update(tab.id, { active: true });
     await chrome.windows.update(tab.windowId, { focused: true });
-    await new Promise(r => setTimeout(r, 200));
+    
+    // Wait for focus to take effect
+    await new Promise(r => setTimeout(r, 500));
+    
+    // Re-query the tab to get updated info
+    tab = await chrome.tabs.get(tab.id);
+    console.log('Tab ready:', tab.id, tab.url, 'active:', tab.active);
     
     // Get element position if selector provided
     let elementRect = null;
@@ -303,11 +306,12 @@ async function captureScreenshot(targetUrl, selector) {
       }
     }
     
-    // Capture the screenshot
-    const screenshot = await chrome.tabs.captureVisibleTab(tab.windowId, {
-      format: 'png',
-      quality: 90
+    // Capture the screenshot using null for current window
+    console.log('Attempting captureVisibleTab for window:', tab.windowId);
+    const screenshot = await chrome.tabs.captureVisibleTab(null, {
+      format: 'png'
     });
+    console.log('Screenshot captured successfully');
     
     // Get viewport dimensions
     const viewportResults = await chrome.scripting.executeScript({
