@@ -459,7 +459,10 @@ export default function NewTooltipPage() {
                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                 />
                 {/* Center indicator dot at 0 */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-gray-400 rounded-full pointer-events-none" />
+                <div 
+                  className="absolute left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-400 rounded-full pointer-events-none border-2 border-white"
+                  style={{ top: '50%', transform: 'translate(-50%, -50%)' }}
+                />
               </div>
             </div>
 
@@ -481,7 +484,10 @@ export default function NewTooltipPage() {
                   className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                 />
                 {/* Center indicator dot */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-gray-400 rounded-full pointer-events-none" />
+                <div 
+                  className="absolute left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-400 rounded-full pointer-events-none border-2 border-white"
+                  style={{ top: '50%', transform: 'translate(-50%, -50%)' }}
+                />
               </div>
             </div>
 
@@ -804,12 +810,12 @@ export default function NewTooltipPage() {
 
         {/* Right Column - Preview */}
         <div className="flex-1 min-w-[400px]">
-          <div className="sticky top-0 h-screen py-6">
+          <div className="sticky top-0 h-screen py-6 flex flex-col">
             {/* Preview Area */}
             {showPreview && (
               <div 
-                className="rounded-xl p-6 flex-1 flex items-center justify-center"
-                style={{ backgroundColor: '#f3f4f6' }}
+                className="rounded-xl p-6 flex-1 flex items-center justify-center h-full"
+                style={{ backgroundColor: '#f3f4f6', minHeight: 'calc(100vh - 48px)' }}
               >
                 {/* Preview Layout - changes based on edge */}
                 <div className={`flex items-center justify-center gap-4 ${
@@ -840,7 +846,7 @@ export default function NewTooltipPage() {
                   <div 
                     className="flex-shrink-0"
                     style={{
-                      width: Math.min(cardWidth, 320),
+                      width: cardWidth,
                       backgroundColor: cardBgColor,
                       color: cardTextColor,
                       borderRadius: cardBorderRadius,

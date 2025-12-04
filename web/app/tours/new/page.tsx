@@ -789,8 +789,8 @@ export default function NewTourPage() {
           <div className="sticky top-0 h-screen py-6 flex flex-col">
             {activeStep ? (
               <div 
-                className="rounded-xl p-6 flex-1 flex items-center justify-center"
-                style={{ backgroundColor: '#f3f4f6' }}
+                className="rounded-xl p-6 flex-1 flex items-center justify-center h-full"
+                style={{ backgroundColor: '#f3f4f6', minHeight: 'calc(100vh - 48px)' }}
               >
                 {/* Preview Layout - changes based on placement */}
                 <div 
