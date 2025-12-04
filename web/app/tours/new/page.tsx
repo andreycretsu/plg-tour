@@ -259,11 +259,11 @@ export default function NewTourPage() {
       actions={
         <button
           onClick={saveTour}
-          disabled={saving || steps.length === 0 || !name || !urlPattern}
+          disabled={loading || steps.length === 0 || !tourName || !urlPattern}
           className="btn-primary flex items-center gap-2"
         >
           <Save size={18} />
-          {saving ? 'Saving...' : 'Save Tour'}
+          {loading ? 'Saving...' : 'Save Tour'}
         </button>
       }
     >
