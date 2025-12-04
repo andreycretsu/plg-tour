@@ -13,23 +13,24 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
 
-    if (!token) {
+    if (!userData) {
       router.push('/login');
       return;
     }
 
-    setUser(JSON.parse(userData || '{}'));
+    setUser(JSON.parse(userData));
 
-    // Fetch tours
-    fetch('/api/tours', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    })
-      .then((res) => res.json())
+    // Fetch tours (cookie sent automatically)
+    fetch('/api/tours')
+      .then((res) => {
+        if (res.status === 401) {
+          router.push('/login');
+          return [];
+        }
+        return res.json();
+      })
       .then((data) => {
         setTours(data || []);
         setLoading(false);

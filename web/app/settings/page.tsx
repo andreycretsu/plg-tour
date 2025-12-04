@@ -30,16 +30,15 @@ export default function SettingsPage() {
   const [loadingMembers, setLoadingMembers] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
     const workspaceData = localStorage.getItem('workspace');
 
-    if (!token) {
+    if (!userData) {
       router.push('/login');
       return;
     }
 
-    setUser(JSON.parse(userData || '{}'));
+    setUser(JSON.parse(userData));
     
     if (workspaceData) {
       const ws = JSON.parse(workspaceData);
@@ -51,12 +50,7 @@ export default function SettingsPage() {
   const fetchMembers = async (workspaceId: number) => {
     setLoadingMembers(true);
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`/api/workspaces/${workspaceId}/members`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(`/api/workspaces/${workspaceId}/members`);
       
       if (response.ok) {
         const data = await response.json();
@@ -104,12 +98,10 @@ export default function SettingsPage() {
     setInviteSuccess('');
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`/api/workspaces/${workspace.id}/invite`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ email: inviteEmail, role: inviteRole }),
       });

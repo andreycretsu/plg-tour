@@ -81,23 +81,33 @@ export async function POST(request: NextRequest) {
       workspaceId: workspace.id 
     });
 
-    return NextResponse.json({
+    // Create response with user data (no sensitive tokens in body)
+    const response = NextResponse.json({
       user: {
         id: user.id,
         email: user.email,
         name: user.name,
-        apiToken: user.api_token,
         createdAt: user.created_at,
       },
       workspace: {
         id: workspace.id,
         name: workspace.name,
         slug: workspace.slug,
-        apiToken: workspace.api_token,
+        role: 'owner',
         createdAt: workspace.created_at,
       },
-      token,
     });
+
+    // Set JWT as HttpOnly cookie (secure, not accessible via JS)
+    response.cookies.set('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/',
+    });
+
+    return response;
   } catch (error) {
     console.error('Signup error:', error);
     return NextResponse.json(

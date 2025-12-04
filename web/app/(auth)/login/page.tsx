@@ -29,8 +29,7 @@ export default function LoginPage() {
         throw new Error(data.error || 'Login failed');
       }
 
-      // Store token and workspace info
-      localStorage.setItem('token', data.token);
+      // Store non-sensitive data in localStorage (token is in HttpOnly cookie)
       localStorage.setItem('user', JSON.stringify(data.user));
       localStorage.setItem('workspace', JSON.stringify(data.workspace));
       localStorage.setItem('workspaces', JSON.stringify(data.workspaces || []));

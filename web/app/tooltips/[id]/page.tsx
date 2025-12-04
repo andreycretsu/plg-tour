@@ -66,10 +66,7 @@ export default function EditTooltipPage() {
   useEffect(() => {
     const loadTooltip = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`/api/tooltips/${tooltipId}`, {
-          headers: { 'Authorization': `Bearer ${token}` },
-        });
+        const response = await fetch(`/api/tooltips/${tooltipId}`);
         
         if (!response.ok) throw new Error('Failed to load tooltip');
         
@@ -204,12 +201,10 @@ export default function EditTooltipPage() {
     setSaving(true);
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`/api/tooltips/${tooltipId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           name,
@@ -263,10 +258,8 @@ export default function EditTooltipPage() {
     
     setDeleting(true);
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch(`/api/tooltips/${tooltipId}`, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
       });
       
       if (!response.ok) throw new Error('Failed to delete');

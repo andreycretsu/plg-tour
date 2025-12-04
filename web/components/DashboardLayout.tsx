@@ -33,11 +33,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
+  const handleLogout = async () => {
+    // Clear HttpOnly cookie via API
+    await fetch('/api/auth/logout', { method: 'POST' });
+    
+    // Clear localStorage
     localStorage.removeItem('user');
     localStorage.removeItem('workspace');
     localStorage.removeItem('workspaces');
+    
     router.push('/login');
   };
 

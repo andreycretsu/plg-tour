@@ -52,3 +52,16 @@ export function extractToken(authHeader: string | null | undefined): string | nu
   return null;
 }
 
+// Extract token from cookie string
+export function extractTokenFromCookie(cookieHeader: string | null | undefined): string | null {
+  if (!cookieHeader) return null;
+  const cookies = cookieHeader.split(';').map(c => c.trim());
+  for (const cookie of cookies) {
+    const [name, value] = cookie.split('=');
+    if (name === 'token') {
+      return value;
+    }
+  }
+  return null;
+}
+

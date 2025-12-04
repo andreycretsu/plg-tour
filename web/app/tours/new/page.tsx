@@ -201,13 +201,10 @@ export default function NewTourPage() {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
-      
       const response = await fetch('/api/tours', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           name: tourName,

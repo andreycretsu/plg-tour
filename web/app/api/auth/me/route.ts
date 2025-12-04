@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
-import { extractToken, verifyToken } from '@/lib/auth';
+import { extractToken, extractTokenFromCookie, verifyToken } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
+    // Try cookie first (for web app), then Authorization header (for extension/API)
+    const cookieToken = request.cookies.get('token')?.value;
     const authHeader = request.headers.get('authorization');
-    const token = extractToken(authHeader);
+    const headerToken = extractToken(authHeader);
+    const token = cookieToken || headerToken;
 
     if (!token) {
       return NextResponse.json(

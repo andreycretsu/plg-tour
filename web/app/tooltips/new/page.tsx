@@ -129,12 +129,10 @@ export default function NewTooltipPage() {
     setLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
       const response = await fetch('/api/tooltips', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           name,

@@ -29,12 +29,7 @@ export default function TooltipsPage() {
 
   const fetchTooltips = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/tooltips', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await fetch('/api/tooltips');
 
       if (response.ok) {
         const data = await response.json();
@@ -49,12 +44,10 @@ export default function TooltipsPage() {
 
   const toggleActive = async (id: number, currentState: boolean) => {
     try {
-      const token = localStorage.getItem('token');
       await fetch(`/api/tooltips/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ isActive: !currentState }),
       });
@@ -71,12 +64,8 @@ export default function TooltipsPage() {
     if (!confirm('Are you sure you want to delete this tooltip?')) return;
 
     try {
-      const token = localStorage.getItem('token');
       await fetch(`/api/tooltips/${id}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
       });
 
       setTooltips(tooltips.filter(t => t.id !== id));

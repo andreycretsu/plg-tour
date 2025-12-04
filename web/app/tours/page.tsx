@@ -13,19 +13,21 @@ export default function ToursPage() {
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const userData = localStorage.getItem('user');
 
-    if (!token) {
+    if (!userData) {
       router.push('/login');
       return;
     }
 
-    fetch('/api/tours', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    })
-      .then((res) => res.json())
+    fetch('/api/tours')
+      .then((res) => {
+        if (res.status === 401) {
+          router.push('/login');
+          return [];
+        }
+        return res.json();
+      })
       .then((data) => {
         setTours(data || []);
         setLoading(false);
@@ -40,14 +42,9 @@ export default function ToursPage() {
 
   const deleteTour = async (tourId: number) => {
     if (!confirm('Are you sure you want to delete this tour?')) return;
-
-    const token = localStorage.getItem('token');
     
     await fetch(`/api/tours/${tourId}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
     });
 
     setTours(tours.filter((t) => t.id !== tourId));

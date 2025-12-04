@@ -97,12 +97,7 @@ export default function EditTourPage() {
   useEffect(() => {
     const loadTour = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`/api/tours/${tourId}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+        const response = await fetch(`/api/tours/${tourId}`);
 
         if (!response.ok) {
           throw new Error('Failed to load tour');
@@ -208,13 +203,10 @@ export default function EditTourPage() {
     setSaving(true);
 
     try {
-      const token = localStorage.getItem('token');
-      
       const response = await fetch(`/api/tours/${tourId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           name: tourName,
