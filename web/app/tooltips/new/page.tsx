@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/DashboardLayout';
 import ImageUpload from '@/components/ImageUpload';
 import ColorPicker from '@/components/ColorPicker';
-import { Save, Crosshair, AlertCircle, CheckCircle, ArrowLeft, MousePointer, Hand, Languages, Settings, FileText } from 'lucide-react';
+import { Save, Crosshair, AlertCircle, CheckCircle, ArrowLeft, MousePointer, Hand, Languages, Settings, FileText, Star, Sparkles, Wand2, Circle } from 'lucide-react';
 
 export default function NewTooltipPage() {
   const router = useRouter();
@@ -39,8 +39,9 @@ export default function NewTooltipPage() {
   const [triggerType, setTriggerType] = useState<'click' | 'hover'>('click');
   const [dismissType, setDismissType] = useState<'button' | 'click_element' | 'click_outside'>('button');
   
-  // Icon/Beacon settings - expanded types
-  const [iconType, setIconType] = useState<string>('pulse_dot');
+  // Icon/Beacon settings
+  const [iconShape, setIconShape] = useState<'dot' | 'star' | 'sparkle' | 'wand'>('dot');
+  const [isPulsing, setIsPulsing] = useState(true);
   const [iconEdge, setIconEdge] = useState<'top' | 'right' | 'bottom' | 'left'>('right');
   const [iconOffset, setIconOffset] = useState(0); // Beacon distance from element edge
   const [iconOffsetY, setIconOffsetY] = useState(0); // Beacon position along edge
@@ -160,7 +161,7 @@ export default function NewTooltipPage() {
           selector,
           triggerType,
           dismissType,
-          iconType,
+          iconType: `${isPulsing ? 'pulse' : 'static'}_${iconShape}`,
           iconEdge,
           iconOffset,
           iconOffsetY,
@@ -206,9 +207,7 @@ export default function NewTooltipPage() {
     }
   };
 
-  // Check if beacon should animate
-  const isAnimated = iconType.startsWith('pulse_');
-  const iconShape = iconType.replace('pulse_', '').replace('static_', '');
+  // Animation is controlled by isPulsing state directly
 
   // Get beacon position for preview - properly centered
   const getBeaconPreviewStyle = (): React.CSSProperties => {
@@ -222,7 +221,7 @@ export default function NewTooltipPage() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      animation: isAnimated ? 'pulse 2s infinite' : undefined,
+      animation: isPulsing ? 'pulse 2s infinite' : undefined,
     };
 
     // Position beacon on the edge with offsets
@@ -560,31 +559,56 @@ export default function NewTooltipPage() {
             
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="label">Beacon Type</label>
-                <select
-                  className="input"
-                  value={iconType}
-                  onChange={(e) => setIconType(e.target.value)}
-                >
-                  <optgroup label="Dot">
-                    <option value="pulse_dot">🔴 Pulsing Dot</option>
-                    <option value="static_dot">⚫ Static Dot</option>
-                  </optgroup>
-                  <optgroup label="Star">
-                    <option value="pulse_star">⭐ Pulsing Star</option>
-                    <option value="static_star">★ Static Star</option>
-                  </optgroup>
-                  <optgroup label="Sparkle">
-                    <option value="pulse_sparkle">✨ Pulsing Sparkle</option>
-                    <option value="static_sparkle">✦ Static Sparkle</option>
-                  </optgroup>
-                  <optgroup label="Magic Wand">
-                    <option value="pulse_wand">🪄 Pulsing Wand</option>
-                    <option value="static_wand">⚡ Static Wand</option>
-                  </optgroup>
-                </select>
+                <label className="label">Icon Shape</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { type: 'dot', icon: Circle, label: 'Dot' },
+                    { type: 'star', icon: Star, label: 'Star' },
+                    { type: 'sparkle', icon: Sparkles, label: 'Sparkle' },
+                    { type: 'wand', icon: Wand2, label: 'Wand' },
+                  ].map(({ type, icon: Icon, label }) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setIconShape(type as any)}
+                      className={`flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all ${
+                        iconShape === type
+                          ? 'border-blue-500 bg-blue-50 text-blue-600'
+                          : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                      }`}
+                    >
+                      <Icon size={20} />
+                      <span className="text-xs mt-1">{label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
+              <div>
+                <label className="label">Animation</label>
+                <button
+                  type="button"
+                  onClick={() => setIsPulsing(!isPulsing)}
+                  className={`w-full flex items-center justify-between p-3 rounded-lg border-2 transition-all ${
+                    isPulsing
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className={`w-4 h-4 rounded-full bg-blue-500 ${isPulsing ? 'animate-pulse' : ''}`}
+                    />
+                    <span className="text-sm font-medium">Pulse Animation</span>
+                  </div>
+                  <div className={`w-10 h-6 rounded-full transition-colors ${isPulsing ? 'bg-blue-500' : 'bg-gray-300'}`}>
+                    <div className={`w-5 h-5 rounded-full bg-white shadow-sm transform transition-transform mt-0.5 ${isPulsing ? 'translate-x-4.5 ml-4' : 'translate-x-0.5 ml-0.5'}`} />
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="label">Size: {iconSize}px</label>
                 <input
@@ -1028,7 +1052,7 @@ export default function NewTooltipPage() {
                       Element
                       
                       {/* Beacon */}
-                      {iconType !== 'none' && (
+                      {iconShape && (
                         <div style={getBeaconPreviewStyle()}>
                           {renderBeaconIcon()}
                         </div>
