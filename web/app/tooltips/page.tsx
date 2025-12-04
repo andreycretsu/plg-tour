@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Plus, MessageCircle, Trash2, Edit, ToggleLeft, ToggleRight, MousePointer, Hand, Copy } from 'lucide-react';
+import { Plus, MessageCircle, Trash2, Edit, ToggleLeft, ToggleRight, MousePointer, Hand, Copy, Sparkles, Eye } from 'lucide-react';
+import { Banner, PromoBanner } from '@/components/ui/banner';
 
 interface Tooltip {
   id: number;
@@ -22,6 +23,7 @@ export default function TooltipsPage() {
   const router = useRouter();
   const [tooltips, setTooltips] = useState<Tooltip[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showPromoBanner, setShowPromoBanner] = useState(true);
 
   useEffect(() => {
     fetchTooltips();
@@ -93,6 +95,21 @@ export default function TooltipsPage() {
   return (
     <DashboardLayout>
       <div className="max-w-6xl mx-auto">
+        {/* Promotional Banner */}
+        {showPromoBanner && (
+          <PromoBanner
+            className="mb-6 shadow-sm"
+            icon={<Sparkles className="h-5 w-5 text-emerald-600" />}
+            linkText="Learn more"
+            linkHref="/docs"
+            actionText="Try Analytics"
+            onAction={() => router.push('/dashboard')}
+            onDismiss={() => setShowPromoBanner(false)}
+          >
+            New: <strong>Analytics Dashboard</strong> is now available! Track tooltip engagement.
+          </PromoBanner>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -111,18 +128,20 @@ export default function TooltipsPage() {
         </div>
 
         {/* Info Banner */}
-        <div className="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-4 mb-6">
-          <div className="flex items-start gap-3">
-            <MessageCircle className="text-purple-600 mt-0.5" size={20} />
-            <div>
-              <h3 className="font-semibold text-purple-900">What are Tooltips?</h3>
-              <p className="text-sm text-purple-700 mt-1">
-                Tooltips are single-step hints that appear next to elements with a pulsating beacon. 
-                They can be triggered on hover or click, perfect for contextual help and feature discovery.
-              </p>
-            </div>
+        <Banner
+          variant="info"
+          className="mb-6 rounded-xl"
+          icon={<MessageCircle className="h-5 w-5" />}
+          dismissible={false}
+        >
+          <div>
+            <strong>What are Tooltips?</strong>{" "}
+            <span className="text-blue-700">
+              Tooltips are single-step hints that appear next to elements with a pulsating beacon. 
+              They can be triggered on hover or click, perfect for contextual help and feature discovery.
+            </span>
           </div>
-        </div>
+        </Banner>
 
         {/* Tooltips List */}
         {loading ? (
