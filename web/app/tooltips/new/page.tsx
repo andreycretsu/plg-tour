@@ -1011,13 +1011,12 @@ export default function NewTooltipPage() {
                 style={{ backgroundColor: '#f3f4f6', minHeight: 'calc(100vh - 48px)' }}
               >
                 {/* Preview Layout - changes based on edge */}
-                <div className={`flex items-center justify-center gap-4 ${
-                  iconEdge === 'top' || iconEdge === 'bottom' ? 'flex-col' : 'flex-row'
-                } ${iconEdge === 'top' || iconEdge === 'left' ? 'flex-col-reverse' : ''}`}
+                <div className={`flex items-center justify-center`}
                 style={{
                   flexDirection: iconEdge === 'top' ? 'column-reverse' : 
                                  iconEdge === 'bottom' ? 'column' : 
-                                 iconEdge === 'left' ? 'row-reverse' : 'row'
+                                 iconEdge === 'left' ? 'row-reverse' : 'row',
+                  gap: `${cardGap}px`
                 }}>
                   
                   {/* Mock Element - Square */}
@@ -1048,6 +1047,11 @@ export default function NewTooltipPage() {
                       padding: cardPadding,
                       boxShadow: getShadowValue(cardShadow),
                       textAlign: textAlign,
+                      // Card offset: for top/bottom edges, offset moves card horizontally
+                      // For left/right edges, offset moves card vertically
+                      transform: (iconEdge === 'top' || iconEdge === 'bottom')
+                        ? `translateX(${cardOffsetY}px)`
+                        : `translateY(${cardOffsetY}px)`,
                     }}
                   >
                     {imageUrl && (

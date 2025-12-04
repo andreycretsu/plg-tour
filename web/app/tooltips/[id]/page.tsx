@@ -1372,11 +1372,12 @@ export default function EditTooltipPage() {
                 style={{ backgroundColor: '#f3f4f6', minHeight: 'calc(100vh - 48px)' }}
               >
                 {/* Preview Layout - changes based on edge */}
-                <div className={`flex items-center justify-center gap-4`}
+                <div className={`flex items-center justify-center`}
                 style={{
                   flexDirection: iconEdge === 'top' ? 'column-reverse' : 
                                  iconEdge === 'bottom' ? 'column' : 
-                                 iconEdge === 'left' ? 'row-reverse' : 'row'
+                                 iconEdge === 'left' ? 'row-reverse' : 'row',
+                  gap: `${cardGap}px`
                 }}>
                   
                   {/* Mock Element - Square */}
@@ -1399,6 +1400,11 @@ export default function EditTooltipPage() {
                   {/* Tooltip Card Preview */}
                   {(() => {
                     const preview = getPreviewContent();
+                    // Card offset: for top/bottom edges, offset moves card horizontally
+                    // For left/right edges, offset moves card vertically
+                    const cardTransform = (iconEdge === 'top' || iconEdge === 'bottom')
+                      ? `translateX(${cardPosOffsetY}px)`
+                      : `translateY(${cardPosOffsetY}px)`;
                     return (
                       <div 
                         className="flex-shrink-0"
@@ -1410,6 +1416,7 @@ export default function EditTooltipPage() {
                           padding: cardPadding,
                           boxShadow: getShadowValue(cardShadow),
                           textAlign: textAlign,
+                          transform: cardTransform,
                         }}
                       >
                         {/* Language Badge */}
