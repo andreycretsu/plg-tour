@@ -8,6 +8,12 @@ import ColorPicker from '@/components/ColorPicker';
 import CenterSlider from '@/components/CenterSlider';
 import { Save, Crosshair, AlertCircle, CheckCircle, MousePointer, Hand, Trash2, Loader2, Languages, Globe, RefreshCw, Settings, FileText, Star, Sparkles, Wand2, Circle, Copy } from 'lucide-react';
 
+// Shadcn UI components
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
+
 export default function EditTooltipPage() {
   const router = useRouter();
   const params = useParams();
@@ -1173,31 +1179,28 @@ export default function EditTooltipPage() {
             <h2 className="text-base font-semibold text-gray-900 mb-4">Card Styling</h2>
             
             <div className="grid grid-cols-3 gap-4 mb-4">
-              <div>
-                <label className="label">Width (px)</label>
-                <input
+              <div className="space-y-2">
+                <Label>Width (px)</Label>
+                <Input
                   type="number"
-                  className="input"
                   value={cardWidth}
                   onChange={(e) => setCardWidth(parseInt(e.target.value) || 320)}
                 />
               </div>
 
-              <div>
-                <label className="label">Padding (px)</label>
-                <input
+              <div className="space-y-2">
+                <Label>Padding (px)</Label>
+                <Input
                   type="number"
-                  className="input"
                   value={cardPadding}
                   onChange={(e) => setCardPadding(parseInt(e.target.value) || 20)}
                 />
               </div>
 
-              <div>
-                <label className="label">Corner Radius (px)</label>
-                <input
+              <div className="space-y-2">
+                <Label>Corner Radius (px)</Label>
+                <Input
                   type="number"
-                  className="input"
                   value={cardBorderRadius}
                   onChange={(e) => setCardBorderRadius(parseInt(e.target.value) || 12)}
                 />
@@ -1205,18 +1208,18 @@ export default function EditTooltipPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="label">Text Alignment</label>
+              <div className="space-y-2">
+                <Label>Text Alignment</Label>
                 <div className="flex gap-1">
                   {['left', 'center', 'right'].map((align) => (
                     <button
                       key={align}
                       type="button"
                       onClick={() => setTextAlign(align as any)}
-                      className={`flex-1 py-2 rounded capitalize text-sm transition-colors ${
+                      className={`flex-1 py-2 rounded-md capitalize text-sm font-medium transition-colors ${
                         textAlign === align 
-                          ? 'bg-blue-600 text-white' 
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                       }`}
                     >
                       {align}
@@ -1225,30 +1228,31 @@ export default function EditTooltipPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="label">Shadow</label>
-                <select
-                  className="input"
-                  value={cardShadow}
-                  onChange={(e) => setCardShadow(e.target.value)}
-                >
-                  <option value="none">None</option>
-                  <option value="small">Small</option>
-                  <option value="medium">Medium</option>
-                  <option value="large">Large</option>
-                  <option value="extra">Extra Large</option>
-                </select>
+              <div className="space-y-2">
+                <Label>Shadow</Label>
+                <Select value={cardShadow} onValueChange={setCardShadow}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    <SelectItem value="small">Small</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="large">Large</SelectItem>
+                    <SelectItem value="extra">Extra Large</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="label">Background Color</label>
+              <div className="space-y-2">
+                <Label>Background Color</Label>
                 <ColorPicker value={cardBgColor} onChange={setCardBgColor} />
               </div>
 
-              <div>
-                <label className="label">Text Color</label>
+              <div className="space-y-2">
+                <Label>Text Color</Label>
                 <ColorPicker value={cardTextColor} onChange={setCardTextColor} />
               </div>
             </div>
@@ -1258,41 +1262,37 @@ export default function EditTooltipPage() {
           <div className="card p-5 mb-5">
             <h2 className="text-base font-semibold text-gray-900 mb-4">Typography</h2>
             
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              <div>
-                <label className="label">Title Size: {titleSize}px</label>
-                <input
-                  type="range"
-                  min="12"
-                  max="24"
-                  value={titleSize}
-                  onChange={(e) => setTitleSize(parseInt(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+            <div className="grid grid-cols-3 gap-6 mb-4">
+              <div className="space-y-3">
+                <Label>Title Size: {titleSize}px</Label>
+                <Slider
+                  value={[titleSize]}
+                  onValueChange={([value]) => setTitleSize(value)}
+                  min={12}
+                  max={24}
+                  step={1}
                 />
               </div>
 
-              <div>
-                <label className="label">Body Size: {bodySize}px</label>
-                <input
-                  type="range"
-                  min="10"
-                  max="18"
-                  value={bodySize}
-                  onChange={(e) => setBodySize(parseInt(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+              <div className="space-y-3">
+                <Label>Body Size: {bodySize}px</Label>
+                <Slider
+                  value={[bodySize]}
+                  onValueChange={([value]) => setBodySize(value)}
+                  min={10}
+                  max={18}
+                  step={1}
                 />
               </div>
 
-              <div>
-                <label className="label">Line Height: {bodyLineHeight}</label>
-                <input
-                  type="range"
-                  min="1"
-                  max="2"
-                  step="0.1"
-                  value={bodyLineHeight}
-                  onChange={(e) => setBodyLineHeight(parseFloat(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+              <div className="space-y-3">
+                <Label>Line Height: {bodyLineHeight.toFixed(2)}</Label>
+                <Slider
+                  value={[bodyLineHeight * 100]}
+                  onValueChange={([value]) => setBodyLineHeight(value / 100)}
+                  min={100}
+                  max={200}
+                  step={10}
                 />
               </div>
             </div>
@@ -1303,8 +1303,8 @@ export default function EditTooltipPage() {
             <h2 className="text-base font-semibold text-gray-900 mb-4">Button Styling</h2>
             
             {/* Size */}
-            <div className="mb-4">
-              <label className="label">Size</label>
+            <div className="mb-4 space-y-2">
+              <Label>Size</Label>
               <div className="flex gap-1">
                 {[
                   { size: 'xxs', label: 'XXS' },
@@ -1318,10 +1318,10 @@ export default function EditTooltipPage() {
                     key={size}
                     type="button"
                     onClick={() => setButtonSize(size as any)}
-                    className={`flex-1 py-2 rounded text-xs font-medium transition-colors ${
+                    className={`flex-1 py-2 rounded-md text-xs font-medium transition-colors ${
                       buttonSize === size
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                     }`}
                   >
                     {label}
@@ -1332,8 +1332,8 @@ export default function EditTooltipPage() {
 
             {/* Position and Type */}
             <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="label">Position</label>
+              <div className="space-y-2">
+                <Label>Position</Label>
                 <div className="flex gap-1">
                   {[
                     { pos: 'left', label: '←' },
@@ -1344,10 +1344,10 @@ export default function EditTooltipPage() {
                       key={pos}
                       type="button"
                       onClick={() => setButtonPosition(pos as any)}
-                      className={`flex-1 py-2 rounded text-sm font-medium transition-colors ${
+                      className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
                         buttonPosition === pos
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                       }`}
                     >
                       {label}
@@ -1356,8 +1356,8 @@ export default function EditTooltipPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="label">Type</label>
+              <div className="space-y-2">
+                <Label>Type</Label>
                 <div className="flex gap-1">
                   {[
                     { type: 'regular', label: 'Regular' },
@@ -1367,10 +1367,10 @@ export default function EditTooltipPage() {
                       key={type}
                       type="button"
                       onClick={() => setButtonType(type as any)}
-                      className={`flex-1 py-2 rounded text-xs font-medium transition-colors ${
+                      className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
                         buttonType === type
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
                       }`}
                     >
                       {label}
@@ -1381,11 +1381,10 @@ export default function EditTooltipPage() {
             </div>
 
             {/* Corner Radius */}
-            <div className="mb-4">
-              <label className="label">Corner Radius (px)</label>
-              <input
+            <div className="mb-4 space-y-2">
+              <Label>Corner Radius (px)</Label>
+              <Input
                 type="number"
-                className="input"
                 value={buttonBorderRadius}
                 onChange={(e) => setButtonBorderRadius(parseInt(e.target.value) || 8)}
               />
@@ -1393,13 +1392,13 @@ export default function EditTooltipPage() {
 
             {/* Colors */}
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="label">Button Background</label>
+              <div className="space-y-2">
+                <Label>Button Background</Label>
                 <ColorPicker value={buttonColor} onChange={setButtonColor} />
               </div>
 
-              <div>
-                <label className="label">Button Text Color</label>
+              <div className="space-y-2">
+                <Label>Button Text Color</Label>
                 <ColorPicker value={buttonTextColor} onChange={setButtonTextColor} />
               </div>
             </div>
