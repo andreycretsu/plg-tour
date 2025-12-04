@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Plus, Search, MoreVertical, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Plus, Search, Trash2, Eye, EyeOff, Copy } from 'lucide-react';
 
 export default function ToursPage() {
   const router = useRouter();
@@ -48,6 +48,22 @@ export default function ToursPage() {
     });
 
     setTours(tours.filter((t) => t.id !== tourId));
+  };
+
+  const duplicateTour = async (tourId: number) => {
+    try {
+      const response = await fetch(`/api/tours/${tourId}/duplicate`, {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Add the new tour to the list
+        setTours([data.tour, ...tours]);
+      }
+    } catch (error) {
+      console.error('Failed to duplicate tour:', error);
+    }
   };
 
   if (loading) {
@@ -147,6 +163,13 @@ export default function ToursPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => duplicateTour(tour.id)}
+                          className="text-purple-600 hover:text-purple-700 p-2"
+                          title="Duplicate"
+                        >
+                          <Copy size={16} />
+                        </button>
                         <Link
                           href={`/tours/${tour.id}`}
                           className="text-primary-600 hover:text-primary-700 text-sm font-medium"
@@ -156,6 +179,7 @@ export default function ToursPage() {
                         <button
                           onClick={() => deleteTour(tour.id)}
                           className="text-red-600 hover:text-red-700 p-2"
+                          title="Delete"
                         >
                           <Trash2 size={16} />
                         </button>

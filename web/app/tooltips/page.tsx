@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
-import { Plus, MessageCircle, Trash2, Edit, ToggleLeft, ToggleRight, MousePointer, Hand } from 'lucide-react';
+import { Plus, MessageCircle, Trash2, Edit, ToggleLeft, ToggleRight, MousePointer, Hand, Copy } from 'lucide-react';
 
 interface Tooltip {
   id: number;
@@ -71,6 +71,22 @@ export default function TooltipsPage() {
       setTooltips(tooltips.filter(t => t.id !== id));
     } catch (error) {
       console.error('Failed to delete tooltip:', error);
+    }
+  };
+
+  const duplicateTooltip = async (id: number) => {
+    try {
+      const response = await fetch(`/api/tooltips/${id}/duplicate`, {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Add the new tooltip to the list
+        setTooltips([data.tooltip, ...tooltips]);
+      }
+    } catch (error) {
+      console.error('Failed to duplicate tooltip:', error);
     }
   };
 
@@ -184,6 +200,13 @@ export default function TooltipsPage() {
                       title={tooltip.is_active ? 'Deactivate' : 'Activate'}
                     >
                       {tooltip.is_active ? <ToggleRight size={20} /> : <ToggleLeft size={20} />}
+                    </button>
+                    <button
+                      onClick={() => duplicateTooltip(tooltip.id)}
+                      className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                      title="Duplicate"
+                    >
+                      <Copy size={18} />
                     </button>
                     <Link
                       href={`/tooltips/${tooltip.id}`}
