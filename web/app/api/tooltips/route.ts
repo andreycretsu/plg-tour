@@ -110,11 +110,16 @@ export async function POST(request: NextRequest) {
       textAlign = 'left',
       cardTextColor = '#1f2937',
       cardBgColor = '#ffffff',
+      // Typography
+      titleSize = 16,
+      bodySize = 14,
+      bodyLineHeight = 1.5,
       // Button styling
       buttonText = 'Got it',
       buttonColor = '#3b82f6',
       buttonTextColor = '#ffffff',
       buttonBorderRadius = 8,
+      buttonSize = 'm',
       // Advanced
       zIndex = 2147483647,
       delayMs = 0,
@@ -141,10 +146,11 @@ export async function POST(request: NextRequest) {
         card_gap, card_offset_y,
         title, body, image_url,
         card_width, card_padding, card_border_radius, card_shadow, text_align, card_text_color, card_bg_color,
-        button_text, button_color, button_text_color, button_border_radius,
+        title_size, body_size, body_line_height,
+        button_text, button_color, button_text_color, button_border_radius, button_size,
         z_index, delay_ms,
         frequency_type, frequency_count, frequency_days, show_once
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39)
       RETURNING *`,
       [
         workspaceId, payload.userId, name, urlPattern, selector,
@@ -153,7 +159,8 @@ export async function POST(request: NextRequest) {
         cardGap, cardPosOffsetY,
         title, tooltipBody, imageUrl,
         cardWidth, cardPadding, cardBorderRadius, cardShadow, textAlign, cardTextColor, cardBgColor,
-        buttonText, buttonColor, buttonTextColor, buttonBorderRadius,
+        titleSize, bodySize, bodyLineHeight,
+        buttonText, buttonColor, buttonTextColor, buttonBorderRadius, buttonSize,
         zIndex, delayMs,
         frequencyType, frequencyCount, frequencyDays, showOnce
       ]
