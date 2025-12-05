@@ -4,7 +4,7 @@ import { RippleGrid } from "@/components/ui/ripple-grid"
 
 export default function SignupPage() {
   return (
-    <div className="grid min-h-svh lg:grid-cols-2">
+    <div className="grid min-h-svh lg:grid-cols-2 bg-muted">
       <div className="flex flex-col gap-4 p-6 md:p-10 bg-white m-6 rounded-[32px] shadow-md">
         <div className="flex justify-center gap-2 md:justify-start">
           <a href="/" className="flex items-center gap-2 font-medium">
