@@ -2045,6 +2045,7 @@ export default function EditTooltipPage() {
                               const preview = getPreviewContent();
                               
                               // Calculate beacon position first (matching the beacon positioning above)
+                              // beaconLeft and beaconTop are the LEFT and TOP edges of the beacon
                               const beaconLeft = iconEdge === 'left' 
                                 ? screenshotElementRect.x - iconSize - iconOffset
                                 : iconEdge === 'right'
@@ -2057,29 +2058,33 @@ export default function EditTooltipPage() {
                                 ? screenshotElementRect.y + screenshotElementRect.height + iconOffset
                                 : screenshotElementRect.y + screenshotElementRect.height / 2 - iconSize / 2 + iconOffsetY;
                               
+                              // Calculate beacon center
+                              const beaconCenterX = beaconLeft + iconSize / 2;
+                              const beaconCenterY = beaconTop + iconSize / 2;
+                              
                               // Calculate card position relative to beacon
                               let cardLeft: number;
                               let cardTop: number;
                               
                               switch (iconEdge) {
                                 case 'right':
-                                  // Card to the right of beacon
+                                  // Card to the right of beacon, offset vertically
                                   cardLeft = beaconLeft + iconSize + cardGap;
-                                  cardTop = beaconTop + cardPosOffsetY;
+                                  cardTop = beaconCenterY - 50 + cardPosOffsetY; // Center card vertically on beacon, then offset
                                   break;
                                 case 'left':
-                                  // Card to the left of beacon
+                                  // Card to the left of beacon, offset vertically
                                   cardLeft = beaconLeft - cardGap - cardWidth;
-                                  cardTop = beaconTop + cardPosOffsetY;
+                                  cardTop = beaconCenterY - 50 + cardPosOffsetY; // Center card vertically on beacon, then offset
                                   break;
                                 case 'bottom':
-                                  // Card below beacon, centered horizontally
-                                  cardLeft = beaconLeft - cardWidth / 2 + iconSize / 2 + cardPosOffsetY;
+                                  // Card below beacon, centered horizontally with horizontal offset
+                                  cardLeft = beaconCenterX - cardWidth / 2 + cardPosOffsetY;
                                   cardTop = beaconTop + iconSize + cardGap;
                                   break;
                                 case 'top':
-                                  // Card above beacon, centered horizontally
-                                  cardLeft = beaconLeft - cardWidth / 2 + iconSize / 2 + cardPosOffsetY;
+                                  // Card above beacon, centered horizontally with horizontal offset
+                                  cardLeft = beaconCenterX - cardWidth / 2 + cardPosOffsetY;
                                   cardTop = beaconTop - cardGap;
                                   break;
                                 default:
@@ -2197,40 +2202,48 @@ export default function EditTooltipPage() {
                     
                     switch (iconEdge) {
                       case 'top':
-                        // Beacon center is at: element center horizontally, above element vertically
+                        // Beacon left/top edges
                         beaconLeft = halfElement + iconOffsetY - halfSize;
                         beaconTop = -halfSize - iconOffset;
-                        // Card below beacon
+                        // Beacon center
+                        const beaconCenterXTop = beaconLeft + halfSize;
+                        // Card below beacon, centered horizontally with horizontal offset
                         cardStyle.top = beaconTop + iconSize + cardGap;
-                        cardStyle.left = beaconLeft + halfSize - cardWidth / 2 + cardPosOffsetY;
+                        cardStyle.left = beaconCenterXTop - cardWidth / 2 + cardPosOffsetY;
                         cardStyle.transform = 'none';
                         break;
                       case 'bottom':
-                        // Beacon center is at: element center horizontally, below element vertically
+                        // Beacon left/top edges
                         beaconLeft = halfElement + iconOffsetY - halfSize;
                         beaconTop = elementSize + halfSize + iconOffset;
-                        // Card above beacon
+                        // Beacon center
+                        const beaconCenterXBottom = beaconLeft + halfSize;
+                        // Card above beacon, centered horizontally with horizontal offset
                         cardStyle.bottom = (elementSize - beaconTop) + iconSize + cardGap;
-                        cardStyle.left = beaconLeft + halfSize - cardWidth / 2 + cardPosOffsetY;
+                        cardStyle.left = beaconCenterXBottom - cardWidth / 2 + cardPosOffsetY;
                         cardStyle.transform = 'none';
                         break;
                       case 'left':
-                        // Beacon center is at: left of element, element center vertically
+                        // Beacon left/top edges
                         beaconLeft = -halfSize - iconOffset;
                         beaconTop = halfElement + iconOffsetY - halfSize;
-                        // Card to the right of beacon
+                        // Beacon center
+                        const beaconCenterYLeft = beaconTop + halfSize;
+                        // Card to the right of beacon, offset vertically
                         cardStyle.left = beaconLeft + iconSize + cardGap;
-                        cardStyle.top = beaconTop + halfSize - 100 + cardPosOffsetY;
+                        cardStyle.top = beaconCenterYLeft - 50 + cardPosOffsetY; // Center card vertically on beacon, then offset
                         cardStyle.transform = 'none';
                         break;
                       case 'right':
                       default:
-                        // Beacon center is at: right of element, element center vertically
+                        // Beacon left/top edges
                         beaconLeft = elementSize + halfSize + iconOffset;
                         beaconTop = halfElement + iconOffsetY - halfSize;
-                        // Card to the right of beacon
-                        cardStyle.left = beaconLeft + halfSize + cardGap;
-                        cardStyle.top = beaconTop + halfSize - 100 + cardPosOffsetY;
+                        // Beacon center
+                        const beaconCenterYRight = beaconTop + halfSize;
+                        // Card to the right of beacon, offset vertically
+                        cardStyle.left = beaconLeft + iconSize + cardGap;
+                        cardStyle.top = beaconCenterYRight - 50 + cardPosOffsetY; // Center card vertically on beacon, then offset
                         cardStyle.transform = 'none';
                         break;
                     }
