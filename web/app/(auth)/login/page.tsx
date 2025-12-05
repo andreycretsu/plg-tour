@@ -24,7 +24,7 @@ export default function LoginPage() {
         <RippleGrid
           enableRainbow={false}
           gridColor="#8b5cf6"
-          rippleIntensity={0.14}
+          rippleIntensity={0.02}
           gridSize={21}
           gridThickness={50}
           fadeDistance={1.5}
