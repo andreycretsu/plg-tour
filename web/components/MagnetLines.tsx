@@ -33,36 +33,53 @@ export default function MagnetLines({
     if (!container) return;
 
     const items = container.querySelectorAll('span');
+    let rafId: number | null = null;
+    let lastPointer = { x: 0, y: 0 };
+    let needsUpdate = false;
 
-    const onPointerMove = (pointer: { x: number; y: number }) => {
+    const updateLines = () => {
+      if (!needsUpdate) return;
+      
       items.forEach(item => {
         const rect = item.getBoundingClientRect();
         const centerX = rect.x + rect.width / 2;
         const centerY = rect.y + rect.height / 2;
 
-        const b = pointer.x - centerX;
-        const a = pointer.y - centerY;
+        const b = lastPointer.x - centerX;
+        const a = lastPointer.y - centerY;
         const c = Math.sqrt(a * a + b * b) || 1;
-        const r = ((Math.acos(b / c) * 180) / Math.PI) * (pointer.y > centerY ? 1 : -1);
+        const r = ((Math.acos(b / c) * 180) / Math.PI) * (lastPointer.y > centerY ? 1 : -1);
 
         (item as HTMLElement).style.setProperty('--rotate', `${r}deg`);
       });
+      
+      needsUpdate = false;
+      rafId = null;
     };
 
     const handlePointerMove = (e: PointerEvent) => {
-      onPointerMove({ x: e.clientX, y: e.clientY });
+      lastPointer = { x: e.clientX, y: e.clientY };
+      
+      if (!needsUpdate) {
+        needsUpdate = true;
+        rafId = requestAnimationFrame(updateLines);
+      }
     };
 
-    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointermove', handlePointerMove, { passive: true });
 
     if (items.length) {
       const middleIndex = Math.floor(items.length / 2);
       const rect = items[middleIndex].getBoundingClientRect();
-      onPointerMove({ x: rect.x, y: rect.y });
+      lastPointer = { x: rect.x, y: rect.y };
+      updateLines();
     }
 
     return () => {
       window.removeEventListener('pointermove', handlePointerMove);
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
     };
   }, []);
 

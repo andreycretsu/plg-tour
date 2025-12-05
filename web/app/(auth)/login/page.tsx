@@ -7,7 +7,7 @@ export default function LoginPage() {
   return (
     <div className="grid min-h-svh lg:grid-cols-2 relative overflow-hidden" style={{ backgroundColor: '#F5F5F5' }}>
       {/* Magnet Lines effect - covers entire page background */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
         <MagnetLines 
           rows={80}
           columns={100}
@@ -21,7 +21,7 @@ export default function LoginPage() {
       </div>
       
       {/* Left section - white card */}
-      <div className="relative flex flex-col gap-4 p-6 md:p-10 bg-white m-6 rounded-[32px] shadow-md z-10">
+      <div className="relative flex flex-col gap-4 p-6 md:p-10 bg-white m-6 rounded-[32px] shadow-md z-20">
         <div className="flex justify-center gap-2 md:justify-start">
           <a href="/" className="flex items-center gap-2 font-medium">
             <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
@@ -38,7 +38,7 @@ export default function LoginPage() {
       </div>
       
       {/* Right section - tilted tour card */}
-      <div className="relative hidden lg:flex items-center justify-center">
+      <div className="relative hidden lg:flex items-center justify-center z-20">
         <TiltedCard className="w-full max-w-[400px]">
           <div 
             className="bg-white rounded-xl shadow-lg p-6"
