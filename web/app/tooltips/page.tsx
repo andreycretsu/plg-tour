@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, MessageCircle, Trash2, Edit, ToggleLeft, ToggleRight, MousePointer, Hand, Copy, Sparkles, Eye } from 'lucide-react';
-import { Banner, PromoBanner } from '@/components/ui/banner';
+import { PromoBanner } from '@/components/ui/banner';
 import { Button } from '@/components/ui/button';
 import {
   Empty,
@@ -134,22 +134,6 @@ export default function TooltipsPage() {
             </Link>
           </Button>
         </div>
-
-        {/* Info Banner */}
-        <Banner
-          variant="info"
-          className="mb-6 rounded-xl"
-          icon={<MessageCircle className="h-5 w-5" />}
-          dismissible={false}
-        >
-          <div>
-            <strong>What are Tooltips?</strong>{" "}
-            <span className="text-blue-700">
-              Tooltips are single-step hints that appear next to elements with a pulsating beacon. 
-              They can be triggered on hover or click, perfect for contextual help and feature discovery.
-            </span>
-          </div>
-        </Banner>
 
         {/* Tooltips List */}
         {loading ? (
