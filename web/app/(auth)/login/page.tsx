@@ -1,5 +1,6 @@
 import { GalleryVerticalEnd } from "lucide-react"
 import { LoginForm } from "@/components/login-form"
+import { RippleGrid } from "@/components/ui/ripple-grid"
 
 export default function LoginPage() {
   return (
@@ -20,10 +21,24 @@ export default function LoginPage() {
         </div>
       </div>
       <div className="relative hidden bg-muted lg:block">
+        <RippleGrid
+          gridColor="#8b5cf6"
+          rippleIntensity={0.14}
+          gridSize={21}
+          gridThickness={50}
+          fadeDistance={1.5}
+          vignetteStrength={2}
+          glowIntensity={0}
+          opacity={0.7}
+          gridRotation={0}
+          mouseInteractionRadius={1.2}
+          mouseInteraction={true}
+          enableRainbow={false}
+        />
         <img
           src="/placeholder.svg"
           alt="Image"
-          className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+          className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale opacity-0"
         />
       </div>
     </div>
