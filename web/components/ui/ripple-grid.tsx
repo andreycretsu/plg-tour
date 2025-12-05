@@ -60,6 +60,7 @@ const RippleGrid = ({
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
     gl.canvas.style.width = '100%'
     gl.canvas.style.height = '100%'
+    gl.canvas.style.pointerEvents = 'auto'
     containerRef.current.appendChild(gl.canvas)
 
     const vert = `
@@ -199,8 +200,10 @@ const RippleGrid = ({
     }
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (!mouseInteraction || !containerRef.current) return
-      const rect = containerRef.current.getBoundingClientRect()
+      if (!mouseInteraction) return
+      const target = (e.target as HTMLElement) === gl.canvas ? gl.canvas : containerRef.current
+      if (!target) return
+      const rect = target.getBoundingClientRect()
       const x = (e.clientX - rect.left) / rect.width
       const y = 1.0 - (e.clientY - rect.top) / rect.height // Flip Y coordinate
       targetMouseRef.current = { x, y }
@@ -217,10 +220,16 @@ const RippleGrid = ({
     }
 
     window.addEventListener('resize', resize)
-    if (mouseInteraction && containerRef.current) {
-      containerRef.current.addEventListener('mousemove', handleMouseMove)
-      containerRef.current.addEventListener('mouseenter', handleMouseEnter)
-      containerRef.current.addEventListener('mouseleave', handleMouseLeave)
+    if (mouseInteraction) {
+      // Attach to both container and canvas to ensure events are captured
+      if (containerRef.current) {
+        containerRef.current.addEventListener('mousemove', handleMouseMove)
+        containerRef.current.addEventListener('mouseenter', handleMouseEnter)
+        containerRef.current.addEventListener('mouseleave', handleMouseLeave)
+      }
+      gl.canvas.addEventListener('mousemove', handleMouseMove)
+      gl.canvas.addEventListener('mouseenter', handleMouseEnter)
+      gl.canvas.addEventListener('mouseleave', handleMouseLeave)
     }
     resize()
 
@@ -245,10 +254,15 @@ const RippleGrid = ({
 
     return () => {
       window.removeEventListener('resize', resize)
-      if (mouseInteraction && containerRef.current) {
-        containerRef.current.removeEventListener('mousemove', handleMouseMove)
-        containerRef.current.removeEventListener('mouseenter', handleMouseEnter)
-        containerRef.current.removeEventListener('mouseleave', handleMouseLeave)
+      if (mouseInteraction) {
+        if (containerRef.current) {
+          containerRef.current.removeEventListener('mousemove', handleMouseMove)
+          containerRef.current.removeEventListener('mouseenter', handleMouseEnter)
+          containerRef.current.removeEventListener('mouseleave', handleMouseLeave)
+        }
+        gl.canvas.removeEventListener('mousemove', handleMouseMove)
+        gl.canvas.removeEventListener('mouseenter', handleMouseEnter)
+        gl.canvas.removeEventListener('mouseleave', handleMouseLeave)
       }
       renderer.gl.getExtension('WEBGL_lose_context')?.loseContext()
       if (containerRef.current && gl.canvas.parentNode === containerRef.current) {
