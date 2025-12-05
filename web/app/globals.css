@@ -173,7 +173,7 @@
   }
   
   .card {
-    @apply bg-white rounded-lg border border-gray-200 shadow-sm;
+    @apply bg-white;
   }
   
   .label {

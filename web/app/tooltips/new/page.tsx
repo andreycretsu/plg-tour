@@ -459,8 +459,8 @@ export default function NewTooltipPage() {
           {/* Step 1: Targeting & Trigger */}
           {activeStep === 1 && (
             <StepContent>
-              <div className="space-y-6">
-                <div className="card p-5">
+              <div className="space-y-0">
+                <div className="p-5">
                   <h2 className="text-base font-semibold text-gray-900 mb-4">Targeting</h2>
                   
                   <FieldGroup>
@@ -518,7 +518,7 @@ export default function NewTooltipPage() {
                   </FieldGroup>
                 </div>
 
-                <div className="card p-5">
+                <div className="p-5 border-t border-gray-200">
                   <h2 className="text-base font-semibold text-gray-900 mb-4">Trigger Settings</h2>
                   
                   <FieldGroup>
@@ -574,7 +574,7 @@ export default function NewTooltipPage() {
           {/* Step 2: Content */}
           {activeStep === 2 && (
             <StepContent>
-              <div className="card p-5">
+              <div className="p-5">
                 <h2 className="text-base font-semibold text-gray-900 mb-4">Tooltip Content</h2>
                 
                 <FieldGroup>
@@ -631,7 +631,7 @@ export default function NewTooltipPage() {
           {/* Step 3: Beacon */}
           {activeStep === 3 && (
             <StepContent>
-              <div className="card p-5">
+              <div className="p-5">
                 <h2 className="text-base font-semibold text-gray-900 mb-4">Beacon Settings</h2>
             
             <div className="grid grid-cols-2 gap-4 mb-4">
@@ -797,9 +797,9 @@ export default function NewTooltipPage() {
           {/* Step 4: Card */}
           {activeStep === 4 && (
             <StepContent>
-              <div className="space-y-6">
+              <div className="space-y-0">
                 {/* Card Style */}
-                <div className="card p-5">
+                <div className="p-5">
                   <h2 className="text-base font-semibold text-gray-900 mb-4">Card Styling</h2>
                   
                   <FieldGroup>
@@ -925,7 +925,7 @@ export default function NewTooltipPage() {
                 </div>
 
                 {/* Typography */}
-                <div className="card p-5">
+                <div className="p-5 border-t border-gray-200">
                   <h2 className="text-base font-semibold text-gray-900 mb-4">Typography</h2>
                   
                   <FieldGroup>
@@ -967,7 +967,7 @@ export default function NewTooltipPage() {
                 </div>
 
                 {/* Button Styling */}
-                <div className="card p-5">
+                <div className="p-5 border-t border-gray-200">
                   <h2 className="text-base font-semibold text-gray-900 mb-4">Button Styling</h2>
                   
                   <FieldGroup>
@@ -1080,7 +1080,7 @@ export default function NewTooltipPage() {
           {/* Step 5: Display Frequency */}
           {activeStep === 5 && (
             <StepContent>
-              <div className="card p-5">
+              <div className="p-5">
                 <h2 className="text-base font-semibold text-gray-900 mb-4">Display Frequency</h2>
             <p className="text-sm text-gray-500 mb-4">Control how often users see this tooltip</p>
             

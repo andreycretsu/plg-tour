@@ -647,7 +647,7 @@ export default function EditTourPage() {
           {/* Step 1: Tour Details */}
           {activeStep === 1 && (
             <StepContent>
-              <div className="card p-5">
+              <div className="p-5">
                 <h2 className="text-base font-semibold text-gray-900 mb-4">Tour Details</h2>
                 
                 <FieldGroup>
@@ -817,7 +817,7 @@ export default function EditTourPage() {
           {/* Step 2: Steps Management */}
           {activeStep === 2 && (
             <StepContent>
-              <div className="card p-5">
+              <div className="p-5">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-base font-semibold text-gray-900">
                     Tour Steps ({steps.length})
@@ -992,7 +992,7 @@ export default function EditTourPage() {
           {/* Step 3: Card Style */}
           {activeStep === 3 && (
             <StepContent>
-              <div className="card p-5">
+              <div className="p-5">
                 <h2 className="text-base font-semibold text-gray-900 mb-4">Card Style</h2>
                 
                 <FieldGroup>
@@ -1054,7 +1054,7 @@ export default function EditTourPage() {
           {/* Step 4: Typography */}
           {activeStep === 4 && (
             <StepContent>
-              <div className="card p-5">
+              <div className="p-5">
                 <h2 className="text-base font-semibold text-gray-900 mb-4">Typography</h2>
                 <p className="text-sm text-gray-500 mb-4">Typography settings are applied at the step level. Configure individual step titles and content in Step 2.</p>
               </div>
@@ -1064,7 +1064,7 @@ export default function EditTourPage() {
           {/* Step 5: Button */}
           {activeStep === 5 && (
             <StepContent>
-              <div className="card p-5">
+              <div className="p-5">
                 <h2 className="text-base font-semibold text-gray-900 mb-4">Button Style</h2>
                 
                 <FieldGroup>
@@ -1100,7 +1100,7 @@ export default function EditTourPage() {
           {/* Step 6: Frequency */}
           {activeStep === 6 && (
             <StepContent>
-              <div className="card p-5">
+              <div className="p-5">
                 <h2 className="text-base font-semibold text-gray-900 mb-4">Display Frequency</h2>
                 
                 <div className="grid grid-cols-2 gap-3 mb-4">
