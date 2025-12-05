@@ -402,8 +402,10 @@ export default function NewTooltipPage() {
   };
 
   return (
-    <FullScreenModal
-      title="New Tooltip"
+    <>
+      <AlertDialogComponent />
+      <FullScreenModal
+        title="New Tooltip"
       headerExtra={
         <StatusBadge variant={extensionInstalled ? 'success' : 'fail'}>
           {extensionInstalled ? 'Extension ready' : 'Extension not connected'}
