@@ -354,7 +354,7 @@ export default function NewTourPage() {
         </div>
 
         {/* Middle Column - Form Content */}
-        <div className="flex-1 max-w-xl overflow-y-auto p-6 pb-20">
+        <div className="flex-1 max-w-xl overflow-y-auto pb-20">
           {/* Step 1: Tour Details */}
           {activeStep === 1 && (
             <StepContent>
@@ -782,7 +782,7 @@ export default function NewTourPage() {
         </div>
 
         {/* Right Column - Preview */}
-        <div className="flex-1 min-w-[400px]">
+        <div className="flex-1 min-w-[400px] border-l border-gray-200">
           <div className="sticky top-0 h-screen py-6 flex flex-col">
             {/* Capture Preview Button */}
             <div className="flex items-center justify-between mb-3 px-2">
