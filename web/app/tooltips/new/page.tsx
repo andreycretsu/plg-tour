@@ -1374,6 +1374,8 @@ export default function NewTooltipPage() {
                                 padding: cardPadding,
                                 boxShadow: getShadowValue(cardShadow),
                                 textAlign: textAlign,
+                                zIndex: 10,
+                                isolation: 'isolate' as const,
                               }}
                             >
                               {imageUrl && (
@@ -1529,6 +1531,8 @@ export default function NewTooltipPage() {
                         padding: cardPadding,
                         boxShadow: getShadowValue(cardShadow),
                         textAlign: textAlign,
+                        zIndex: 10,
+                        isolation: 'isolate' as const,
                       };
 
                       // Calculate beacon position to match getBeaconPreviewStyle()

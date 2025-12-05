@@ -2118,6 +2118,14 @@ export default function EditTooltipPage() {
                                   cardTop = screenshotElementRect.y + screenshotElementRect.height / 2;
                               }
                               
+                              // Convert hex to rgba with opacity
+                              const hexToRgba = (hex: string, opacity: number) => {
+                                const r = parseInt(hex.slice(1, 3), 16);
+                                const g = parseInt(hex.slice(3, 5), 16);
+                                const b = parseInt(hex.slice(5, 7), 16);
+                                return `rgba(${r}, ${g}, ${b}, ${opacity / 100})`;
+                              };
+                              
                               return (
                                 <div
                                   className="absolute pointer-events-none"
@@ -2126,12 +2134,16 @@ export default function EditTooltipPage() {
                                     top: iconEdge === 'top' ? `${cardTop}px` : `${cardTop}px`,
                                     transform: iconEdge === 'top' ? `translateY(-100%)` : undefined,
                                     width: cardWidth,
-                                    backgroundColor: cardBgColor,
+                                    backgroundColor: hexToRgba(cardBgColor, cardBgOpacity),
+                                    backdropFilter: cardBlurIntensity > 0 ? `blur(${cardBlurIntensity}px)` : 'none',
+                                    WebkitBackdropFilter: cardBlurIntensity > 0 ? `blur(${cardBlurIntensity}px)` : 'none',
                                     color: cardTextColor,
                                     borderRadius: cardBorderRadius,
                                     padding: cardPadding,
                                     boxShadow: getShadowValue(cardShadow),
                                     textAlign: textAlign,
+                                    zIndex: 10,
+                                    isolation: 'isolate' as const,
                                   }}
                                 >
                                   {imageUrl && (
@@ -2269,16 +2281,28 @@ export default function EditTooltipPage() {
                     const elementSize = 80;
                     const halfElement = elementSize / 2;
                     
+                    // Convert hex to rgba with opacity
+                    const hexToRgba = (hex: string, opacity: number) => {
+                      const r = parseInt(hex.slice(1, 3), 16);
+                      const g = parseInt(hex.slice(3, 5), 16);
+                      const b = parseInt(hex.slice(5, 7), 16);
+                      return `rgba(${r}, ${g}, ${b}, ${opacity / 100})`;
+                    };
+                    
                     // Calculate card position based on beacon position + cardGap
                     let cardStyle: React.CSSProperties = {
                       position: 'absolute',
                       width: cardWidth,
-                      backgroundColor: cardBgColor,
+                      backgroundColor: hexToRgba(cardBgColor, cardBgOpacity),
+                      backdropFilter: cardBlurIntensity > 0 ? `blur(${cardBlurIntensity}px)` : 'none',
+                      WebkitBackdropFilter: cardBlurIntensity > 0 ? `blur(${cardBlurIntensity}px)` : 'none',
                       color: cardTextColor,
                       borderRadius: cardBorderRadius,
                       padding: cardPadding,
                       boxShadow: getShadowValue(cardShadow),
                       textAlign: textAlign,
+                      zIndex: 10,
+                      isolation: 'isolate' as const,
                     };
 
                     // Calculate beacon position to match getBeaconPreviewStyle()
