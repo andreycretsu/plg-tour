@@ -60,7 +60,11 @@ const RippleGrid = ({
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
     gl.canvas.style.width = '100%'
     gl.canvas.style.height = '100%'
+    gl.canvas.style.position = 'absolute'
+    gl.canvas.style.top = '0'
+    gl.canvas.style.left = '0'
     gl.canvas.style.pointerEvents = 'auto'
+    gl.canvas.style.zIndex = '1'
     containerRef.current.appendChild(gl.canvas)
 
     const vert = `
@@ -201,12 +205,15 @@ const RippleGrid = ({
 
     const handleMouseMove = (e: MouseEvent) => {
       if (!mouseInteraction) return
-      const target = (e.target as HTMLElement) === gl.canvas ? gl.canvas : containerRef.current
-      if (!target) return
-      const rect = target.getBoundingClientRect()
+      const rect = containerRef.current?.getBoundingClientRect()
+      if (!rect) return
       const x = (e.clientX - rect.left) / rect.width
       const y = 1.0 - (e.clientY - rect.top) / rect.height // Flip Y coordinate
       targetMouseRef.current = { x, y }
+      // Ensure mouse influence is active when moving
+      if (mouseInfluenceRef.current === 0) {
+        mouseInfluenceRef.current = 1.0
+      }
     }
 
     const handleMouseEnter = () => {
@@ -221,13 +228,14 @@ const RippleGrid = ({
 
     window.addEventListener('resize', resize)
     if (mouseInteraction) {
-      // Attach to both container and canvas to ensure events are captured
+      // Attach events to the container (which contains the canvas)
       if (containerRef.current) {
-        containerRef.current.addEventListener('mousemove', handleMouseMove)
+        containerRef.current.addEventListener('mousemove', handleMouseMove, { passive: true })
         containerRef.current.addEventListener('mouseenter', handleMouseEnter)
         containerRef.current.addEventListener('mouseleave', handleMouseLeave)
       }
-      gl.canvas.addEventListener('mousemove', handleMouseMove)
+      // Also attach to canvas as backup
+      gl.canvas.addEventListener('mousemove', handleMouseMove, { passive: true })
       gl.canvas.addEventListener('mouseenter', handleMouseEnter)
       gl.canvas.addEventListener('mouseleave', handleMouseLeave)
     }
@@ -308,7 +316,7 @@ const RippleGrid = ({
     mouseInteractionRadius,
   ])
 
-  return <div ref={containerRef} className={cn('absolute inset-0 overflow-hidden', className)} />
+  return <div ref={containerRef} className={cn('absolute inset-0 overflow-hidden', className)} style={{ pointerEvents: 'auto' }} />
 }
 
 export { RippleGrid }
