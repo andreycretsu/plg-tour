@@ -1,25 +1,21 @@
 import { GalleryVerticalEnd } from "lucide-react"
 import { LoginForm } from "@/components/login-form"
-import { RippleGrid } from "@/components/ui/ripple-grid"
+import { MagnetLines } from "@/components/ui/magnet-lines"
 
 export default function LoginPage() {
   return (
-    <div className="grid min-h-svh lg:grid-cols-2 relative overflow-hidden">
-      {/* Chalkboard background with texture - covers entire page */}
-      <div 
-        className="absolute inset-0"
-        style={{
-          backgroundColor: '#1a3d0f',
-          backgroundImage: `
-            radial-gradient(circle at 2px 2px, rgba(255,255,255,0.08) 1px, transparent 0),
-            radial-gradient(circle at 8px 8px, rgba(255,255,255,0.05) 1px, transparent 0),
-            radial-gradient(circle at 15px 15px, rgba(255,255,255,0.03) 1px, transparent 0)
-          `,
-          backgroundSize: '20px 20px, 25px 25px, 30px 30px',
-        }}
-      />
+    <div className="grid min-h-svh lg:grid-cols-2 relative overflow-hidden" style={{ backgroundColor: '#F5F5F5' }}>
+      {/* Magnet Lines effect - covers entire page background */}
+      <div className="absolute inset-0">
+        <MagnetLines 
+          className="w-full h-full"
+          lineColor="#d0d0d0"
+          lineWidth={1}
+          numLines={50}
+        />
+      </div>
       
-      {/* Left section - solid dark green with texture (1/3) */}
+      {/* Left section - white card */}
       <div className="relative flex flex-col gap-4 p-6 md:p-10 bg-white m-6 rounded-[32px] shadow-md z-10">
         <div className="flex justify-center gap-2 md:justify-start">
           <a href="/" className="flex items-center gap-2 font-medium">
@@ -36,23 +32,8 @@ export default function LoginPage() {
         </div>
       </div>
       
-      {/* Right section - animated ripple grid (2/3) */}
-      <div className="relative hidden lg:block">
-        <RippleGrid
-          enableRainbow={false}
-          gridColor="#366328"
-          rippleIntensity={0.02}
-          gridSize={40}
-          gridThickness={1}
-          fadeDistance={1.5}
-          vignetteStrength={2}
-          glowIntensity={0}
-          opacity={0.3}
-          gridRotation={0}
-          mouseInteraction={true}
-          mouseInteractionRadius={1.2}
-        />
-      </div>
+      {/* Right section - empty, magnet lines show through */}
+      <div className="relative hidden lg:block" />
     </div>
   )
 }
