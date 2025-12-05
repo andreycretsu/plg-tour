@@ -50,12 +50,20 @@ export function RippleGrid({
 
     const resizeCanvas = () => {
       const rect = container.getBoundingClientRect()
-      canvas.width = rect.width * window.devicePixelRatio
-      canvas.height = rect.height * window.devicePixelRatio
-      ctx.scale(window.devicePixelRatio, window.devicePixelRatio)
+      const dpr = window.devicePixelRatio || 1
+      canvas.width = rect.width * dpr
+      canvas.height = rect.height * dpr
+      canvas.style.width = `${rect.width}px`
+      canvas.style.height = `${rect.height}px`
+      ctx.scale(dpr, dpr)
     }
 
     resizeCanvas()
+    let resizeObserver: ResizeObserver | null = null
+    if (typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(resizeCanvas)
+      resizeObserver.observe(container)
+    }
     window.addEventListener("resize", resizeCanvas)
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -77,10 +85,15 @@ export function RippleGrid({
     }
 
     const draw = () => {
-      const width = canvas.width / window.devicePixelRatio
-      const height = canvas.height / window.devicePixelRatio
+      const dpr = window.devicePixelRatio || 1
+      const width = canvas.width / dpr
+      const height = canvas.height / dpr
 
+      // Clear with background color
+      ctx.fillStyle = "transparent"
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
       ctx.clearRect(0, 0, canvas.width, canvas.height)
+      
       ctx.save()
       
       // Apply rotation
@@ -92,11 +105,12 @@ export function RippleGrid({
 
       // Draw grid
       const spacing = gridSize
-      const lineWidth = (gridThickness / 100) * 2
+      const lineWidth = Math.max(0.5, (gridThickness / 100) * 2)
       
       ctx.strokeStyle = gridColor
       ctx.lineWidth = lineWidth
       ctx.globalAlpha = opacity
+      ctx.lineCap = "round"
 
       const offsetX = (width % spacing) / 2
       const offsetY = (height % spacing) / 2
@@ -129,7 +143,7 @@ export function RippleGrid({
           const age = (currentTime - ripple.time) / 1000
           const progress = age / (fadeDistance * 2)
           
-          if (progress < 1) {
+          if (progress < 1 && ripple.time > 0) {
             const radius = progress * mouseInteractionRadius * 200
             const alpha = rippleIntensity * (1 - progress)
             
@@ -157,11 +171,12 @@ export function RippleGrid({
               gradient.addColorStop(1, "transparent")
             }
 
+            ctx.globalAlpha = 1
             ctx.fillStyle = gradient
             ctx.fillRect(0, 0, width, height)
+            ctx.globalAlpha = opacity
           }
         })
-
       }
 
       // Vignette
@@ -200,7 +215,10 @@ export function RippleGrid({
 
     return () => {
       window.removeEventListener("resize", resizeCanvas)
-      if (mouseInteraction) {
+      if (resizeObserver && container) {
+        resizeObserver.unobserve(container)
+      }
+      if (mouseInteraction && container) {
         container.removeEventListener("mousemove", handleMouseMove)
       }
       if (animationFrameRef.current) {
