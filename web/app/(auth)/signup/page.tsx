@@ -9,13 +9,13 @@ export default function SignupPage() {
       {/* Magnet Lines effect - covers entire page background */}
       <div className="absolute inset-0 flex items-center justify-center">
         <MagnetLines 
-          rows={50}
-          columns={50}
+          rows={80}
+          columns={100}
           containerSize="100%"
           lineColor="#d0d0d0"
           lineWidth="1px"
           lineHeight="8px"
-          baseAngle={0}
+          baseAngle={-10}
           style={{ width: '100%', height: '100%' }}
         />
       </div>
@@ -64,9 +64,6 @@ export default function SignupPage() {
                 <span className="text-xs text-gray-500">Step 1 of 3</span>
               </div>
             </div>
-            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors">
-              Get Started
-            </button>
           </div>
         </TiltedCard>
       </div>
