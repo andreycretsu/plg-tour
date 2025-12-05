@@ -28,7 +28,10 @@ export function MagnetLines({
     if (!ctx) return;
 
     const resizeCanvas = () => {
-      const rect = canvas.getBoundingClientRect();
+      const container = canvas.parentElement;
+      if (!container) return;
+      
+      const rect = container.getBoundingClientRect();
       const dpr = window.devicePixelRatio || 1;
       canvas.width = rect.width * dpr;
       canvas.height = rect.height * dpr;
@@ -38,7 +41,10 @@ export function MagnetLines({
     };
 
     const initLines = () => {
-      const rect = canvas.getBoundingClientRect();
+      const container = canvas.parentElement;
+      if (!container) return;
+      
+      const rect = container.getBoundingClientRect();
       linesRef.current = Array.from({ length: numLines }, () => ({
         x: Math.random() * rect.width,
         y: Math.random() * rect.height,
@@ -48,7 +54,10 @@ export function MagnetLines({
     };
 
     const handleMouseMove = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
+      const container = canvas.parentElement;
+      if (!container) return;
+      
+      const rect = container.getBoundingClientRect();
       mouseRef.current = {
         x: e.clientX - rect.left,
         y: e.clientY - rect.top,
@@ -56,7 +65,10 @@ export function MagnetLines({
     };
 
     const animate = () => {
-      const rect = canvas.getBoundingClientRect();
+      const container = canvas.parentElement;
+      if (!container) return;
+      
+      const rect = container.getBoundingClientRect();
       ctx.clearRect(0, 0, rect.width, rect.height);
 
       ctx.strokeStyle = lineColor;

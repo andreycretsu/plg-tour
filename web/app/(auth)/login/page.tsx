@@ -10,7 +10,7 @@ export default function LoginPage() {
       <div className="absolute inset-0">
         <MagnetLines 
           className="w-full h-full"
-          lineColor="#999999"
+          lineColor="#d0d0d0"
           lineWidth={2}
           numLines={60}
         />
