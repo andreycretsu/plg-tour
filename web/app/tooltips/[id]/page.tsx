@@ -2189,7 +2189,7 @@ export default function EditTooltipPage() {
                   <div className="relative p-6">
                     {/* Mock Element - Figma Design */}
                     <div 
-                      className="bg-white overflow-hidden relative rounded-[10px]"
+                      className="bg-white overflow-hidden relative rounded-[10px] shadow-sm"
                       style={{ width: 80, height: 80 }}
                     >
                       {/* Central black dot */}
