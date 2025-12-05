@@ -1239,6 +1239,27 @@ export default function EditTourPage() {
               </Button>
             </div>
 
+            {/* Step Indicators */}
+            {steps.length > 0 && (
+              <div className="flex items-center justify-center gap-2 mb-3 px-2">
+                {steps.map((step, index) => {
+                  const isActive = activePreviewStep === step.id;
+                  return (
+                    <button
+                      key={step.id}
+                      onClick={() => setActivePreviewStep(step.id)}
+                      className={`transition-all ${
+                        isActive 
+                          ? 'w-2.5 h-2.5 bg-gray-900' 
+                          : 'w-2 h-2 bg-gray-300 hover:bg-gray-400'
+                      } rounded-full`}
+                      aria-label={`Go to step ${index + 1}`}
+                    />
+                  );
+                })}
+              </div>
+            )}
+
             {/* Preview Area - Same as new page */}
             <div 
               className="rounded-xl flex-1 flex items-center justify-center h-full overflow-hidden relative"
