@@ -392,7 +392,7 @@ export default function EditTourPage() {
 
   const startPicker = (stepId: string) => {
     if (!extensionInstalled) {
-      alert('Please install the TourLayer Chrome extension first!');
+      alert('Please install the Walko Chrome extension first!');
       return;
     }
 
@@ -417,7 +417,7 @@ export default function EditTourPage() {
 
   const capturePreviewScreenshot = () => {
     if (!extensionInstalled) {
-      alert('Please install the TourLayer Chrome extension first!');
+      alert('Please install the Walko Chrome extension first!');
       return;
     }
 

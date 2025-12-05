@@ -1,4 +1,4 @@
-// TourLayer Popup Script
+// Walko Popup Script
 
 // Default API URL - can be overridden
 let API_URL = 'https://www.cleaqops.com';

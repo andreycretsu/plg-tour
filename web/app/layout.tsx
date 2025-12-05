@@ -5,7 +5,7 @@ import { Inter } from 'next/font/google';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'TourLayer - Product Tour Platform',
+  title: 'Walko - Product Tour Platform',
   description: 'Build interactive product tours on any website',
 };
 

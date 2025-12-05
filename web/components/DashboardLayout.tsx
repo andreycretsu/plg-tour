@@ -110,7 +110,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <BreadcrumbList>
               <BreadcrumbItem className="hidden md:block">
                 <BreadcrumbLink href="/dashboard">
-                  TourLayer
+                  Walko
                 </BreadcrumbLink>
               </BreadcrumbItem>
               {breadcrumbs.length > 0 && <BreadcrumbSeparator className="hidden md:block" />}

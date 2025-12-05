@@ -106,10 +106,10 @@
   function createPickerUI() {
     // Create overlay
     overlay = document.createElement('div');
-    overlay.id = 'tourlayer-picker-overlay';
+    overlay.id = 'walko-picker-overlay';
     overlay.innerHTML = `
       <style>
-        #tourlayer-picker-overlay {
+        #walko-picker-overlay {
           position: fixed;
           top: 0;
           left: 0;
@@ -118,7 +118,7 @@
           z-index: 2147483646;
           cursor: crosshair;
         }
-        #tourlayer-highlight-box {
+        #walko-highlight-box {
           position: fixed;
           pointer-events: none;
           border: 2px solid #3b82f6;
@@ -126,7 +126,7 @@
           z-index: 2147483647;
           transition: all 0.1s ease;
         }
-        #tourlayer-picker-toolbar {
+        #walko-picker-toolbar {
           position: fixed;
           bottom: 20px;
           left: 50%;
@@ -145,13 +145,13 @@
           min-width: 400px;
           max-width: 600px;
         }
-        #tourlayer-picker-toolbar h3 {
+        #walko-picker-toolbar h3 {
           margin: 0;
           font-size: 16px;
           font-weight: 600;
           color: #3b82f6;
         }
-        #tourlayer-selector-display {
+        #walko-selector-display {
           background: #0f172a;
           padding: 10px 14px;
           border-radius: 6px;
@@ -161,12 +161,12 @@
           word-break: break-all;
           min-height: 20px;
         }
-        #tourlayer-picker-buttons {
+        #walko-picker-buttons {
           display: flex;
           gap: 10px;
           justify-content: flex-end;
         }
-        #tourlayer-picker-buttons button {
+        #walko-picker-buttons button {
           padding: 8px 16px;
           border-radius: 6px;
           border: none;
@@ -175,52 +175,52 @@
           cursor: pointer;
           transition: all 0.2s;
         }
-        #tourlayer-btn-cancel {
+        #walko-btn-cancel {
           background: #475569;
           color: white;
         }
-        #tourlayer-btn-cancel:hover {
+        #walko-btn-cancel:hover {
           background: #64748b;
         }
-        #tourlayer-btn-select {
+        #walko-btn-select {
           background: #3b82f6;
           color: white;
         }
-        #tourlayer-btn-select:hover {
+        #walko-btn-select:hover {
           background: #2563eb;
         }
-        #tourlayer-btn-select:disabled {
+        #walko-btn-select:disabled {
           background: #1e40af;
           opacity: 0.5;
           cursor: not-allowed;
         }
-        #tourlayer-picker-hint {
+        #walko-picker-hint {
           font-size: 12px;
           color: #94a3b8;
         }
       </style>
-      <div id="tourlayer-highlight-box"></div>
-      <div id="tourlayer-picker-toolbar">
-        <h3>🎯 TourLayer Element Picker</h3>
-        <p id="tourlayer-picker-hint">Hover over any element and click to select it</p>
-        <div id="tourlayer-selector-display">Move mouse over an element...</div>
-        <div id="tourlayer-picker-buttons">
-          <button id="tourlayer-btn-cancel">Cancel (Esc)</button>
-          <button id="tourlayer-btn-select" disabled>Select Element</button>
+      <div id="walko-highlight-box"></div>
+      <div id="walko-picker-toolbar">
+        <h3>🎯 Walko Element Picker</h3>
+        <p id="walko-picker-hint">Hover over any element and click to select it</p>
+        <div id="walko-selector-display">Move mouse over an element...</div>
+        <div id="walko-picker-buttons">
+          <button id="walko-btn-cancel">Cancel (Esc)</button>
+          <button id="walko-btn-select" disabled>Select Element</button>
         </div>
       </div>
     `;
     
     document.body.appendChild(overlay);
     
-    highlightBox = document.getElementById('tourlayer-highlight-box');
-    selectorDisplay = document.getElementById('tourlayer-selector-display');
+    highlightBox = document.getElementById('walko-highlight-box');
+    selectorDisplay = document.getElementById('walko-selector-display');
     
     // Event listeners
     overlay.addEventListener('mousemove', handleMouseMove);
     overlay.addEventListener('click', handleClick);
-    document.getElementById('tourlayer-btn-cancel').addEventListener('click', cleanup);
-    document.getElementById('tourlayer-btn-select').addEventListener('click', confirmSelection);
+    document.getElementById('walko-btn-cancel').addEventListener('click', cleanup);
+    document.getElementById('walko-btn-select').addEventListener('click', confirmSelection);
     document.addEventListener('keydown', handleKeyDown);
   }
 
@@ -232,8 +232,8 @@
     
     if (element && 
         element !== overlay && 
-        !element.id?.startsWith('tourlayer-') &&
-        !element.closest('#tourlayer-picker-overlay')) {
+        !element.id?.startsWith('walko-') &&
+        !element.closest('#walko-picker-overlay')) {
       currentElement = element;
       
       // Update highlight box
@@ -249,7 +249,7 @@
       selectorDisplay.textContent = selector;
       
       // Enable select button
-      document.getElementById('tourlayer-btn-select').disabled = false;
+      document.getElementById('walko-btn-select').disabled = false;
     }
   }
 
@@ -277,14 +277,14 @@
     const rect = currentElement.getBoundingClientRect();
     
     // Show success feedback
-    const toolbar = document.getElementById('tourlayer-picker-toolbar');
+    const toolbar = document.getElementById('walko-picker-toolbar');
     if (toolbar) {
       toolbar.innerHTML = `
         <div style="text-align: center; padding: 20px;">
           <div style="font-size: 48px; margin-bottom: 10px;">✅</div>
           <h3 style="color: #22c55e; margin: 0 0 8px 0;">Element Selected!</h3>
           <p style="color: #94a3b8; font-size: 13px; margin: 0;">Selector: <code style="background: #0f172a; padding: 2px 6px; border-radius: 4px; color: #22c55e;">${selector}</code></p>
-          <p style="color: #64748b; font-size: 12px; margin-top: 12px;">Returning to TourLayer...</p>
+          <p style="color: #64748b; font-size: 12px; margin-top: 12px;">Returning to Walko...</p>
         </div>
       `;
     }

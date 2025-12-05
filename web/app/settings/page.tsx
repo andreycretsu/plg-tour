@@ -73,9 +73,9 @@ export default function SettingsPage() {
     const apiToken = workspace?.apiToken || user?.apiToken || 'YOUR_API_TOKEN';
     
     if (withUser) {
-      return `<!-- TourLayer - Product Tours with User Tracking & Personalization -->
+      return `<!-- Walko - Product Tours with User Tracking & Personalization -->
 <script>
-  window.TourLayerConfig = {
+  window.WalkoConfig = {
     token: '${apiToken}',
     userId: 'YOUR_USER_ID',     // Your app's logged-in user ID
     userName: 'John Doe',       // Full name (for {{userName}} variable)
@@ -87,7 +87,7 @@ export default function SettingsPage() {
 <script src="https://www.cleaqops.com/embed.js"></script>`;
     }
     
-    return `<!-- TourLayer - Product Tours (Basic) -->
+    return `<!-- Walko - Product Tours (Basic) -->
 <script 
   src="https://www.cleaqops.com/embed.js" 
   data-token="${apiToken}">
@@ -192,7 +192,7 @@ export default function SettingsPage() {
         {/* Installation Tab */}
         {activeTab === 'install' && (
           <div className="card p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">🚀 Install TourLayer</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">🚀 Install Walko</h2>
             <p className="text-gray-600 mb-6">
               Choose how you want to show tours to your users. The embed snippet is recommended for production.
             </p>
@@ -359,7 +359,7 @@ export default function SettingsPage() {
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <h3 className="font-semibold text-blue-900 mb-2">📋 Setup Steps:</h3>
                   <ol className="list-decimal list-inside space-y-2 text-sm text-blue-800">
-                    <li>Download the TourLayer Chrome extension</li>
+                    <li>Download the Walko Chrome extension</li>
                     <li>Click the extension icon in your browser toolbar</li>
                     <li>Paste your API token and click "Connect"</li>
                     <li>Navigate to any website and use "Pick Element" to build tours</li>

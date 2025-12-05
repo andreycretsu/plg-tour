@@ -12,7 +12,7 @@ export default function LoginPage() {
             <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
               <GalleryVerticalEnd className="size-4" />
             </div>
-            TourLayer
+            Walko
           </a>
         </div>
         <div className="flex flex-1 items-center justify-center">
@@ -37,7 +37,7 @@ export default function LoginPage() {
             >
               <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-[12px]">
                 <img 
-                  alt="TourLayer preview" 
+                  alt="Walko preview" 
                   className="absolute h-[175.3%] left-[-5.99%] max-w-none top-[-19.3%] w-[111.98%] object-cover"
                   src="http://localhost:3845/assets/ca09867c21c144cd5ebf64e599be1994a116b0c5.png"
                 />
@@ -47,7 +47,7 @@ export default function LoginPage() {
             {/* Content */}
             <div className="absolute content-stretch flex flex-col gap-[12px] items-start left-[24px] top-[251px] w-[352px]">
               <p className="font-semibold leading-none min-w-full not-italic relative shrink-0 text-[32px] text-black w-[min-content]">
-                Welcome to TourLayer
+                Welcome to Walko
               </p>
               <p className="font-normal leading-[1.2] min-w-full not-italic relative shrink-0 text-[24px] text-black w-[min-content]">
                 Create interactive product tours and tooltips that guide your users through your application with ease

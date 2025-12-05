@@ -337,7 +337,7 @@ export default function EditTooltipPage() {
 
   const startPicker = () => {
     if (!extensionInstalled) {
-      alert('Please install the TourLayer Chrome extension first!');
+      alert('Please install the Walko Chrome extension first!');
       return;
     }
 
@@ -360,7 +360,7 @@ export default function EditTooltipPage() {
 
   const capturePreviewScreenshot = () => {
     if (!extensionInstalled) {
-      alert('Please install the TourLayer Chrome extension first!');
+      alert('Please install the Walko Chrome extension first!');
       return;
     }
 

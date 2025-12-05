@@ -96,7 +96,7 @@ export function SignupForm({ className, ...props }: SignupFormProps) {
                 <span className="text-foreground font-medium">{workspaceSlug}</span>
               </div>
               <div className="px-4 py-3 bg-background text-muted-foreground text-sm border-l border-border">
-                .tourlayer.io
+                .walko.io
               </div>
             </div>
           )}

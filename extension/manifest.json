@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "TourLayer",
+  "name": "Walko",
   "version": "2.1.0",
   "description": "Create interactive product tours on any website. Visual element picker & tour player.",
   "icons": {
@@ -15,7 +15,7 @@
       "48": "icon48.svg",
       "128": "icon128.svg"
     },
-    "default_title": "TourLayer - Product Tours"
+    "default_title": "Walko - Product Tours"
   },
   "permissions": [
     "storage",

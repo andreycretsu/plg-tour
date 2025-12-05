@@ -1,5 +1,5 @@
 /**
- * TourLayer Embed Script
+ * Walko Embed Script
  * Add this to your website to show product tours and tooltips to all visitors
  * 
  * Usage (basic):
@@ -7,7 +7,7 @@
  * 
  * Usage (with user tracking - recommended for "show once" to work across devices):
  * <script>
- *   window.TourLayerConfig = {
+ *   window.WalkoConfig = {
  *     token: 'YOUR_API_TOKEN',
  *     userId: 'user_123',        // Required for cross-device tracking
  *     userEmail: 'user@example.com', // Optional
@@ -21,11 +21,11 @@
   'use strict';
 
   // Prevent multiple initializations - also check for Chrome extension
-  if (window.__TourLayerLoaded || window.__tourLayerInitialized) {
-    console.log('TourLayer Embed: Skipping - already initialized or extension present');
+  if (window.__WalkoLoaded || window.__tourLayerInitialized) {
+    console.log('Walko Embed: Skipping - already initialized or extension present');
     return;
   }
-  window.__TourLayerLoaded = true;
+  window.__WalkoLoaded = true;
 
   const API_URL = 'https://www.cleaqops.com';
   
@@ -64,7 +64,7 @@
       // Handle both formats: 'de' and 'de-DE'
       const locale = userConfig.userLocale.split('-')[0].toLowerCase();
       if (supported.includes(locale)) {
-        console.log('TourLayer: Using configured locale:', locale);
+        console.log('Walko: Using configured locale:', locale);
         return locale;
       }
     }
@@ -75,7 +75,7 @@
     
     // 3. Return supported language or default to English
     const finalLang = supported.includes(code) ? code : 'en';
-    console.log('TourLayer: Detected language:', finalLang, '(from:', browserLang, ')');
+    console.log('Walko: Detected language:', finalLang, '(from:', browserLang, ')');
     return finalLang;
   }
   
@@ -100,10 +100,10 @@
     }
     
     // Also check for separate firstName/lastName in config
-    if (window.TourLayerConfig) {
-      firstName = window.TourLayerConfig.firstName || firstName;
-      lastName = window.TourLayerConfig.lastName || lastName;
-      fullName = window.TourLayerConfig.userName || fullName || `${firstName} ${lastName}`.trim();
+    if (window.WalkoConfig) {
+      firstName = window.WalkoConfig.firstName || firstName;
+      lastName = window.WalkoConfig.lastName || lastName;
+      fullName = window.WalkoConfig.userName || fullName || `${firstName} ${lastName}`.trim();
     }
     
     // Replace all variables (case-insensitive matching for flexibility)
@@ -121,15 +121,15 @@
     let token = null;
     
     // Method 1: Check for global config (preferred for user tracking)
-    if (window.TourLayerConfig) {
-      token = window.TourLayerConfig.token;
-      userConfig.userId = window.TourLayerConfig.userId || null;
-      userConfig.userEmail = window.TourLayerConfig.userEmail || null;
-      userConfig.userName = window.TourLayerConfig.userName || null;
-      userConfig.userLocale = window.TourLayerConfig.userLocale || null;
+    if (window.WalkoConfig) {
+      token = window.WalkoConfig.token;
+      userConfig.userId = window.WalkoConfig.userId || null;
+      userConfig.userEmail = window.WalkoConfig.userEmail || null;
+      userConfig.userName = window.WalkoConfig.userName || null;
+      userConfig.userLocale = window.WalkoConfig.userLocale || null;
       
       if (token) {
-        console.log('TourLayer: Config found in TourLayerConfig', userConfig.userId ? '(with user tracking)' : '(anonymous)', userConfig.userLocale ? `(locale: ${userConfig.userLocale})` : '');
+        console.log('Walko: Config found in WalkoConfig', userConfig.userId ? '(with user tracking)' : '(anonymous)', userConfig.userLocale ? `(locale: ${userConfig.userLocale})` : '');
         return token;
       }
     }
@@ -138,7 +138,7 @@
     const scripts = document.querySelectorAll('script');
     for (const script of scripts) {
       const src = script.getAttribute('src') || '';
-      if (src.includes('cleaqops') || src.includes('plg-tour') || src.includes('embed.js') || src.includes('tourlayer')) {
+      if (src.includes('cleaqops') || src.includes('plg-tour') || src.includes('embed.js') || src.includes('walko')) {
         token = script.getAttribute('data-token');
         // Also check for user data in script attributes
         userConfig.userId = script.getAttribute('data-user-id') || userConfig.userId;
@@ -146,7 +146,7 @@
         userConfig.userName = script.getAttribute('data-user-name') || userConfig.userName;
         
         if (token) {
-          console.log('TourLayer: Token found in script tag', userConfig.userId ? '(with user tracking)' : '(anonymous)');
+          console.log('Walko: Token found in script tag', userConfig.userId ? '(with user tracking)' : '(anonymous)');
           return token;
         }
       }
@@ -156,7 +156,7 @@
     if (document.currentScript) {
       token = document.currentScript.getAttribute('data-token');
       if (token) {
-        console.log('TourLayer: Token found in currentScript');
+        console.log('Walko: Token found in currentScript');
         return token;
       }
     }
@@ -184,7 +184,7 @@
         return data.views || {};
       }
     } catch (error) {
-      console.warn('TourLayer: Failed to fetch user views', error);
+      console.warn('Walko: Failed to fetch user views', error);
     }
     
     return {};
@@ -194,7 +194,7 @@
   async function recordView(contentType, contentId) {
     if (!userConfig.userId) {
       // Fall back to localStorage for anonymous users
-      const storageKey = `tourlayer_${contentType}_${contentId}`;
+      const storageKey = `walko_${contentType}_${contentId}`;
       const stored = localStorage.getItem(storageKey);
       const data = stored ? JSON.parse(stored) : { viewCount: 0, lastSeen: null };
       localStorage.setItem(storageKey, JSON.stringify({
@@ -233,7 +233,7 @@
         serverViewsCache.tooltips[contentId].viewCount++;
       }
     } catch (error) {
-      console.warn('TourLayer: Failed to record view', error);
+      console.warn('Walko: Failed to record view', error);
     }
   }
   
@@ -264,7 +264,7 @@
     }
     
     // Fall back to localStorage for anonymous users
-    const storageKey = `tourlayer_${contentType}_${content.id}`;
+    const storageKey = `walko_${contentType}_${content.id}`;
     const stored = localStorage.getItem(storageKey);
     const data = stored ? JSON.parse(stored) : { viewCount: 0, lastSeen: null };
     const now = Date.now();
@@ -287,22 +287,22 @@
 
   // Initialize
   async function init() {
-    console.log('TourLayer: Initializing embed on', window.location.href);
+    console.log('Walko: Initializing embed on', window.location.href);
     
     apiToken = getConfig();
     
     if (!apiToken) {
-      console.warn('TourLayer: No API token found. Add data-token="YOUR_TOKEN" to the script tag.');
-      console.warn('TourLayer: Example: <script src="https://www.cleaqops.com/embed.js" data-token="tl_xxx"></script>');
+      console.warn('Walko: No API token found. Add data-token="YOUR_TOKEN" to the script tag.');
+      console.warn('Walko: Example: <script src="https://www.cleaqops.com/embed.js" data-token="tl_xxx"></script>');
       return;
     }
 
     if (!userConfig.userId) {
-      console.warn('TourLayer: No userId configured. "Show once" will only work per browser, not per user.');
-      console.warn('TourLayer: For cross-device tracking, set window.TourLayerConfig.userId before loading the script.');
+      console.warn('Walko: No userId configured. "Show once" will only work per browser, not per user.');
+      console.warn('Walko: For cross-device tracking, set window.WalkoConfig.userId before loading the script.');
     }
 
-    console.log('TourLayer: Token found, fetching content...');
+    console.log('Walko: Token found, fetching content...');
 
     // Fetch both tours and tooltips
     await Promise.all([
@@ -331,14 +331,14 @@
       );
 
       if (!response.ok) {
-        console.error('TourLayer: Failed to fetch tours', response.status);
+        console.error('Walko: Failed to fetch tours', response.status);
         return;
       }
 
       const toursData = await response.json();
       const tours = toursData.tours || [];
 
-      console.log('TourLayer: Found', tours.length, 'tours');
+      console.log('Walko: Found', tours.length, 'tours');
 
       if (tours.length > 0 && tours[0].steps?.length > 0) {
         currentTour = tours[0];
@@ -354,11 +354,11 @@
         if (shouldShowContent(currentTour, 'tour')) {
           setTimeout(() => showStep(currentStepIndex), 500);
         } else {
-          console.log('TourLayer: Tour skipped due to frequency settings');
+          console.log('Walko: Tour skipped due to frequency settings');
         }
       }
     } catch (error) {
-      console.error('TourLayer: Error fetching tours', error);
+      console.error('Walko: Error fetching tours', error);
     }
   }
 
@@ -382,14 +382,14 @@
       );
 
       if (!response.ok) {
-        console.error('TourLayer: Failed to fetch tooltips', response.status);
+        console.error('Walko: Failed to fetch tooltips', response.status);
         return;
       }
 
       const tooltipsData = await response.json();
       const tooltips = tooltipsData.tooltips || [];
 
-      console.log('TourLayer: Found', tooltips.length, 'tooltips');
+      console.log('Walko: Found', tooltips.length, 'tooltips');
 
       if (tooltips.length > 0) {
         activeTooltips = tooltips;
@@ -403,7 +403,7 @@
         initTooltips();
       }
     } catch (error) {
-      console.error('TourLayer: Error fetching tooltips', error);
+      console.error('Walko: Error fetching tooltips', error);
     }
   }
 
@@ -411,7 +411,7 @@
     // Create tooltip container
     if (!tooltipContainer) {
       const host = document.createElement('div');
-      host.id = 'tourlayer-tooltip-embed';
+      host.id = 'walko-tooltip-embed';
       host.style.cssText = 'all: initial; position: fixed; z-index: 2147483646;';
       document.body.appendChild(host);
       
@@ -438,7 +438,7 @@
     // Check if beacon already exists for this tooltip
     const existingBeacon = document.querySelector(`[data-tooltip-id="${tooltip.id}"]`);
     if (existingBeacon) {
-      console.log('TourLayer: Beacon already exists for tooltip', tooltip.id);
+      console.log('Walko: Beacon already exists for tooltip', tooltip.id);
       return;
     }
 
@@ -446,12 +446,12 @@
     try {
       element = document.querySelector(tooltip.selector);
     } catch (e) {
-      console.warn('TourLayer: Invalid tooltip selector:', tooltip.selector);
+      console.warn('Walko: Invalid tooltip selector:', tooltip.selector);
       return;
     }
 
     if (!element) {
-      console.warn('TourLayer: Tooltip element not found:', tooltip.selector);
+      console.warn('Walko: Tooltip element not found:', tooltip.selector);
       return;
     }
 
@@ -890,7 +890,7 @@
     if (tourContainer) return tourContainer;
 
     const host = document.createElement('div');
-    host.id = 'tourlayer-embed';
+    host.id = 'walko-embed';
     host.style.cssText = `all: initial; position: fixed; z-index: ${zIndex};`;
     document.body.appendChild(host);
 
@@ -1100,7 +1100,7 @@
     try {
       element = document.querySelector(step.selector);
     } catch (e) {
-      console.warn('TourLayer: Invalid selector', step.selector);
+      console.warn('Walko: Invalid selector', step.selector);
     }
 
     if (!element) {
@@ -1329,13 +1329,13 @@
 
   // Expose API
   // Expose API for runtime control
-  window.TourLayer = {
+  window.Walko = {
     // Identify user (can be called after initial load)
     identify: (userId, userEmail, userName) => {
       userConfig.userId = userId;
       userConfig.userEmail = userEmail || null;
       userConfig.userName = userName || null;
-      console.log('TourLayer: User identified', userId);
+      console.log('Walko: User identified', userId);
     },
     
     // Get current user
@@ -1344,12 +1344,12 @@
     // Reset view tracking
     reset: (id) => {
       if (id) {
-        localStorage.removeItem(`tourlayer_tour_${id}`);
-        localStorage.removeItem(`tourlayer_tooltip_${id}`);
+        localStorage.removeItem(`walko_tour_${id}`);
+        localStorage.removeItem(`walko_tooltip_${id}`);
       }
       // Clear server cache
       serverViewsCache = { tours: {}, tooltips: {} };
-      console.log('TourLayer: Reset complete');
+      console.log('Walko: Reset complete');
     },
     
     // Refresh content (re-fetch and re-render)
@@ -1365,7 +1365,7 @@
         fetchAndShowTours(),
         fetchAndShowTooltips()
       ]);
-      console.log('TourLayer: Refreshed');
+      console.log('Walko: Refreshed');
     },
     
     version: '2.0.0'

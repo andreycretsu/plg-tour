@@ -1,4 +1,4 @@
-// TourLayer Background Script - Handles API communication and picker
+// Walko Background Script - Handles API communication and picker
 
 let apiToken = null;
 let apiUrl = 'https://www.cleaqops.com';
@@ -204,7 +204,7 @@ async function startElementPicker(tabId) {
 // Broadcast message to web app tabs (any Vercel deployment)
 async function broadcastToWebApp(message) {
   try {
-    // Search for TourLayer web app tabs
+    // Search for Walko web app tabs
     const cleaqopsTabs = await chrome.tabs.query({ url: 'https://www.cleaqops.com/*' });
     const vercelTabs = await chrome.tabs.query({ url: 'https://*.vercel.app/*' });
     
@@ -361,7 +361,7 @@ async function switchToWebAppTab() {
     const localTabs = await chrome.tabs.query({ url: 'http://localhost:3000/*' });
     const allTabs = [...cleaqopsTabs, ...vercelTabs, ...localTabs];
     
-    // Find a tab that looks like TourLayer (includes tours, tooltips, or dashboard)
+    // Find a tab that looks like Walko (includes tours, tooltips, or dashboard)
     const tourLayerTab = allTabs.find(tab => 
       tab.url.includes('/tours') || 
       tab.url.includes('/tooltips') || 

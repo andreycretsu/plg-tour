@@ -46,16 +46,16 @@ export default function DocsPage() {
         <div className="flex-1 max-w-3xl">
           {activeSection === 'getting-started' && (
             <div className="prose prose-blue max-w-none">
-              <h1>Getting Started with TourLayer</h1>
+              <h1>Getting Started with Walko</h1>
               <p className="lead">
-                TourLayer helps you create interactive product tours that guide users through your application.
+                Walko helps you create interactive product tours that guide users through your application.
                 Get started in minutes with our simple installation process.
               </p>
 
               <h2>Quick Start</h2>
               <ol>
                 <li><strong>Create your account</strong> - Sign up and get your API token</li>
-                <li><strong>Install TourLayer</strong> - Add the embed snippet to your website</li>
+                <li><strong>Install Walko</strong> - Add the embed snippet to your website</li>
                 <li><strong>Build tours</strong> - Use our Chrome extension to create tours visually</li>
                 <li><strong>Go live!</strong> - Tours automatically appear to your users</li>
               </ol>
@@ -101,7 +101,7 @@ export default function DocsPage() {
 
               <div className="not-prose bg-slate-900 rounded-lg p-4 my-4">
                 <pre className="text-sm text-green-400 font-mono overflow-x-auto">
-{`<!-- TourLayer - Product Tours -->
+{`<!-- Walko - Product Tours -->
 <script 
   src="https://www.cleaqops.com/embed.js" 
   data-token="YOUR_API_TOKEN">
@@ -143,16 +143,16 @@ export default function DocsPage() {
               <div className="not-prose bg-slate-900 rounded-lg p-4 my-4">
                 <pre className="text-sm text-green-400 font-mono overflow-x-auto">
 {`// Reset a tour (show it again to the user)
-TourLayer.reset(tourId);
+Walko.reset(tourId);
 
 // Check version
-console.log(TourLayer.version);`}
+console.log(Walko.version);`}
                 </pre>
               </div>
 
               <h2>SPA Support</h2>
               <p>
-                TourLayer automatically detects URL changes in Single Page Applications (SPAs)
+                Walko automatically detects URL changes in Single Page Applications (SPAs)
                 and re-evaluates tour conditions. No additional configuration needed!
               </p>
             </div>
@@ -168,7 +168,7 @@ console.log(TourLayer.version);`}
 
               <h2>Installation</h2>
               <ol>
-                <li>Download the TourLayer Chrome extension</li>
+                <li>Download the Walko Chrome extension</li>
                 <li>Go to <code>chrome://extensions</code></li>
                 <li>Enable "Developer mode"</li>
                 <li>Click "Load unpacked" and select the extension folder</li>
@@ -176,14 +176,14 @@ console.log(TourLayer.version);`}
 
               <h2>Connecting Your Account</h2>
               <ol>
-                <li>Click the TourLayer icon in your browser toolbar</li>
+                <li>Click the Walko icon in your browser toolbar</li>
                 <li>Paste your API token (from Settings page)</li>
                 <li>Click "Connect"</li>
               </ol>
 
               <h2>Using the Element Picker</h2>
               <ol>
-                <li>Go to the TourLayer dashboard and create a new tour</li>
+                <li>Go to the Walko dashboard and create a new tour</li>
                 <li>Enter the URL pattern for your tour</li>
                 <li>Click "Add Step" and then "Pick"</li>
                 <li>A new tab opens with your target website</li>
@@ -356,7 +356,7 @@ console.log(TourLayer.version);`}
             <div className="prose prose-blue max-w-none">
               <h1>API Reference</h1>
               <p className="lead">
-                Technical reference for the TourLayer API.
+                Technical reference for the Walko API.
               </p>
 
               <h2>Authentication</h2>

@@ -1,8 +1,8 @@
-// TourLayer Content Script - Renders tours and tooltips on matching websites
+// Walko Content Script - Renders tours and tooltips on matching websites
 (function() {
   // Prevent multiple injections - also check for embed script
-  if (window.__tourLayerInitialized || window.__TourLayerLoaded) {
-    console.log('TourLayer Extension: Skipping - already initialized or embed script present');
+  if (window.__tourLayerInitialized || window.__WalkoLoaded) {
+    console.log('Walko Extension: Skipping - already initialized or embed script present');
     return;
   }
   window.__tourLayerInitialized = true;
@@ -45,7 +45,7 @@
       // Handle both formats: 'de' and 'de-DE'
       const locale = userConfig.userLocale.split('-')[0].toLowerCase();
       if (supported.includes(locale)) {
-        console.log('TourLayer Extension: Using configured locale:', locale);
+        console.log('Walko Extension: Using configured locale:', locale);
         return locale;
       }
     }
@@ -56,7 +56,7 @@
     
     // 3. Return supported language or default to English
     const finalLang = supported.includes(code) ? code : 'en';
-    console.log('TourLayer Extension: Detected language:', finalLang, '(from:', browserLang, ')');
+    console.log('Walko Extension: Detected language:', finalLang, '(from:', browserLang, ')');
     return finalLang;
   }
   
@@ -76,10 +76,10 @@
     }
     
     // Also check for separate firstName/lastName in config
-    if (window.TourLayerConfig) {
-      firstName = window.TourLayerConfig.firstName || firstName;
-      lastName = window.TourLayerConfig.lastName || lastName;
-      fullName = window.TourLayerConfig.userName || fullName || `${firstName} ${lastName}`.trim();
+    if (window.WalkoConfig) {
+      firstName = window.WalkoConfig.firstName || firstName;
+      lastName = window.WalkoConfig.lastName || lastName;
+      fullName = window.WalkoConfig.userName || fullName || `${firstName} ${lastName}`.trim();
     }
     
     // Replace all variables (case-insensitive matching for flexibility)
@@ -94,16 +94,16 @@
   
   // Get user config from page (if set by website)
   function getUserConfig() {
-    if (window.TourLayerConfig) {
-      userConfig.userId = window.TourLayerConfig.userId || null;
-      userConfig.userEmail = window.TourLayerConfig.userEmail || null;
-      userConfig.userName = window.TourLayerConfig.userName || null;
-      userConfig.userLocale = window.TourLayerConfig.userLocale || null;
+    if (window.WalkoConfig) {
+      userConfig.userId = window.WalkoConfig.userId || null;
+      userConfig.userEmail = window.WalkoConfig.userEmail || null;
+      userConfig.userName = window.WalkoConfig.userName || null;
+      userConfig.userLocale = window.WalkoConfig.userLocale || null;
       if (userConfig.userId) {
-        console.log('TourLayer Extension: User identified from TourLayerConfig:', userConfig.userId);
+        console.log('Walko Extension: User identified from WalkoConfig:', userConfig.userId);
       }
       if (userConfig.userLocale) {
-        console.log('TourLayer Extension: Locale from TourLayerConfig:', userConfig.userLocale);
+        console.log('Walko Extension: Locale from WalkoConfig:', userConfig.userLocale);
       }
     }
   }
@@ -128,7 +128,7 @@
         return data.views || {};
       }
     } catch (error) {
-      console.warn('TourLayer: Failed to fetch user views', error);
+      console.warn('Walko: Failed to fetch user views', error);
     }
     
     return {};
@@ -167,7 +167,7 @@
         serverViewsCache.tooltips[contentId].viewCount++;
       }
     } catch (error) {
-      console.warn('TourLayer: Failed to record view', error);
+      console.warn('Walko: Failed to record view', error);
     }
   }
   
@@ -197,7 +197,7 @@
   // Show debug badge (temporary - remove in production)
   function showDebugBadge(status, color = '#3b82f6') {
     const badge = document.createElement('div');
-    badge.id = 'tourlayer-debug-badge';
+    badge.id = 'walko-debug-badge';
     badge.style.cssText = `
       position: fixed;
       bottom: 10px;
@@ -211,9 +211,9 @@
       z-index: 2147483647;
       box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     `;
-    badge.textContent = `🎯 TourLayer: ${status}`;
+    badge.textContent = `🎯 Walko: ${status}`;
     
-    const existing = document.getElementById('tourlayer-debug-badge');
+    const existing = document.getElementById('walko-debug-badge');
     if (existing) existing.remove();
     
     document.body.appendChild(badge);
@@ -225,25 +225,25 @@
 
   // Initialize
   async function init() {
-    console.log('TourLayer: Initializing on', window.location.href);
+    console.log('Walko: Initializing on', window.location.href);
     showDebugBadge('Loading...', '#6366f1');
     
     // Check for user config from page
     getUserConfig();
     
-    // Don't run on TourLayer web app itself
+    // Don't run on Walko web app itself
     if (window.location.hostname.includes('cleaqops') || 
         window.location.hostname.includes('plg-tour') || 
         (window.location.hostname.includes('vercel.app') && window.location.pathname.includes('/tours'))) {
-      console.log('TourLayer: Skipping on TourLayer app');
-      showDebugBadge('Skipped (TourLayer app)', '#64748b');
+      console.log('Walko: Skipping on Walko app');
+      showDebugBadge('Skipped (Walko app)', '#64748b');
       return;
     }
     
     const result = await chrome.storage.local.get(['apiToken']);
     
     if (!result.apiToken) {
-      console.log('TourLayer: No API token configured');
+      console.log('Walko: No API token configured');
       showDebugBadge('No API token! Connect in popup', '#ef4444');
       return;
     }
@@ -251,7 +251,7 @@
     // Store token globally
     apiToken = result.apiToken;
 
-    console.log('TourLayer: API token found, fetching content...');
+    console.log('Walko: API token found, fetching content...');
     showDebugBadge('Fetching...', '#3b82f6');
 
     // Fetch both tours and tooltips
@@ -298,7 +298,7 @@
         } else {
           // Fall back to chrome.storage.local
           const frequencyType = currentTour.frequency_type || 'once';
-          const storageKey = `tourlayer_tour_${currentTour.id}`;
+          const storageKey = `walko_tour_${currentTour.id}`;
           const result = await chrome.storage.local.get([storageKey]);
           const storageData = result[storageKey] || { viewCount: 0, lastSeen: null };
           const now = Date.now();
@@ -329,7 +329,7 @@
         }
       }
     } catch (error) {
-      console.error('TourLayer: Error fetching tours', error);
+      console.error('Walko: Error fetching tours', error);
     }
   }
 
@@ -356,7 +356,7 @@
       const tooltipsData = await response.json();
       const tooltips = tooltipsData.tooltips || [];
 
-      console.log('TourLayer: Found', tooltips.length, 'tooltips');
+      console.log('Walko: Found', tooltips.length, 'tooltips');
 
       if (tooltips.length > 0) {
         activeTooltips = tooltips;
@@ -370,7 +370,7 @@
         initTooltips();
       }
     } catch (error) {
-      console.error('TourLayer: Error fetching tooltips', error);
+      console.error('Walko: Error fetching tooltips', error);
     }
   }
 
@@ -378,7 +378,7 @@
     // Create tooltip container
     if (!tooltipContainer) {
       const host = document.createElement('div');
-      host.id = 'tourlayer-tooltip-container';
+      host.id = 'walko-tooltip-container';
       host.style.cssText = 'all: initial; position: fixed; z-index: 2147483646;';
       document.body.appendChild(host);
       
@@ -408,7 +408,7 @@
     
     // Fall back to chrome.storage.local for anonymous users
     const frequencyType = tooltip.frequency_type || (tooltip.show_once ? 'once' : 'always');
-    const storageKey = `tourlayer_tooltip_${tooltip.id}`;
+    const storageKey = `walko_tooltip_${tooltip.id}`;
     
     chrome.storage.local.get([storageKey], (result) => {
       const data = result[storageKey] || { viewCount: 0, lastSeen: null };
@@ -451,7 +451,7 @@
     // Check if beacon already exists for this tooltip
     const existingBeacon = document.querySelector(`[data-tooltip-id="${tooltip.id}"]`);
     if (existingBeacon) {
-      console.log('TourLayer: Beacon already exists for tooltip', tooltip.id);
+      console.log('Walko: Beacon already exists for tooltip', tooltip.id);
       return;
     }
 
@@ -460,12 +460,12 @@
     try {
       element = document.querySelector(tooltip.selector);
     } catch (e) {
-      console.warn('TourLayer: Invalid tooltip selector:', tooltip.selector);
+      console.warn('Walko: Invalid tooltip selector:', tooltip.selector);
       return;
     }
 
     if (!element) {
-      console.warn('TourLayer: Tooltip element not found:', tooltip.selector);
+      console.warn('Walko: Tooltip element not found:', tooltip.selector);
       return;
     }
 
@@ -484,7 +484,7 @@
       
       // Create beacon element
       const beacon = document.createElement('div');
-      beacon.className = 'tourlayer-beacon';
+      beacon.className = 'walko-beacon';
       beacon.dataset.tooltipId = tooltip.id;
       beacon.style.cssText = `
         position: fixed;
@@ -510,7 +510,7 @@
           display: flex;
           align-items: center;
           justify-content: center;
-          ${isAnimated ? 'animation: tourlayer-pulse 2s infinite;' : ''}
+          ${isAnimated ? 'animation: walko-pulse 2s infinite;' : ''}
         `;
         
         if (iconShape === 'dot' || iconShape === 'beacon' || iconShape === 'pulse') {
@@ -553,7 +553,7 @@
         beacon.addEventListener('mouseenter', () => showTooltipCard(tooltip, element));
         beacon.addEventListener('mouseleave', (e) => {
           setTimeout(() => {
-            if (!tooltipContainer.querySelector('.tourlayer-card:hover')) {
+            if (!tooltipContainer.querySelector('.walko-card:hover')) {
               hideTooltipCard(tooltip.id);
             }
           }, 200);
@@ -563,7 +563,7 @@
         element.addEventListener('mouseenter', () => showTooltipCard(tooltip, element));
         element.addEventListener('mouseleave', (e) => {
           setTimeout(() => {
-            const card = tooltipContainer.querySelector('.tourlayer-card:hover');
+            const card = tooltipContainer.querySelector('.walko-card:hover');
             const beaconHovered = beacon.matches(':hover');
             if (!card && !beaconHovered) {
               hideTooltipCard(tooltip.id);
@@ -652,7 +652,7 @@
     
     // Create card
     const card = document.createElement('div');
-    card.className = 'tourlayer-card';
+    card.className = 'walko-card';
     card.dataset.tooltipId = tooltip.id;
     card.style.cssText = `
       position: fixed;
@@ -671,12 +671,12 @@
     const displayButtonText = replaceVariables(tooltip.button_text || 'Got it');
     
     card.innerHTML = `
-      <button class="tourlayer-card-close" data-action="close">&times;</button>
-      ${tooltip.image_url ? `<img src="${escapeHtml(tooltip.image_url)}" class="tourlayer-card-image" style="border-radius: ${Math.max(0, cardBorderRadius - 4)}px ${Math.max(0, cardBorderRadius - 4)}px 0 0;" alt="">` : ''}
-      <div class="tourlayer-card-content" style="color: ${cardTextColor}; padding: ${cardPadding}px;">
-        <h3 class="tourlayer-card-title">${escapeHtml(displayTitle)}</h3>
-        ${displayBody ? `<p class="tourlayer-card-body">${escapeHtml(displayBody)}</p>` : ''}
-        <button class="tourlayer-card-btn" style="background: ${buttonColor}; color: ${buttonTextColor}; border-radius: ${buttonBorderRadius}px; margin-top: 12px; padding: 10px 20px; border: none; cursor: pointer; font-weight: 500; width: ${tooltip.text_align === 'center' ? '100%' : 'auto'};" data-action="dismiss">
+      <button class="walko-card-close" data-action="close">&times;</button>
+      ${tooltip.image_url ? `<img src="${escapeHtml(tooltip.image_url)}" class="walko-card-image" style="border-radius: ${Math.max(0, cardBorderRadius - 4)}px ${Math.max(0, cardBorderRadius - 4)}px 0 0;" alt="">` : ''}
+      <div class="walko-card-content" style="color: ${cardTextColor}; padding: ${cardPadding}px;">
+        <h3 class="walko-card-title">${escapeHtml(displayTitle)}</h3>
+        ${displayBody ? `<p class="walko-card-body">${escapeHtml(displayBody)}</p>` : ''}
+        <button class="walko-card-btn" style="background: ${buttonColor}; color: ${buttonTextColor}; border-radius: ${buttonBorderRadius}px; margin-top: 12px; padding: 10px 20px; border: none; cursor: pointer; font-weight: 500; width: ${tooltip.text_align === 'center' ? '100%' : 'auto'};" data-action="dismiss">
           ${escapeHtml(displayButtonText)}
         </button>
       </div>
@@ -797,11 +797,11 @@
 
   function hideTooltipCard(tooltipId) {
     if (tooltipId) {
-      const card = tooltipContainer.querySelector(`.tourlayer-card[data-tooltip-id="${tooltipId}"]`);
+      const card = tooltipContainer.querySelector(`.walko-card[data-tooltip-id="${tooltipId}"]`);
       if (card) card.remove();
       if (openTooltipId === tooltipId) openTooltipId = null;
     } else {
-      tooltipContainer.querySelectorAll('.tourlayer-card').forEach(c => c.remove());
+      tooltipContainer.querySelectorAll('.walko-card').forEach(c => c.remove());
       openTooltipId = null;
     }
   }
@@ -810,14 +810,14 @@
     hideTooltipCard(tooltip.id);
     
     // Remove beacon
-    const beacon = tooltipContainer.querySelector(`.tourlayer-beacon[data-tooltip-id="${tooltip.id}"]`);
+    const beacon = tooltipContainer.querySelector(`.walko-beacon[data-tooltip-id="${tooltip.id}"]`);
     if (beacon) beacon.remove();
     
     // Record view (server-side if userId configured, otherwise chrome.storage)
     if (userConfig.userId) {
       recordServerView('tooltip', tooltip.id);
     } else {
-      const storageKey = `tourlayer_tooltip_${tooltip.id}`;
+      const storageKey = `walko_tooltip_${tooltip.id}`;
       chrome.storage.local.get([storageKey], (result) => {
         const data = result[storageKey] || { viewCount: 0, lastSeen: null };
         chrome.storage.local.set({
@@ -839,47 +839,47 @@
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       }
       
-      .tourlayer-beacon {
+      .walko-beacon {
         transition: transform 0.2s;
       }
       
-      .tourlayer-beacon:hover {
+      .walko-beacon:hover {
         transform: scale(1.2);
       }
       
-      .tourlayer-beacon-pulse {
-        animation: tourlayer-pulse 2s infinite;
+      .walko-beacon-pulse {
+        animation: walko-pulse 2s infinite;
       }
       
-      .tourlayer-beacon-beacon {
-        animation: tourlayer-beacon 1.5s infinite;
+      .walko-beacon-beacon {
+        animation: walko-beacon 1.5s infinite;
       }
       
-      .tourlayer-beacon-dot {
+      .walko-beacon-dot {
         /* No animation */
       }
       
-      @keyframes tourlayer-pulse {
+      @keyframes walko-pulse {
         0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
         70% { box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); }
         100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
       }
       
-      @keyframes tourlayer-beacon {
+      @keyframes walko-beacon {
         0%, 100% { opacity: 1; transform: scale(1); }
         50% { opacity: 0.5; transform: scale(0.8); }
       }
       
-      .tourlayer-card {
-        animation: tourlayer-fade-in 0.2s ease-out;
+      .walko-card {
+        animation: walko-fade-in 0.2s ease-out;
       }
       
-      @keyframes tourlayer-fade-in {
+      @keyframes walko-fade-in {
         from { opacity: 0; transform: translateY(-10px); }
         to { opacity: 1; transform: translateY(0); }
       }
       
-      .tourlayer-card-close {
+      .walko-card-close {
         position: absolute;
         top: 8px;
         right: 8px;
@@ -897,11 +897,11 @@
         z-index: 1;
       }
       
-      .tourlayer-card-close:hover {
+      .walko-card-close:hover {
         background: rgba(0, 0, 0, 0.2);
       }
       
-      .tourlayer-card-image {
+      .walko-card-image {
         width: 100%;
         aspect-ratio: 16 / 9;
         object-fit: cover;
@@ -909,28 +909,28 @@
         background: #f3f4f6;
       }
       
-      .tourlayer-card-content {
+      .walko-card-content {
         padding: 16px;
       }
       
-      .tourlayer-card-title {
+      .walko-card-title {
         font-size: 16px;
         font-weight: 600;
         margin-bottom: 8px;
       }
       
-      .tourlayer-card-body {
+      .walko-card-body {
         font-size: 14px;
         line-height: 1.5;
         opacity: 0.8;
       }
       
-      .tourlayer-card-footer {
+      .walko-card-footer {
         padding: 12px 16px;
         border-top: 1px solid #eee;
       }
       
-      .tourlayer-card-btn {
+      .walko-card-btn {
         width: 100%;
         padding: 10px 16px;
         border: none;
@@ -942,7 +942,7 @@
         transition: opacity 0.2s;
       }
       
-      .tourlayer-card-btn:hover {
+      .walko-card-btn:hover {
         opacity: 0.9;
       }
     `;
@@ -954,13 +954,13 @@
 
   function createContainer(zIndex = 2147483647) {
     if (tourContainer) {
-      const host = document.getElementById('tourlayer-container');
+      const host = document.getElementById('walko-container');
       if (host) host.style.zIndex = zIndex.toString();
       return tourContainer;
     }
 
     const host = document.createElement('div');
-    host.id = 'tourlayer-container';
+    host.id = 'walko-container';
     host.style.cssText = `all: initial; position: fixed; z-index: ${zIndex};`;
     document.body.appendChild(host);
 
@@ -975,7 +975,7 @@
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       }
       
-      .tourlayer-overlay {
+      .walko-overlay {
         position: fixed;
         top: 0;
         left: 0;
@@ -985,7 +985,7 @@
         z-index: 1;
       }
       
-      .tourlayer-highlight {
+      .walko-highlight {
         position: fixed;
         box-shadow: 0 0 0 4px #3b82f6, 0 0 0 9999px rgba(0, 0, 0, 0.5);
         border-radius: 4px;
@@ -994,7 +994,7 @@
         transition: all 0.3s ease;
       }
       
-      .tourlayer-tooltip {
+      .walko-tooltip {
         position: fixed;
         background: white;
         border-radius: 12px;
@@ -1004,34 +1004,34 @@
         overflow: hidden;
       }
       
-      .tourlayer-tooltip-header {
+      .walko-tooltip-header {
         padding: 16px 20px;
         background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
         color: white;
       }
       
-      .tourlayer-tooltip-title {
+      .walko-tooltip-title {
         font-size: 16px;
         font-weight: 600;
         margin-bottom: 4px;
       }
       
-      .tourlayer-tooltip-step {
+      .walko-tooltip-step {
         font-size: 12px;
         opacity: 0.8;
       }
       
-      .tourlayer-tooltip-body {
+      .walko-tooltip-body {
         padding: 16px 20px;
       }
       
-      .tourlayer-tooltip-content {
+      .walko-tooltip-content {
         font-size: 14px;
         color: #374151;
         line-height: 1.6;
       }
       
-      .tourlayer-tooltip-image {
+      .walko-tooltip-image {
         width: 100%;
         max-height: 150px;
         object-fit: cover;
@@ -1039,7 +1039,7 @@
         border-radius: 8px;
       }
       
-      .tourlayer-tooltip-footer {
+      .walko-tooltip-footer {
         padding: 12px 20px;
         background: #f9fafb;
         display: flex;
@@ -1048,7 +1048,7 @@
         gap: 12px;
       }
       
-      .tourlayer-btn {
+      .walko-btn {
         padding: 8px 16px;
         border-radius: 6px;
         font-size: 14px;
@@ -1058,35 +1058,35 @@
         transition: all 0.2s;
       }
       
-      .tourlayer-btn-secondary {
+      .walko-btn-secondary {
         background: #e5e7eb;
         color: #374151;
       }
       
-      .tourlayer-btn-secondary:hover {
+      .walko-btn-secondary:hover {
         background: #d1d5db;
       }
       
-      .tourlayer-btn-primary {
+      .walko-btn-primary {
         background: #3b82f6;
         color: white;
       }
       
-      .tourlayer-btn-primary:hover {
+      .walko-btn-primary:hover {
         background: #2563eb;
       }
       
-      .tourlayer-btn-skip {
+      .walko-btn-skip {
         background: transparent;
         color: #6b7280;
         padding: 8px;
       }
       
-      .tourlayer-btn-skip:hover {
+      .walko-btn-skip:hover {
         color: #374151;
       }
       
-      .tourlayer-close {
+      .walko-close {
         position: absolute;
         top: 12px;
         right: 12px;
@@ -1103,7 +1103,7 @@
         font-size: 16px;
       }
       
-      .tourlayer-close:hover {
+      .walko-close:hover {
         background: rgba(255, 255, 255, 0.3);
       }
     `;
@@ -1137,7 +1137,7 @@
     try {
       element = document.querySelector(step.selector);
     } catch (e) {
-      console.warn('TourLayer: Invalid selector:', step.selector, e);
+      console.warn('Walko: Invalid selector:', step.selector, e);
     }
 
     if (!element) {
@@ -1181,12 +1181,12 @@
     };
 
     const overlay = document.createElement('div');
-    overlay.className = 'tourlayer-overlay';
+    overlay.className = 'walko-overlay';
     overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 1;';
     container.appendChild(overlay);
 
     const tooltip = document.createElement('div');
-    tooltip.className = 'tourlayer-tooltip';
+    tooltip.className = 'walko-tooltip';
     tooltip.style.cssText = `
       position: fixed;
       top: 50%;
@@ -1204,20 +1204,20 @@
     const displayContent = replaceVariables(step.content);
     
     tooltip.innerHTML = `
-      <button class="tourlayer-close" data-action="close">&times;</button>
-      <div class="tourlayer-tooltip-header" style="background: ${styling.buttonColor};">
-        <div class="tourlayer-tooltip-title">${escapeHtml(displayTitle)}</div>
-        <div class="tourlayer-tooltip-step">Step ${index + 1} of ${totalSteps}</div>
+      <button class="walko-close" data-action="close">&times;</button>
+      <div class="walko-tooltip-header" style="background: ${styling.buttonColor};">
+        <div class="walko-tooltip-title">${escapeHtml(displayTitle)}</div>
+        <div class="walko-tooltip-step">Step ${index + 1} of ${totalSteps}</div>
       </div>
-      <div class="tourlayer-tooltip-body" style="padding: ${styling.cardPadding}px; color: ${styling.cardTextColor};">
-        ${step.image_url ? `<img src="${escapeHtml(step.image_url)}" class="tourlayer-tooltip-image" style="border-radius: ${Math.max(0, styling.cardBorderRadius - 4)}px;" alt="">` : ''}
-        <div class="tourlayer-tooltip-content">${escapeHtml(displayContent)}</div>
+      <div class="walko-tooltip-body" style="padding: ${styling.cardPadding}px; color: ${styling.cardTextColor};">
+        ${step.image_url ? `<img src="${escapeHtml(step.image_url)}" class="walko-tooltip-image" style="border-radius: ${Math.max(0, styling.cardBorderRadius - 4)}px;" alt="">` : ''}
+        <div class="walko-tooltip-content">${escapeHtml(displayContent)}</div>
       </div>
-      <div class="tourlayer-tooltip-footer">
-        <button class="tourlayer-btn tourlayer-btn-skip" data-action="skip">Skip tour</button>
+      <div class="walko-tooltip-footer">
+        <button class="walko-btn walko-btn-skip" data-action="skip">Skip tour</button>
         <div style="display: flex; gap: 8px;">
-          ${!isFirstStep ? '<button class="tourlayer-btn tourlayer-btn-secondary" data-action="prev">Back</button>' : ''}
-          <button class="tourlayer-btn tourlayer-btn-primary" style="background: ${styling.buttonColor}; color: ${styling.buttonTextColor}; border-radius: ${styling.buttonBorderRadius}px;" data-action="next">
+          ${!isFirstStep ? '<button class="walko-btn walko-btn-secondary" data-action="prev">Back</button>' : ''}
+          <button class="walko-btn walko-btn-primary" style="background: ${styling.buttonColor}; color: ${styling.buttonTextColor}; border-radius: ${styling.buttonBorderRadius}px;" data-action="next">
             ${isLastStep ? 'Finish' : step.button_text || 'Next'}
           </button>
         </div>
@@ -1251,7 +1251,7 @@
       const updatedRect = element.getBoundingClientRect();
       
       const highlight = document.createElement('div');
-      highlight.className = 'tourlayer-highlight';
+      highlight.className = 'walko-highlight';
       highlight.style.cssText = `
         top: ${updatedRect.top - 4}px;
         left: ${updatedRect.left - 4}px;
@@ -1261,7 +1261,7 @@
       container.appendChild(highlight);
 
       const tooltip = document.createElement('div');
-      tooltip.className = 'tourlayer-tooltip';
+      tooltip.className = 'walko-tooltip';
       tooltip.style.cssText = `
         background: ${styling.cardBgColor};
         border-radius: ${styling.cardBorderRadius}px;
@@ -1277,20 +1277,20 @@
       const displayStepContent = replaceVariables(step.content);
       
       tooltip.innerHTML = `
-        <button class="tourlayer-close" data-action="close">&times;</button>
-        <div class="tourlayer-tooltip-header" style="background: ${styling.buttonColor};">
-          <div class="tourlayer-tooltip-title">${escapeHtml(displayStepTitle)}</div>
-          <div class="tourlayer-tooltip-step">Step ${index + 1} of ${totalSteps}</div>
+        <button class="walko-close" data-action="close">&times;</button>
+        <div class="walko-tooltip-header" style="background: ${styling.buttonColor};">
+          <div class="walko-tooltip-title">${escapeHtml(displayStepTitle)}</div>
+          <div class="walko-tooltip-step">Step ${index + 1} of ${totalSteps}</div>
         </div>
-        <div class="tourlayer-tooltip-body" style="padding: ${styling.cardPadding}px; color: ${styling.cardTextColor};">
-          ${step.image_url ? `<img src="${escapeHtml(step.image_url)}" class="tourlayer-tooltip-image" style="border-radius: ${Math.max(0, styling.cardBorderRadius - 4)}px;" alt="">` : ''}
-          <div class="tourlayer-tooltip-content">${escapeHtml(displayStepContent)}</div>
+        <div class="walko-tooltip-body" style="padding: ${styling.cardPadding}px; color: ${styling.cardTextColor};">
+          ${step.image_url ? `<img src="${escapeHtml(step.image_url)}" class="walko-tooltip-image" style="border-radius: ${Math.max(0, styling.cardBorderRadius - 4)}px;" alt="">` : ''}
+          <div class="walko-tooltip-content">${escapeHtml(displayStepContent)}</div>
         </div>
-        <div class="tourlayer-tooltip-footer">
-          <button class="tourlayer-btn tourlayer-btn-skip" data-action="skip">Skip tour</button>
+        <div class="walko-tooltip-footer">
+          <button class="walko-btn walko-btn-skip" data-action="skip">Skip tour</button>
           <div style="display: flex; gap: 8px;">
-            ${!isFirstStep ? '<button class="tourlayer-btn tourlayer-btn-secondary" data-action="prev">Back</button>' : ''}
-            <button class="tourlayer-btn tourlayer-btn-primary" style="background: ${styling.buttonColor}; color: ${styling.buttonTextColor}; border-radius: ${styling.buttonBorderRadius}px;" data-action="next">
+            ${!isFirstStep ? '<button class="walko-btn walko-btn-secondary" data-action="prev">Back</button>' : ''}
+            <button class="walko-btn walko-btn-primary" style="background: ${styling.buttonColor}; color: ${styling.buttonTextColor}; border-radius: ${styling.buttonBorderRadius}px;" data-action="next">
               ${isLastStep ? 'Finish' : step.button_text || 'Next'}
             </button>
           </div>
@@ -1378,7 +1378,7 @@
       if (userConfig.userId) {
         recordServerView('tour', currentTour.id);
       } else {
-        const storageKey = `tourlayer_tour_${currentTour.id}`;
+        const storageKey = `walko_tour_${currentTour.id}`;
         chrome.storage.local.get([storageKey], (result) => {
           const data = result[storageKey] || { viewCount: 0, lastSeen: null };
           chrome.storage.local.set({
