@@ -26,27 +26,44 @@ export default function SignupPage() {
       <div className="relative hidden lg:flex items-center justify-center z-20">
         <TiltedCard className="w-full max-w-[400px]">
           <div 
-            className="bg-white rounded-xl shadow-lg p-6"
+            className="backdrop-blur-[2px] bg-[rgba(255,255,255,0.4)] rounded-[18px] w-[400px] h-[484px] relative"
             style={{
-              borderRadius: '12px',
-              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15)',
+              backdropFilter: 'blur(2px)',
             }}
           >
-            <div className="mb-4">
-              <div className="w-full h-48 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg mb-4 flex items-center justify-center">
-                <GalleryVerticalEnd className="size-12 text-white opacity-80" />
+            {/* Image */}
+            <div 
+              className="absolute border-[#c7c7c7] border-[0.5px] border-solid h-[216px] left-[-25px] rounded-[12px] top-[19px] w-[451px] overflow-hidden"
+            >
+              <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-[12px]">
+                <img 
+                  alt="TourLayer preview" 
+                  className="absolute h-[175.3%] left-[-5.99%] max-w-none top-[-19.3%] w-[111.98%] object-cover"
+                  src="http://localhost:3845/assets/ca09867c21c144cd5ebf64e599be1994a116b0c5.png"
+                />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            </div>
+            
+            {/* Content */}
+            <div className="absolute content-stretch flex flex-col gap-[12px] items-start left-[24px] top-[251px] w-[352px]">
+              <p className="font-semibold leading-none min-w-full not-italic relative shrink-0 text-[32px] text-black w-[min-content]">
                 Welcome to TourLayer
-              </h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Create interactive product tours and tooltips that guide your users through your application with ease.
               </p>
-              <div className="flex gap-2">
-                <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div className="h-full bg-blue-500 rounded-full" style={{ width: '33%' }} />
+              <p className="font-normal leading-[1.2] min-w-full not-italic relative shrink-0 text-[24px] text-black w-[min-content]">
+                Create interactive product tours and tooltips that guide your users through your application with ease
+              </p>
+              
+              {/* Progress indicator */}
+              <div className="box-border content-stretch flex flex-col gap-[10px] items-start px-0 py-[12px] relative shrink-0 w-[352px]">
+                <div className="content-stretch flex gap-[10px] h-[8px] items-center relative shrink-0 w-full">
+                  <div className="basis-0 bg-[#ffda70] grow h-full min-h-px min-w-px rounded-[4px] shrink-0" />
+                  <div className="basis-0 bg-[#ffda70] grow h-full min-h-px min-w-px rounded-[4px] shrink-0" />
+                  <div className="basis-0 bg-[#ffda70] grow h-full min-h-px min-w-px rounded-[4px] shrink-0" />
+                  <div className="basis-0 bg-[#e3e3e3] grow h-full min-h-px min-w-px rounded-[4px] shrink-0" />
+                  <div className="basis-0 bg-[#e3e3e3] grow h-full min-h-px min-w-px rounded-[4px] shrink-0" />
+                  <div className="basis-0 bg-[#e3e3e3] grow h-full min-h-px min-w-px rounded-[4px] shrink-0" />
+                  <div className="basis-0 bg-[#e3e3e3] grow h-full min-h-px min-w-px rounded-[4px] shrink-0" />
                 </div>
-                <span className="text-xs text-gray-500">Step 1 of 3</span>
               </div>
             </div>
           </div>
