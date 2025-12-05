@@ -104,7 +104,8 @@ export function MagnetLines({
 
           if (distance < maxConnectionDistance) {
             const opacity = 1 - distance / maxConnectionDistance;
-            ctx.strokeStyle = `${lineColor}${Math.floor(opacity * 40).toString(16).padStart(2, '0')}`;
+            const alpha = Math.floor(opacity * 200).toString(16).padStart(2, '0');
+            ctx.strokeStyle = `${lineColor}${alpha}`;
             ctx.beginPath();
             ctx.moveTo(line.x, line.y);
             ctx.lineTo(otherLine.x, otherLine.y);
