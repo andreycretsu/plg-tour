@@ -147,7 +147,7 @@ ugzpmodoyxenodkmjthx
 
 ### 6.3 Update URLs After First Deploy
 
-1. Copy your Vercel URL (e.g., `https://plg-tour.vercel.app`)
+1. Copy your Vercel URL (e.g., `https://www.cleaqops.com`)
 2. Update environment variables:
    - `NEXT_PUBLIC_API_URL` → `https://YOUR-URL.vercel.app/api`
    - `NEXT_PUBLIC_APP_URL` → `https://YOUR-URL.vercel.app`

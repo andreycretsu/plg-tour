@@ -36,13 +36,13 @@
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://*.vercel.app/*", "http://localhost:3000/*"],
+      "matches": ["https://www.cleaqops.com/*", "https://*.vercel.app/*", "http://localhost:3000/*"],
       "js": ["webapp-bridge.js"],
       "run_at": "document_end"
     }
   ],
   "externally_connectable": {
-    "matches": ["https://*.vercel.app/*", "http://localhost:3000/*"]
+    "matches": ["https://www.cleaqops.com/*", "https://*.vercel.app/*", "http://localhost:3000/*"]
   },
   "web_accessible_resources": [
     {

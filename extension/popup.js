@@ -1,7 +1,7 @@
 // TourLayer Popup Script
 
 // Default API URL - can be overridden
-let API_URL = 'https://plg-tour.vercel.app';
+let API_URL = 'https://www.cleaqops.com';
 
 // DOM Elements
 const statusDot = document.getElementById('statusDot');

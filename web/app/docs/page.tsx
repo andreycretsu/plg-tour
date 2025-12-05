@@ -103,7 +103,7 @@ export default function DocsPage() {
                 <pre className="text-sm text-green-400 font-mono overflow-x-auto">
 {`<!-- TourLayer - Product Tours -->
 <script 
-  src="https://plg-tour.vercel.app/embed.js" 
+  src="https://www.cleaqops.com/embed.js" 
   data-token="YOUR_API_TOKEN">
 </script>`}
                 </pre>

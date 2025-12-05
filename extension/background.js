@@ -1,7 +1,7 @@
 // TourLayer Background Script - Handles API communication and picker
 
 let apiToken = null;
-let apiUrl = 'https://plg-tour.vercel.app';
+let apiUrl = 'https://www.cleaqops.com';
 let pickerCallback = null;
 
 // Load saved token on startup
@@ -9,8 +9,16 @@ chrome.storage.local.get(['apiToken', 'apiUrl'], (result) => {
   if (result.apiToken) {
     apiToken = result.apiToken;
   }
-  if (result.apiUrl) {
+  // Migrate old API URL to new domain
+  if (result.apiUrl && result.apiUrl.includes('plg-tour.vercel.app')) {
+    apiUrl = 'https://www.cleaqops.com';
+    chrome.storage.local.set({ apiUrl: apiUrl });
+  } else if (result.apiUrl) {
     apiUrl = result.apiUrl;
+  } else {
+    // Default to new domain if not set
+    apiUrl = 'https://www.cleaqops.com';
+    chrome.storage.local.set({ apiUrl: apiUrl });
   }
 });
 
@@ -196,12 +204,13 @@ async function startElementPicker(tabId) {
 // Broadcast message to web app tabs (any Vercel deployment)
 async function broadcastToWebApp(message) {
   try {
-    // Search for ALL vercel.app tabs that might be TourLayer
-    const tabs = await chrome.tabs.query({ url: 'https://*.vercel.app/*' });
+    // Search for TourLayer web app tabs
+    const cleaqopsTabs = await chrome.tabs.query({ url: 'https://www.cleaqops.com/*' });
+    const vercelTabs = await chrome.tabs.query({ url: 'https://*.vercel.app/*' });
     
     // Also check localhost for development
     const localTabs = await chrome.tabs.query({ url: 'http://localhost:3000/*' });
-    const allTabs = [...tabs, ...localTabs];
+    const allTabs = [...cleaqopsTabs, ...vercelTabs, ...localTabs];
     
     console.log('Broadcasting to tabs:', allTabs.length);
     
@@ -347,9 +356,10 @@ async function captureScreenshot(targetUrl, selector) {
 async function switchToWebAppTab() {
   try {
     // Find web app tabs
-    const tabs = await chrome.tabs.query({ url: 'https://*.vercel.app/*' });
+    const cleaqopsTabs = await chrome.tabs.query({ url: 'https://www.cleaqops.com/*' });
+    const vercelTabs = await chrome.tabs.query({ url: 'https://*.vercel.app/*' });
     const localTabs = await chrome.tabs.query({ url: 'http://localhost:3000/*' });
-    const allTabs = [...tabs, ...localTabs];
+    const allTabs = [...cleaqopsTabs, ...vercelTabs, ...localTabs];
     
     // Find a tab that looks like TourLayer (includes tours, tooltips, or dashboard)
     const tourLayerTab = allTabs.find(tab => 

@@ -25,9 +25,12 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    // Get tour
+    // Get tour with all fields including styling and frequency
     const tourResult = await query(
-      `SELECT id, user_id, name, url_pattern, is_active, created_at, updated_at
+      `SELECT id, user_id, name, url_pattern, is_active, created_at, updated_at,
+              card_bg_color, card_text_color, card_border_radius, card_padding, card_shadow,
+              button_color, button_text_color, button_border_radius,
+              frequency_type, frequency_count, frequency_days
        FROM tours 
        WHERE id = $1 AND user_id = $2`,
       [params.id, payload.userId]
@@ -42,7 +45,7 @@ export async function GET(
     // Get steps
     const stepsResult = await query(
       `SELECT id, tour_id, step_order, selector, title, content, 
-              image_url, button_text, placement, pulse_enabled
+              image_url, button_text, placement, pulse_enabled, z_index
        FROM tour_steps 
        WHERE tour_id = $1 
        ORDER BY step_order ASC`,
@@ -121,7 +124,25 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, urlPattern, isActive, steps } = body;
+    const { 
+      name, 
+      urlPattern, 
+      isActive, 
+      steps,
+      // Styling fields
+      cardBgColor,
+      cardTextColor,
+      cardBorderRadius,
+      cardPadding,
+      cardShadow,
+      buttonColor,
+      buttonTextColor,
+      buttonBorderRadius,
+      // Frequency fields
+      frequencyType,
+      frequencyCount,
+      frequencyDays,
+    } = body;
 
     // Verify tour ownership
     const checkResult = await query(
@@ -133,16 +154,47 @@ export async function PUT(
       return NextResponse.json({ error: 'Tour not found' }, { status: 404 });
     }
 
-    // Update tour
+    // Update tour with styling and frequency
     const tourResult = await query(
       `UPDATE tours 
        SET name = $1,
            url_pattern = $2,
            is_active = $3,
+           card_bg_color = COALESCE($4, card_bg_color),
+           card_text_color = COALESCE($5, card_text_color),
+           card_border_radius = COALESCE($6, card_border_radius),
+           card_padding = COALESCE($7, card_padding),
+           card_shadow = COALESCE($8, card_shadow),
+           button_color = COALESCE($9, button_color),
+           button_text_color = COALESCE($10, button_text_color),
+           button_border_radius = COALESCE($11, button_border_radius),
+           frequency_type = COALESCE($12, frequency_type),
+           frequency_count = COALESCE($13, frequency_count),
+           frequency_days = COALESCE($14, frequency_days),
            updated_at = CURRENT_TIMESTAMP
-       WHERE id = $4 AND user_id = $5
-       RETURNING id, user_id, name, url_pattern, is_active, created_at, updated_at`,
-      [name, urlPattern, isActive !== false, params.id, payload.userId]
+       WHERE id = $15 AND user_id = $16
+       RETURNING id, user_id, name, url_pattern, is_active, created_at, updated_at,
+                 card_bg_color, card_text_color, card_border_radius, card_padding, card_shadow,
+                 button_color, button_text_color, button_border_radius,
+                 frequency_type, frequency_count, frequency_days`,
+      [
+        name, 
+        urlPattern, 
+        isActive !== false,
+        cardBgColor,
+        cardTextColor,
+        cardBorderRadius,
+        cardPadding,
+        cardShadow,
+        buttonColor,
+        buttonTextColor,
+        buttonBorderRadius,
+        frequencyType,
+        frequencyCount,
+        frequencyDays,
+        params.id, 
+        payload.userId
+      ]
     );
 
     const tour = tourResult.rows[0];
@@ -157,8 +209,8 @@ export async function PUT(
         await query(
           `INSERT INTO tour_steps (
             tour_id, step_order, selector, title, content, 
-            image_url, button_text, placement, pulse_enabled
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+            image_url, button_text, placement, pulse_enabled, z_index
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
           [
             params.id,
             step.stepOrder,
@@ -169,6 +221,7 @@ export async function PUT(
             step.buttonText || 'Next',
             step.placement || 'bottom',
             step.pulseEnabled !== false,
+            step.zIndex || 2147483647,
           ]
         );
       }

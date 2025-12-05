@@ -15,20 +15,57 @@ export async function OPTIONS() {
   return new NextResponse(null, { status: 200, headers: corsHeaders });
 }
 
-// Helper to check if URL matches pattern
+// Helper to check if URL matches pattern (supports path-based patterns and full URLs)
 function urlMatchesPattern(url: string, pattern: string): boolean {
-  const normalize = (u: string) => u.replace(/\/+$/, '').toLowerCase();
-  const normalizedUrl = normalize(url);
-  const normalizedPattern = normalize(pattern);
+  // If pattern is just "*", match everything
+  if (pattern === '*') return true;
   
-  if (normalizedPattern.endsWith('*')) {
-    const prefix = normalizedPattern.slice(0, -1);
-    return normalizedUrl.startsWith(prefix) || normalizedUrl + '/' === prefix;
+  // Extract path from URL
+  let urlPath: string;
+  try {
+    const urlObj = new URL(url);
+    urlPath = urlObj.pathname;
+  } catch (e) {
+    // If URL parsing fails, try to extract path manually
+    const match = url.match(/\/\/[^\/]+(\/.*)?$/);
+    urlPath = match ? (match[1] || '/') : '/';
   }
   
-  return normalizedUrl === normalizedPattern || 
-         normalizedUrl === normalizedPattern + '/' ||
-         normalizedUrl + '/' === normalizedPattern;
+  // If pattern starts with http:// or https://, treat as full URL (backward compatibility)
+  if (pattern.startsWith('http://') || pattern.startsWith('https://')) {
+    const normalize = (u: string) => u.replace(/\/+$/, '').toLowerCase();
+    const normalizedUrl = normalize(url);
+    const normalizedPattern = normalize(pattern);
+    
+    if (normalizedPattern.endsWith('*')) {
+      const prefix = normalizedPattern.slice(0, -1);
+      return normalizedUrl.startsWith(prefix) || normalizedUrl + '/' === prefix;
+    }
+    
+    return normalizedUrl === normalizedPattern || 
+           normalizedUrl === normalizedPattern + '/' ||
+           normalizedUrl + '/' === normalizedPattern;
+  }
+  
+  // Path-based matching (new default)
+  const normalizedPath = urlPath.replace(/\/+$/, '').toLowerCase() || '/';
+  const normalizedPattern = pattern.replace(/\/+$/, '').toLowerCase() || '/';
+  
+  // Handle root path
+  if (normalizedPattern === '/' || normalizedPattern === '') {
+    return normalizedPath === '/' || normalizedPath === '';
+  }
+  
+  // Wildcard matching
+  if (normalizedPattern.endsWith('*')) {
+    const prefix = normalizedPattern.slice(0, -1);
+    return normalizedPath.startsWith(prefix);
+  }
+  
+  // Exact match
+  return normalizedPath === normalizedPattern || 
+         normalizedPath === normalizedPattern + '/' ||
+         normalizedPath + '/' === normalizedPattern;
 }
 
 // GET /api/public/tooltips - Get tooltips for current URL

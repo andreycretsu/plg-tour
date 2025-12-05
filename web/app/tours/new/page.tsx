@@ -3,11 +3,29 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import FullScreenModal from '@/components/FullScreenModal';
-import { PreviewPanel } from '@/components/StepPreview';
-import ColorPicker from '@/components/ColorPicker';
-import { Plus, Trash2, GripVertical, Save, Crosshair, AlertCircle, CheckCircle, Eye, Layers, Settings, FileText, Languages } from 'lucide-react';
 import ImageUpload from '@/components/ImageUpload';
+import ColorPicker from '@/components/ColorPicker';
+import { Plus, Trash2, GripVertical, Save, Crosshair, Languages, Settings, FileText, Type, Palette, Repeat, Layers, Eye, Camera, Loader2 } from 'lucide-react';
+
+// Shadcn UI components
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Field, FieldLabel, FieldGroup, FieldDescription } from '@/components/ui/field';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
+import { Stepper, StepContent } from '@/components/ui/stepper';
+import { VariableInput, VariableTextarea } from '@/components/ui/variable-input';
+import { StatusBadge } from '@/components/ui/status-badge';
+
+// Define wizard steps for tours
+const TOUR_WIZARD_STEPS = [
+  { id: 1, title: 'Tour Details', icon: FileText },
+  { id: 2, title: 'Steps', icon: Layers },
+  { id: 3, title: 'Card Style', icon: Palette },
+  { id: 4, title: 'Typography', icon: Type },
+  { id: 5, title: 'Button', icon: Settings },
+  { id: 6, title: 'Frequency', icon: Repeat },
+];
 
 interface Step {
   id: string;
@@ -57,19 +75,23 @@ const defaultFrequency: TourFrequency = {
 
 export default function NewTourPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'content' | 'customisation'>('content');
+  const [activeStep, setActiveStep] = useState(1);
   const [tourName, setTourName] = useState('New Product Tour');
-  const [urlPattern, setUrlPattern] = useState('');
+  const [urlPattern, setUrlPattern] = useState('*');
   const [steps, setSteps] = useState<Step[]>([]);
   const [styling, setStyling] = useState<TourStyling>(defaultStyling);
   const [frequency, setFrequency] = useState<TourFrequency>(defaultFrequency);
-  const [showStyling, setShowStyling] = useState(false);
-  const [showFrequency, setShowFrequency] = useState(false);
   const [loading, setLoading] = useState(false);
   const [extensionInstalled, setExtensionInstalled] = useState(false);
   const [pickingForStep, setPickingForStep] = useState<string | null>(null);
   const [pickerStatus, setPickerStatus] = useState<'idle' | 'waiting' | 'success'>('idle');
   const [activePreviewStep, setActivePreviewStep] = useState<string | null>(null);
+  
+  // Screenshot preview state
+  const [screenshot, setScreenshot] = useState<string | null>(null);
+  const [screenshotElementRect, setScreenshotElementRect] = useState<{x: number, y: number, width: number, height: number} | null>(null);
+  const [screenshotViewport, setScreenshotViewport] = useState<{width: number, height: number} | null>(null);
+  const [capturingScreenshot, setCapturingScreenshot] = useState(false);
 
   // Check if extension is installed
   useEffect(() => {
@@ -81,15 +103,12 @@ export default function NewTourPage() {
       if (event.source !== window) return;
       if (!event.data || event.data.source !== 'tourlayer-extension') return;
 
-      console.log('Received from extension:', event.data);
-
       switch (event.data.type) {
         case 'PONG':
         case 'EXTENSION_READY':
           setExtensionInstalled(true);
           break;
         case 'ELEMENT_PICKED':
-          // Handle picked element
           if (pickingForStep && event.data.selector) {
             updateStep(pickingForStep, 'selector', event.data.selector);
             setPickerStatus('success');
@@ -103,12 +122,20 @@ export default function NewTourPage() {
           setPickerStatus('idle');
           setPickingForStep(null);
           break;
+        case 'SCREENSHOT_CAPTURED':
+          setCapturingScreenshot(false);
+          if (event.data.success) {
+            setScreenshot(event.data.screenshot);
+            setScreenshotElementRect(event.data.elementRect);
+            setScreenshotViewport(event.data.viewport);
+          } else {
+            alert('Failed to capture screenshot: ' + event.data.error);
+          }
+          break;
       }
     };
 
     window.addEventListener('message', handleMessage);
-    
-    // Check on mount and periodically
     checkExtension();
     const interval = setInterval(checkExtension, 3000);
 
@@ -164,28 +191,52 @@ export default function NewTourPage() {
       return;
     }
 
-    // Get target URL from URL pattern (remove wildcards for opening)
     let targetUrl = urlPattern.replace(/\*+/g, '').trim();
-    
     if (!targetUrl) {
-      alert('Please enter a URL pattern first so we know which website to pick elements from!');
+      alert('Please enter a URL pattern first!');
       return;
     }
-
-    // Ensure it's a valid URL
     if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
       targetUrl = 'https://' + targetUrl;
     }
     
     setPickingForStep(stepId);
     setPickerStatus('waiting');
-    
-    // Tell extension to open target URL and start picker
     window.postMessage({ 
       source: 'tourlayer-webapp', 
       type: 'START_PICKER',
       stepId,
       targetUrl
+    }, '*');
+  };
+
+  const capturePreviewScreenshot = () => {
+    if (!extensionInstalled) {
+      alert('Please install the TourLayer Chrome extension first!');
+      return;
+    }
+
+    const activeStep = steps.find(s => s.id === activePreviewStep);
+    if (!activeStep || !activeStep.selector) {
+      alert('Please select a step with a selector first!');
+      return;
+    }
+
+    let targetUrl = urlPattern.replace(/\*+/g, '').trim();
+    if (!targetUrl) {
+      alert('Please enter a URL pattern first!');
+      return;
+    }
+    if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+      targetUrl = 'https://' + targetUrl;
+    }
+    
+    setCapturingScreenshot(true);
+    window.postMessage({ 
+      source: 'tourlayer-webapp', 
+      type: 'CAPTURE_SCREENSHOT',
+      targetUrl,
+      selector: activeStep.selector
     }, '*');
   };
 
@@ -211,7 +262,6 @@ export default function NewTourPage() {
         body: JSON.stringify({
           name: tourName,
           urlPattern: urlPattern,
-          // Tour-level styling
           cardBgColor: styling.cardBgColor,
           cardTextColor: styling.cardTextColor,
           cardBorderRadius: styling.cardBorderRadius,
@@ -220,7 +270,6 @@ export default function NewTourPage() {
           buttonColor: styling.buttonColor,
           buttonTextColor: styling.buttonTextColor,
           buttonBorderRadius: styling.buttonBorderRadius,
-          // Frequency settings
           frequencyType: frequency.type,
           frequencyCount: frequency.count,
           frequencyDays: frequency.days,
@@ -251,11 +300,16 @@ export default function NewTourPage() {
     }
   };
 
-  const activeStep = steps.find(s => s.id === activePreviewStep);
+  const activeStepData = steps.find(s => s.id === activePreviewStep);
 
   return (
     <FullScreenModal
       title="Create New Tour"
+      headerExtra={
+        <StatusBadge variant={extensionInstalled ? 'success' : 'fail'}>
+          {extensionInstalled ? 'Extension ready' : 'Extension not connected'}
+        </StatusBadge>
+      }
       onClose={() => router.push('/tours')}
       actions={
         <Button
@@ -267,287 +321,385 @@ export default function NewTourPage() {
         </Button>
       }
     >
-      <div className="flex gap-6 p-6 h-full">
-        {/* Main Form */}
-        <div className="flex-1 max-w-3xl overflow-y-auto">
-          {/* Extension Status */}
-          <div className={`mb-6 p-4 rounded-lg flex items-center gap-3 ${
-            extensionInstalled 
-              ? 'bg-green-50 border border-green-200' 
-              : 'bg-yellow-50 border border-yellow-200'
-          }`}>
-            {extensionInstalled ? (
-              <>
-                <CheckCircle className="text-green-600" size={20} />
-                <div>
-                  <p className="font-medium text-green-800">Extension Connected</p>
-                  <p className="text-sm text-green-600">You can use the visual element picker!</p>
-                </div>
-              </>
-            ) : (
-              <>
-                <AlertCircle className="text-yellow-600" size={20} />
-                <div>
-                  <p className="font-medium text-yellow-800">Extension Not Detected</p>
-                  <p className="text-sm text-yellow-600">
-                    Install the TourLayer extension to use the visual element picker. 
+      <style jsx global>{`
+        @keyframes pulse {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.2); opacity: 0.8; }
+        }
+      `}</style>
+
+      <div className="flex h-full">
+        {/* Left Sidebar - Stepper */}
+        <div className="w-52 border-r border-gray-200 bg-gray-50/50 p-4 overflow-y-auto shrink-0">
+          <Stepper
+            steps={TOUR_WIZARD_STEPS}
+            currentStep={activeStep}
+            onStepClick={setActiveStep}
+          />
+        </div>
+
+        {/* Middle Column - Form Content */}
+        <div className="flex-1 max-w-xl overflow-y-auto p-6">
+          {/* Step 1: Tour Details */}
+          {activeStep === 1 && (
+            <StepContent
+              currentStep={activeStep}
+              onNext={() => setActiveStep(2)}
+              isFirst={true}
+              nextLabel="Next: Steps"
+            >
+              <div className="card p-5">
+                <h2 className="text-base font-semibold text-gray-900 mb-4">Tour Details</h2>
+                
+                <FieldGroup>
+                  <Field>
+                    <FieldLabel>Tour Name</FieldLabel>
+                    <Input
+                      value={tourName}
+                      onChange={(e) => setTourName(e.target.value)}
+                      placeholder="e.g., Welcome Tour"
+                    />
+                  </Field>
+
+                  <Field>
+                    <FieldLabel>URL Pattern</FieldLabel>
+                    <Input
+                      value={urlPattern}
+                      onChange={(e) => setUrlPattern(e.target.value)}
+                      placeholder="/dashboard* or /teams"
+                    />
+                    <FieldDescription>Examples: /teams, /settings/*, or * for all pages</FieldDescription>
+                  </Field>
+                </FieldGroup>
+
+                {/* Translations Info */}
+                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Languages size={16} className="text-blue-600" />
+                    <span className="text-sm font-medium text-gray-900">Translations</span>
+                  </div>
+                  <p className="text-xs text-blue-700">
+                    Save first, then auto-translate to 10+ languages on the Edit page.
                   </p>
                 </div>
-              </>
-            )}
-          </div>
-
-          {/* Picker Status */}
-          {pickerStatus === 'waiting' && (
-            <div className="mb-6 p-4 rounded-lg bg-blue-50 border border-blue-200 flex items-center gap-3">
-              <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-600 border-t-transparent"></div>
-              <div>
-                <p className="font-medium text-blue-800">Element Picker Active</p>
-                <p className="text-sm text-blue-600">
-                  Switch to your target website tab and click on any element. Press ESC to cancel.
-                </p>
               </div>
-            </div>
+            </StepContent>
           )}
 
-          {pickerStatus === 'success' && (
-            <div className="mb-6 p-4 rounded-lg bg-green-50 border border-green-200 flex items-center gap-3">
-              <CheckCircle className="text-green-600" size={20} />
-              <p className="font-medium text-green-800">Element selected successfully!</p>
-            </div>
-          )}
-
-          {/* Tabs */}
-          <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-lg">
-            <button
-              onClick={() => setActiveTab('content')}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all ${
-                activeTab === 'content'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
+          {/* Step 2: Steps Management */}
+          {activeStep === 2 && (
+            <StepContent
+              currentStep={activeStep}
+              onBack={() => setActiveStep(1)}
+              onNext={() => setActiveStep(3)}
+              nextLabel="Next: Card Style"
             >
-              <FileText size={18} />
-              Content
-            </button>
-            <button
-              onClick={() => setActiveTab('customisation')}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md font-medium transition-all ${
-                activeTab === 'customisation'
-                  ? 'bg-white text-gray-900 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <Settings size={18} />
-              Customisation
-            </button>
-          </div>
-
-          {/* CONTENT TAB */}
-          {activeTab === 'content' && (
-            <>
-              {/* Tour Details */}
-          <div className="card p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Tour Details</h2>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="label">Tour Name</label>
-                <input
-                  type="text"
-                  className="input"
-                  value={tourName}
-                  onChange={(e) => setTourName(e.target.value)}
-                  placeholder="e.g., Welcome Tour"
-                />
-              </div>
-
-              <div>
-                <label className="label">URL Pattern</label>
-                <input
-                  type="text"
-                  className="input"
-                  value={urlPattern}
-                  onChange={(e) => setUrlPattern(e.target.value)}
-                  placeholder="e.g., https://app.example.com/dashboard*"
-                />
-                <p className="text-sm text-gray-500 mt-1">
-                  Use * as wildcard. Example: https://app.example.com/* matches all pages
-                </p>
-              </div>
-            </div>
-          </div>
-
-              {/* Translations Info */}
-              <div className="card p-5 mb-5 bg-blue-50 border-blue-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <Languages size={20} className="text-blue-600" />
-                  <h2 className="text-base font-semibold text-gray-900">Translations</h2>
+              <div className="card p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-base font-semibold text-gray-900">
+                    Tour Steps ({steps.length})
+                  </h2>
+                  <Button onClick={addStep} size="sm">
+                    <Plus size={16} />
+                    Add Step
+                  </Button>
                 </div>
-                <p className="text-sm text-blue-700">
-                  Save this tour first, then you can auto-translate to 10+ languages on the Edit page.
-                </p>
+
+                {pickerStatus === 'waiting' && (
+                  <div className="mb-4 p-3 rounded-lg bg-blue-50 border border-blue-200 flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+                    <p className="text-sm text-blue-800">Element Picker Active - Switch to target website and click an element</p>
+                  </div>
+                )}
+
+                {pickerStatus === 'success' && (
+                  <div className="mb-4 p-3 rounded-lg bg-green-50 border border-green-200 text-sm text-green-800">
+                    Element selected successfully!
+                  </div>
+                )}
+
+                {steps.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <Layers size={32} className="mx-auto mb-2 opacity-50" />
+                    <p>No steps yet. Click "Add Step" to get started.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {steps.map((step, index) => (
+                      <div 
+                        key={step.id} 
+                        className={`border rounded-lg p-4 transition-all ${
+                          activePreviewStep === step.id 
+                            ? 'border-blue-500 bg-blue-50 shadow-md' 
+                            : 'border-gray-200 bg-gray-50 hover:border-gray-300'
+                        }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="flex items-center gap-2 text-gray-400 mt-2">
+                            <GripVertical size={20} />
+                            <span className="text-sm font-semibold">{index + 1}</span>
+                          </div>
+
+                          <div className="flex-1 space-y-3" onClick={(e) => e.stopPropagation()}>
+                            <div className="grid grid-cols-2 gap-3">
+                              <Field>
+                                <FieldLabel>Element Selector</FieldLabel>
+                                <div className="flex gap-2">
+                                  <Input
+                                    className="flex-1"
+                                    value={step.selector}
+                                    onChange={(e) => updateStep(step.id, 'selector', e.target.value)}
+                                    placeholder=".my-button"
+                                  />
+                                  <Button
+                                    onClick={() => startPicker(step.id)}
+                                    disabled={!extensionInstalled || pickerStatus === 'waiting'}
+                                    size="sm"
+                                    variant="outline"
+                                  >
+                                    <Crosshair size={14} />
+                                    Pick
+                                  </Button>
+                                </div>
+                              </Field>
+                              <div className="grid grid-cols-2 gap-2">
+                                <Field>
+                                  <FieldLabel>Placement</FieldLabel>
+                                  <Select value={step.placement} onValueChange={(value) => updateStep(step.id, 'placement', value)}>
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="top">Top</SelectItem>
+                                      <SelectItem value="bottom">Bottom</SelectItem>
+                                      <SelectItem value="left">Left</SelectItem>
+                                      <SelectItem value="right">Right</SelectItem>
+                                      <SelectItem value="auto">Auto</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </Field>
+                                <Field>
+                                  <FieldLabel>Z-Index</FieldLabel>
+                                  <Input
+                                    type="number"
+                                    value={step.zIndex}
+                                    onChange={(e) => updateStep(step.id, 'zIndex', parseInt(e.target.value) || 2147483647)}
+                                  />
+                                </Field>
+                              </div>
+                            </div>
+
+                            <Field>
+                              <FieldLabel>Step Title</FieldLabel>
+                              <VariableInput
+                                value={step.title}
+                                onValueChange={(value) => updateStep(step.id, 'title', value)}
+                                placeholder="Welcome to Dashboard"
+                              />
+                            </Field>
+
+                            <Field>
+                              <FieldLabel>Step Content</FieldLabel>
+                              <VariableTextarea
+                                value={step.content}
+                                onValueChange={(value) => updateStep(step.id, 'content', value)}
+                                placeholder="This is where you can..."
+                              />
+                            </Field>
+
+                            <Field>
+                              <FieldLabel>Image (Optional)</FieldLabel>
+                              <ImageUpload
+                                value={step.imageUrl}
+                                onChange={(url) => updateStep(step.id, 'imageUrl', url)}
+                              />
+                            </Field>
+
+                            <Field>
+                              <FieldLabel>Button Text</FieldLabel>
+                              <Input
+                                value={step.buttonText}
+                                onChange={(e) => updateStep(step.id, 'buttonText', e.target.value)}
+                                placeholder="Next"
+                              />
+                            </Field>
+
+                            <div className="flex items-center gap-4">
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="checkbox"
+                                  checked={step.pulseEnabled}
+                                  onChange={(e) => updateStep(step.id, 'pulseEnabled', e.target.checked)}
+                                  id={`pulse-${step.id}`}
+                                  className="w-4 h-4"
+                                />
+                                <label htmlFor={`pulse-${step.id}`} className="text-sm text-gray-700">
+                                  Enable pulse animation
+                                </label>
+                              </div>
+                              
+                              <Button
+                                onClick={() => setActivePreviewStep(activePreviewStep === step.id ? null : step.id)}
+                                variant="outline"
+                                size="sm"
+                              >
+                                <Eye size={14} />
+                                Preview
+                              </Button>
+                            </div>
+                          </div>
+
+                          <Button
+                            onClick={(e) => { e.stopPropagation(); deleteStep(step.id); }}
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 size={16} />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            </>
+            </StepContent>
           )}
 
-          {/* CUSTOMISATION TAB */}
-          {activeTab === 'customisation' && (
-            <>
-              {/* Card Styling (Collapsible) */}
-          <div className="card p-6 mb-6">
-            <button
-              onClick={() => setShowStyling(!showStyling)}
-              className="w-full flex items-center justify-between text-left"
+          {/* Step 3: Card Style */}
+          {activeStep === 3 && (
+            <StepContent
+              currentStep={activeStep}
+              onBack={() => setActiveStep(2)}
+              onNext={() => setActiveStep(4)}
+              nextLabel="Next: Typography"
             >
-              <h2 className="text-xl font-semibold text-gray-900">Card Styling</h2>
-              <span className={`transform transition-transform ${showStyling ? 'rotate-180' : ''}`}>
-                ▼
-              </span>
-            </button>
-            
-            {showStyling && (
-              <div className="mt-4 space-y-4">
-                <p className="text-sm text-gray-500">Customize how tour cards appear to users</p>
+              <div className="card p-5">
+                <h2 className="text-base font-semibold text-gray-900 mb-4">Card Style</h2>
                 
-                {/* Card Appearance */}
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className="label text-xs">Background Color</label>
-                    <ColorPicker 
-                      value={styling.cardBgColor} 
-                      onChange={(color) => setStyling({...styling, cardBgColor: color})} 
-                    />
-                  </div>
-
-                  <div>
-                    <label className="label text-xs">Text Color</label>
-                    <ColorPicker 
-                      value={styling.cardTextColor} 
-                      onChange={(color) => setStyling({...styling, cardTextColor: color})} 
-                    />
-                  </div>
-
-                  <div>
-                    <label className="label text-xs">Shadow</label>
-                    <select
-                      className="input text-sm"
-                      value={styling.cardShadow}
-                      onChange={(e) => setStyling({...styling, cardShadow: e.target.value})}
-                    >
-                      <option value="none">None</option>
-                      <option value="small">Small</option>
-                      <option value="medium">Medium</option>
-                      <option value="large">Large</option>
-                      <option value="extra">Extra Large</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="label text-xs">Corner Radius (px)</label>
-                    <input
-                      type="number"
-                      className="input text-sm"
-                      value={styling.cardBorderRadius}
-                      onChange={(e) => setStyling({...styling, cardBorderRadius: parseInt(e.target.value) || 12})}
-                    />
-                  </div>
-                  <div>
-                    <label className="label text-xs">Padding (px)</label>
-                    <input
-                      type="number"
-                      className="input text-sm"
-                      value={styling.cardPadding}
-                      onChange={(e) => setStyling({...styling, cardPadding: parseInt(e.target.value) || 20})}
-                    />
-                  </div>
-                </div>
-
-                {/* Button Styling */}
-                <div className="pt-3 border-t border-gray-200">
-                  <h3 className="text-sm font-medium text-gray-700 mb-3">Button Styling</h3>
+                <FieldGroup>
                   <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <label className="label text-xs">Button Background</label>
+                    <Field>
+                      <FieldLabel>Background Color</FieldLabel>
+                      <ColorPicker 
+                        value={styling.cardBgColor} 
+                        onChange={(color) => setStyling({...styling, cardBgColor: color})} 
+                      />
+                    </Field>
+                    <Field>
+                      <FieldLabel>Text Color</FieldLabel>
+                      <ColorPicker 
+                        value={styling.cardTextColor} 
+                        onChange={(color) => setStyling({...styling, cardTextColor: color})} 
+                      />
+                    </Field>
+                    <Field>
+                      <FieldLabel>Shadow</FieldLabel>
+                      <Select value={styling.cardShadow} onValueChange={(value) => setStyling({...styling, cardShadow: value})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">None</SelectItem>
+                          <SelectItem value="small">Small</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="large">Large</SelectItem>
+                          <SelectItem value="extra">Extra Large</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field>
+                      <FieldLabel>Corner Radius (px)</FieldLabel>
+                      <Input
+                        type="number"
+                        value={styling.cardBorderRadius}
+                        onChange={(e) => setStyling({...styling, cardBorderRadius: parseInt(e.target.value) || 12})}
+                      />
+                    </Field>
+                    <Field>
+                      <FieldLabel>Padding (px)</FieldLabel>
+                      <Input
+                        type="number"
+                        value={styling.cardPadding}
+                        onChange={(e) => setStyling({...styling, cardPadding: parseInt(e.target.value) || 20})}
+                      />
+                    </Field>
+                  </div>
+                </FieldGroup>
+              </div>
+            </StepContent>
+          )}
+
+          {/* Step 4: Typography */}
+          {activeStep === 4 && (
+            <StepContent
+              currentStep={activeStep}
+              onBack={() => setActiveStep(3)}
+              onNext={() => setActiveStep(5)}
+              nextLabel="Next: Button"
+            >
+              <div className="card p-5">
+                <h2 className="text-base font-semibold text-gray-900 mb-4">Typography</h2>
+                <p className="text-sm text-gray-500 mb-4">Typography settings are applied at the step level. Configure individual step titles and content in Step 2.</p>
+              </div>
+            </StepContent>
+          )}
+
+          {/* Step 5: Button */}
+          {activeStep === 5 && (
+            <StepContent
+              currentStep={activeStep}
+              onBack={() => setActiveStep(4)}
+              onNext={() => setActiveStep(6)}
+              nextLabel="Next: Frequency"
+            >
+              <div className="card p-5">
+                <h2 className="text-base font-semibold text-gray-900 mb-4">Button Style</h2>
+                
+                <FieldGroup>
+                  <div className="grid grid-cols-3 gap-4">
+                    <Field>
+                      <FieldLabel>Button Color</FieldLabel>
                       <ColorPicker 
                         value={styling.buttonColor} 
                         onChange={(color) => setStyling({...styling, buttonColor: color})} 
                       />
-                    </div>
-
-                    <div>
-                      <label className="label text-xs">Button Text Color</label>
+                    </Field>
+                    <Field>
+                      <FieldLabel>Text Color</FieldLabel>
                       <ColorPicker 
                         value={styling.buttonTextColor} 
                         onChange={(color) => setStyling({...styling, buttonTextColor: color})} 
                       />
-                    </div>
-
-                    <div>
-                      <label className="label text-xs">Button Radius (px)</label>
-                      <input
+                    </Field>
+                    <Field>
+                      <FieldLabel>Border Radius (px)</FieldLabel>
+                      <Input
                         type="number"
-                        className="input text-sm"
                         value={styling.buttonBorderRadius}
                         onChange={(e) => setStyling({...styling, buttonBorderRadius: parseInt(e.target.value) || 8})}
                       />
-                    </div>
+                    </Field>
                   </div>
-                </div>
-
-                {/* Preview */}
-                <div className="pt-3 border-t border-gray-200">
-                  <p className="text-xs text-gray-500 mb-2">Preview</p>
-                  <div 
-                    className="p-4 rounded-lg inline-block"
-                    style={{
-                      backgroundColor: styling.cardBgColor,
-                      color: styling.cardTextColor,
-                      borderRadius: styling.cardBorderRadius,
-                      padding: styling.cardPadding,
-                      boxShadow: getShadowValue(styling.cardShadow),
-                    }}
-                  >
-                    <h4 className="font-semibold mb-1">Sample Title</h4>
-                    <p className="text-sm opacity-80 mb-3">This is how your tour card will look.</p>
-                    <button
-                      style={{
-                        backgroundColor: styling.buttonColor,
-                        color: styling.buttonTextColor,
-                        borderRadius: styling.buttonBorderRadius,
-                        padding: '8px 16px',
-                        border: 'none',
-                        fontWeight: 500,
-                        fontSize: '14px',
-                      }}
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
+                </FieldGroup>
               </div>
-            )}
-          </div>
+            </StepContent>
+          )}
 
-          {/* Display Frequency */}
-          <div className="card p-6 mb-6">
-            <button
-              onClick={() => setShowFrequency(!showFrequency)}
-              className="w-full flex items-center justify-between text-left"
+          {/* Step 6: Frequency */}
+          {activeStep === 6 && (
+            <StepContent
+              currentStep={activeStep}
+              onBack={() => setActiveStep(5)}
+              isLast={true}
             >
-              <h2 className="text-xl font-semibold text-gray-900">Display Frequency</h2>
-              <span className={`transform transition-transform ${showFrequency ? 'rotate-180' : ''}`}>
-                ▼
-              </span>
-            </button>
-            
-            {showFrequency && (
-              <div className="mt-4 space-y-4">
-                <p className="text-sm text-gray-500">Control how often users see this tour</p>
+              <div className="card p-5">
+                <h2 className="text-base font-semibold text-gray-900 mb-4">Display Frequency</h2>
                 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-3 mb-4">
                   <button
                     type="button"
                     onClick={() => setFrequency({...frequency, type: 'once'})}
@@ -603,279 +755,199 @@ export default function NewTourPage() {
 
                 {frequency.type === 'count' && (
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <label className="label">Maximum Times to Show</label>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="number"
-                        min="1"
-                        max="100"
-                        className="input w-24"
-                        value={frequency.count}
-                        onChange={(e) => setFrequency({...frequency, count: parseInt(e.target.value) || 1})}
-                      />
-                      <span className="text-sm text-gray-600">times per user</span>
-                    </div>
+                    <Field>
+                      <FieldLabel>Maximum Times to Show</FieldLabel>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          type="number"
+                          min="1"
+                          max="100"
+                          className="w-24"
+                          value={frequency.count}
+                          onChange={(e) => setFrequency({...frequency, count: parseInt(e.target.value) || 1})}
+                        />
+                        <span className="text-sm text-gray-600">times per user</span>
+                      </div>
+                    </Field>
                   </div>
                 )}
 
                 {frequency.type === 'days' && (
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <label className="label">Show Again After</label>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="number"
-                        min="1"
-                        max="365"
-                        className="input w-24"
-                        value={frequency.days}
-                        onChange={(e) => setFrequency({...frequency, days: parseInt(e.target.value) || 7})}
-                      />
-                      <span className="text-sm text-gray-600">days</span>
-                    </div>
+                    <Field>
+                      <FieldLabel>Show Again After</FieldLabel>
+                      <div className="flex items-center gap-3">
+                        <Input
+                          type="number"
+                          min="1"
+                          max="365"
+                          className="w-24"
+                          value={frequency.days}
+                          onChange={(e) => setFrequency({...frequency, days: parseInt(e.target.value) || 7})}
+                        />
+                        <span className="text-sm text-gray-600">days</span>
+                      </div>
+                    </Field>
                   </div>
                 )}
               </div>
-            )}
-          </div>
-            </>
+            </StepContent>
           )}
+        </div>
 
-          {/* Steps - Always visible */}
-          <div className="card p-6 mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Tour Steps ({steps.length})
-              </h2>
-              <Button onClick={addStep}>
-                <Plus size={18} />
-                Add Step
+        {/* Right Column - Preview */}
+        <div className="flex-1 min-w-[400px]">
+          <div className="sticky top-0 h-screen py-6 flex flex-col">
+            {/* Capture Preview Button */}
+            <div className="flex items-center justify-between mb-3 px-2">
+              <span className="text-sm font-medium text-gray-700">Preview</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={capturePreviewScreenshot}
+                disabled={capturingScreenshot || !urlPattern || !activeStepData?.selector}
+              >
+                {capturingScreenshot ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    Capturing...
+                  </>
+                ) : (
+                  <>
+                    <Camera size={14} />
+                    Capture Live Preview
+                  </>
+                )}
               </Button>
             </div>
 
-            {steps.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                No steps yet. Click "Add Step" to get started.
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {steps.map((step, index) => (
-                  <div 
-                    key={step.id} 
-                    className={`border rounded-lg p-4 transition-all cursor-pointer ${
-                      activePreviewStep === step.id 
-                        ? 'border-blue-500 bg-blue-50 shadow-md' 
-                        : 'border-gray-200 bg-gray-50 hover:border-gray-300'
-                    }`}
-                    onClick={() => setActivePreviewStep(step.id)}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="flex items-center gap-2 text-gray-400 mt-2">
-                        <GripVertical size={20} />
-                        <span className="text-sm font-semibold">{index + 1}</span>
-                      </div>
-
-                      <div className="flex-1 space-y-3" onClick={(e) => e.stopPropagation()}>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="label text-xs">Element Selector (CSS)</label>
-                            <div className="flex gap-2">
-                              <input
-                                type="text"
-                                className="input text-sm flex-1"
-                                value={step.selector}
-                                onChange={(e) => updateStep(step.id, 'selector', e.target.value)}
-                                placeholder="#button-id or .class-name"
-                              />
-                              <button
-                                onClick={() => startPicker(step.id)}
-                                disabled={!extensionInstalled || pickerStatus === 'waiting'}
-                                className={`px-3 py-2 rounded-lg flex items-center gap-1 text-sm font-medium transition-colors ${
-                                  extensionInstalled 
-                                    ? 'bg-purple-600 hover:bg-purple-700 text-white' 
-                                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                                }`}
-                                title={extensionInstalled ? 'Pick element from page' : 'Install extension to use picker'}
-                              >
-                                <Crosshair size={16} />
-                                Pick
-                              </button>
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <label className="label text-xs">Placement</label>
-                              <select
-                                className="input text-sm"
-                                value={step.placement}
-                                onChange={(e) => updateStep(step.id, 'placement', e.target.value)}
-                              >
-                                <option value="top">Top</option>
-                                <option value="bottom">Bottom</option>
-                                <option value="left">Left</option>
-                                <option value="right">Right</option>
-                                <option value="auto">Auto</option>
-                              </select>
-                            </div>
-                            <div>
-                              <label className="label text-xs flex items-center gap-1">
-                                <Layers size={12} />
-                                Z-Index
-                              </label>
-                              <input
-                                type="number"
-                                className="input text-sm"
-                                value={step.zIndex}
-                                onChange={(e) => updateStep(step.id, 'zIndex', parseInt(e.target.value) || 2147483647)}
-                                placeholder="2147483647"
-                              />
-                            </div>
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="label text-xs">Step Title</label>
-                          <input
-                            type="text"
-                            className="input text-sm"
-                            value={step.title}
-                            onChange={(e) => updateStep(step.id, 'title', e.target.value)}
-                            placeholder="Welcome to Dashboard"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="label text-xs">Step Content</label>
-                          <textarea
-                            className="input text-sm min-h-[80px]"
-                            value={step.content}
-                            onChange={(e) => updateStep(step.id, 'content', e.target.value)}
-                            placeholder="This is where you can..."
-                          />
-                        </div>
-
-                        <div>
-                          <label className="label text-xs">Image (Optional)</label>
-                          <ImageUpload
-                            value={step.imageUrl}
-                            onChange={(url) => updateStep(step.id, 'imageUrl', url)}
-                          />
-                        </div>
-
-                        <div className="w-1/2">
-                          <label className="label text-xs">Button Text</label>
-                          <input
-                            type="text"
-                            className="input text-sm"
-                            value={step.buttonText}
-                            onChange={(e) => updateStep(step.id, 'buttonText', e.target.value)}
-                            placeholder="Next"
-                          />
-                        </div>
-
-                        <div className="flex items-center gap-4">
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={step.pulseEnabled}
-                              onChange={(e) => updateStep(step.id, 'pulseEnabled', e.target.checked)}
-                              id={`pulse-${step.id}`}
-                              className="w-4 h-4 text-primary-600 rounded"
-                            />
-                            <label htmlFor={`pulse-${step.id}`} className="text-sm text-gray-700">
-                              Enable pulse animation
-                            </label>
-                          </div>
-                          
-                          <button
-                            onClick={() => setActivePreviewStep(activePreviewStep === step.id ? null : step.id)}
-                            className={`flex items-center gap-1 text-sm px-2 py-1 rounded ${
-                              activePreviewStep === step.id 
-                                ? 'bg-blue-100 text-blue-700' 
-                                : 'text-gray-500 hover:text-gray-700'
-                            }`}
-                          >
-                            <Eye size={14} />
-                            Preview
-                          </button>
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={(e) => { e.stopPropagation(); deleteStep(step.id); }}
-                        className="btn-ghost text-red-600 hover:text-red-700 p-2"
-                        title="Delete step"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center justify-between">
-            <Button
-              variant="outline"
-              onClick={() => router.push('/tours')}
+            {/* Preview Area */}
+            <div 
+              className="rounded-xl flex-1 flex items-center justify-center h-full overflow-hidden relative"
+              style={{ backgroundColor: '#f3f4f6', minHeight: 'calc(100vh - 100px)' }}
             >
-              Cancel
-            </Button>
-            <Button
-              onClick={saveTour}
-              disabled={loading}
-            >
-              <Save size={18} />
-              {loading ? 'Saving...' : 'Save Tour'}
-            </Button>
-          </div>
-        </div>
-
-        {/* Preview Panel - Sticky Sidebar */}
-        <div className="flex-1 min-w-[400px]">
-          <div className="sticky top-0 h-screen py-6 flex flex-col">
-            {activeStep ? (
-              <div 
-                className="rounded-xl p-6 flex-1 flex items-center justify-center h-full"
-                style={{ backgroundColor: '#f3f4f6', minHeight: 'calc(100vh - 48px)' }}
-              >
-                {/* Preview Layout - changes based on placement */}
-                <div 
-                  className="flex items-center justify-center gap-4"
-                  style={{
-                    flexDirection: activeStep.placement === 'top' ? 'column-reverse' : 
-                                   activeStep.placement === 'bottom' ? 'column' : 
-                                   activeStep.placement === 'left' ? 'row-reverse' : 'row'
-                  }}
-                >
-                  {/* Mock Element - Square */}
-                  <div className="relative flex-shrink-0">
-                    <div 
-                      className="bg-gray-300 rounded-lg flex items-center justify-center text-gray-500 font-medium text-sm"
-                      style={{ width: 100, height: 100 }}
-                    >
-                      Element
-                      {/* Pulse Indicator */}
-                      {activeStep.pulseEnabled && (
-                        <div 
-                          className="absolute w-4 h-4 bg-blue-500 rounded-full"
+              {screenshot && activeStepData && screenshotElementRect ? (
+                /* Screenshot Preview Mode */
+                <div className="relative w-full h-full">
+                  <div className="w-full h-full overflow-auto">
+                    <div className="relative" style={{ minWidth: screenshotViewport?.width || 'auto' }}>
+                      <img 
+                        src={screenshot} 
+                        alt="Page screenshot" 
+                        className="w-full h-auto block"
+                      />
+                    
+                      {/* Element highlight */}
+                      <div
+                        className="absolute border-2 border-blue-500 bg-blue-500/10 rounded pointer-events-none"
+                        style={{
+                          left: screenshotElementRect.x,
+                          top: screenshotElementRect.y,
+                          width: screenshotElementRect.width,
+                          height: screenshotElementRect.height,
+                        }}
+                      />
+                      
+                      {/* Pulse indicator */}
+                      {activeStepData.pulseEnabled && (
+                        <div
+                          className="absolute w-4 h-4 bg-blue-500 rounded-full pointer-events-none"
                           style={{
                             animation: 'pulse 2s infinite',
-                            ...(activeStep.placement === 'top' && { top: -8, left: '50%', marginLeft: -8 }),
-                            ...(activeStep.placement === 'bottom' && { bottom: -8, left: '50%', marginLeft: -8 }),
-                            ...(activeStep.placement === 'left' && { left: -8, top: '50%', marginTop: -8 }),
-                            ...(activeStep.placement === 'right' && { right: -8, top: '50%', marginTop: -8 }),
-                            ...(activeStep.placement === 'auto' && { right: -8, top: '50%', marginTop: -8 }),
+                            left: screenshotElementRect.x + screenshotElementRect.width / 2 - 8,
+                            top: screenshotElementRect.y + screenshotElementRect.height / 2 - 8,
                           }}
                         />
                       )}
+
+                      {/* Tour Card */}
+                      <div 
+                        className="absolute pointer-events-none"
+                        style={{
+                          width: 280,
+                          backgroundColor: styling.cardBgColor,
+                          color: styling.cardTextColor,
+                          borderRadius: styling.cardBorderRadius,
+                          padding: styling.cardPadding,
+                          boxShadow: getShadowValue(styling.cardShadow),
+                          left: screenshotElementRect.x + screenshotElementRect.width / 2 - 140,
+                          top: screenshotElementRect.y + screenshotElementRect.height + 20,
+                        }}
+                      >
+                        {activeStepData.imageUrl && (
+                          <img 
+                            src={activeStepData.imageUrl} 
+                            alt="Preview" 
+                            className="w-full object-cover mb-2"
+                            style={{ 
+                              borderRadius: Math.max(0, styling.cardBorderRadius - 4),
+                              aspectRatio: '16 / 9'
+                            }}
+                          />
+                        )}
+                        <h3 className="font-semibold text-sm mb-1">
+                          {activeStepData.title || 'Step Title'}
+                        </h3>
+                        <p className="text-xs opacity-80 mb-2">
+                          Step {steps.findIndex(s => s.id === activeStepData.id) + 1} of {steps.length}
+                        </p>
+                        <p className="text-xs opacity-70 mb-3">
+                          {activeStepData.content || 'Step content...'}
+                        </p>
+                        <div className="flex justify-between items-center">
+                          <button className="text-xs text-gray-400">Skip</button>
+                          <button
+                            style={{
+                              backgroundColor: styling.buttonColor,
+                              color: styling.buttonTextColor,
+                              borderRadius: styling.buttonBorderRadius,
+                              padding: '6px 12px',
+                              border: 'none',
+                              fontWeight: 500,
+                              fontSize: '12px',
+                            }}
+                          >
+                            {activeStepData.buttonText || 'Next'}
+                          </button>
+                        </div>
+                      </div>
                     </div>
+                  </div>
+                  
+                  {/* Clear screenshot button */}
+                  <button
+                    onClick={() => { setScreenshot(null); setScreenshotElementRect(null); }}
+                    className="absolute top-2 right-10 bg-black/50 text-white px-2 py-1 rounded text-xs hover:bg-black/70 z-10"
+                  >
+                    Clear Screenshot
+                  </button>
+                </div>
+              ) : activeStepData ? (
+                /* Mock Preview Mode */
+                <div className="relative p-6">
+                  <div 
+                    className="bg-gray-300 rounded-lg flex items-center justify-center text-gray-500 font-medium text-sm"
+                    style={{ width: 100, height: 100 }}
+                  >
+                    Element
+                    {activeStepData.pulseEnabled && (
+                      <div 
+                        className="absolute w-4 h-4 bg-blue-500 rounded-full"
+                        style={{
+                          animation: 'pulse 2s infinite',
+                          ...(activeStepData.placement === 'top' && { top: -8, left: '50%', marginLeft: -8 }),
+                          ...(activeStepData.placement === 'bottom' && { bottom: -8, left: '50%', marginLeft: -8 }),
+                          ...(activeStepData.placement === 'left' && { left: -8, top: '50%', marginTop: -8 }),
+                          ...(activeStepData.placement === 'right' && { right: -8, top: '50%', marginTop: -8 }),
+                          ...(activeStepData.placement === 'auto' && { right: -8, top: '50%', marginTop: -8 }),
+                        }}
+                      />
+                    )}
                   </div>
 
                   {/* Tour Card Preview */}
                   <div 
-                    className="flex-shrink-0"
+                    className="absolute"
                     style={{
                       width: 280,
                       backgroundColor: styling.cardBgColor,
@@ -883,11 +955,16 @@ export default function NewTourPage() {
                       borderRadius: styling.cardBorderRadius,
                       padding: styling.cardPadding,
                       boxShadow: getShadowValue(styling.cardShadow),
+                      ...(activeStepData.placement === 'top' && { bottom: 120, left: '50%', marginLeft: -140 }),
+                      ...(activeStepData.placement === 'bottom' && { top: 120, left: '50%', marginLeft: -140 }),
+                      ...(activeStepData.placement === 'left' && { right: 120, top: '50%', marginTop: -100 }),
+                      ...(activeStepData.placement === 'right' && { left: 120, top: '50%', marginTop: -100 }),
+                      ...(activeStepData.placement === 'auto' && { left: 120, top: '50%', marginTop: -100 }),
                     }}
                   >
-                    {activeStep.imageUrl && (
+                    {activeStepData.imageUrl && (
                       <img 
-                        src={activeStep.imageUrl} 
+                        src={activeStepData.imageUrl} 
                         alt="Preview" 
                         className="w-full object-cover mb-2"
                         style={{ 
@@ -897,13 +974,13 @@ export default function NewTourPage() {
                       />
                     )}
                     <h3 className="font-semibold text-sm mb-1">
-                      {activeStep.title || 'Step Title'}
+                      {activeStepData.title || 'Step Title'}
                     </h3>
                     <p className="text-xs opacity-80 mb-2">
-                      Step {steps.findIndex(s => s.id === activeStep.id) + 1} of {steps.length}
+                      Step {steps.findIndex(s => s.id === activeStepData.id) + 1} of {steps.length}
                     </p>
                     <p className="text-xs opacity-70 mb-3">
-                      {activeStep.content || 'Step content...'}
+                      {activeStepData.content || 'Step content...'}
                     </p>
                     <div className="flex justify-between items-center">
                       <button className="text-xs text-gray-400">Skip</button>
@@ -918,45 +995,21 @@ export default function NewTourPage() {
                           fontSize: '12px',
                         }}
                       >
-                        {activeStep.buttonText || 'Next'}
+                        {activeStepData.buttonText || 'Next'}
                       </button>
                     </div>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="rounded-xl p-6 flex-1 flex items-center justify-center" style={{ backgroundColor: '#f3f4f6' }}>
+              ) : (
                 <div className="text-center text-gray-500">
                   <Eye size={32} className="mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">Click on a step to preview</p>
+                  <p className="text-sm">Select a step to preview</p>
                   {steps.length === 0 && (
                     <p className="text-xs mt-2 text-gray-400">Add your first step to get started</p>
                   )}
                 </div>
-              </div>
-            )}
-
-            {/* Placement Selector */}
-            {activeStep && (
-              <div className="mt-4 p-4 bg-white border border-gray-200 rounded-lg">
-                <p className="text-xs text-gray-500 mb-2">Tooltip Position:</p>
-                <div className="flex gap-2">
-                  {['top', 'right', 'bottom', 'left', 'auto'].map((placement) => (
-                    <button
-                      key={placement}
-                      onClick={() => updateStep(activeStep.id, 'placement', placement)}
-                      className={`flex-1 py-2 text-xs font-medium rounded capitalize transition-colors ${
-                        activeStep.placement === placement
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                      }`}
-                    >
-                      {placement}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>

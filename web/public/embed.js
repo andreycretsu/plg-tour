@@ -3,7 +3,7 @@
  * Add this to your website to show product tours and tooltips to all visitors
  * 
  * Usage (basic):
- * <script src="https://plg-tour.vercel.app/embed.js" data-token="YOUR_API_TOKEN"></script>
+ * <script src="https://www.cleaqops.com/embed.js" data-token="YOUR_API_TOKEN"></script>
  * 
  * Usage (with user tracking - recommended for "show once" to work across devices):
  * <script>
@@ -14,7 +14,7 @@
  *     userName: 'John Doe'       // Optional
  *   };
  * </script>
- * <script src="https://plg-tour.vercel.app/embed.js"></script>
+ * <script src="https://www.cleaqops.com/embed.js"></script>
  */
 
 (function() {
@@ -27,7 +27,7 @@
   }
   window.__TourLayerLoaded = true;
 
-  const API_URL = 'https://plg-tour.vercel.app';
+  const API_URL = 'https://www.cleaqops.com';
   
   // Tour state
   let currentTour = null;
@@ -138,7 +138,7 @@
     const scripts = document.querySelectorAll('script');
     for (const script of scripts) {
       const src = script.getAttribute('src') || '';
-      if (src.includes('plg-tour') || src.includes('embed.js') || src.includes('tourlayer')) {
+      if (src.includes('cleaqops') || src.includes('plg-tour') || src.includes('embed.js') || src.includes('tourlayer')) {
         token = script.getAttribute('data-token');
         // Also check for user data in script attributes
         userConfig.userId = script.getAttribute('data-user-id') || userConfig.userId;
@@ -293,7 +293,7 @@
     
     if (!apiToken) {
       console.warn('TourLayer: No API token found. Add data-token="YOUR_TOKEN" to the script tag.');
-      console.warn('TourLayer: Example: <script src="https://plg-tour.vercel.app/embed.js" data-token="tl_xxx"></script>');
+      console.warn('TourLayer: Example: <script src="https://www.cleaqops.com/embed.js" data-token="tl_xxx"></script>');
       return;
     }
 

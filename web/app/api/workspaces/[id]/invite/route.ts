@@ -109,7 +109,7 @@ export async function POST(
 
     // In a real app, you would send an email here with the invite link
     // For MVP, we'll just return success
-    const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://plg-tour.vercel.app'}/invite/${inviteToken}`;
+    const inviteUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.cleaqops.com'}/invite/${inviteToken}`;
 
     return NextResponse.json({ 
       message: 'Invite sent',

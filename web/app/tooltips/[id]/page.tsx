@@ -897,9 +897,9 @@ export default function EditTooltipPage() {
                     <Input
                       value={urlPattern}
                       onChange={(e) => setUrlPattern(e.target.value)}
-                      placeholder="https://app.example.com/*"
+                      placeholder="/dashboard* or /teams"
                     />
-                    <FieldDescription>Use * as wildcard</FieldDescription>
+                    <FieldDescription>Examples: /teams, /settings/*, or * for all pages</FieldDescription>
                   </Field>
 
                   <Field>
@@ -2190,24 +2190,48 @@ export default function EditTooltipPage() {
                       textAlign: textAlign,
                     };
 
-                    // Position card based on edge - distance from beacon, not element
+                    // Calculate beacon position to match getBeaconPreviewStyle()
+                    const halfSize = iconSize / 2;
+                    let beaconLeft: number;
+                    let beaconTop: number;
+                    
                     switch (iconEdge) {
                       case 'top':
-                        cardStyle.bottom = elementSize + iconOffset + iconSize + cardGap;
-                        cardStyle.left = halfElement - cardWidth / 2 + cardPosOffsetY;
+                        // Beacon center is at: element center horizontally, above element vertically
+                        beaconLeft = halfElement + iconOffsetY - halfSize;
+                        beaconTop = -halfSize - iconOffset;
+                        // Card below beacon
+                        cardStyle.top = beaconTop + iconSize + cardGap;
+                        cardStyle.left = beaconLeft + halfSize - cardWidth / 2 + cardPosOffsetY;
+                        cardStyle.transform = 'none';
                         break;
                       case 'bottom':
-                        cardStyle.top = elementSize + iconOffset + iconSize + cardGap;
-                        cardStyle.left = halfElement - cardWidth / 2 + cardPosOffsetY;
+                        // Beacon center is at: element center horizontally, below element vertically
+                        beaconLeft = halfElement + iconOffsetY - halfSize;
+                        beaconTop = elementSize + halfSize + iconOffset;
+                        // Card above beacon
+                        cardStyle.bottom = (elementSize - beaconTop) + iconSize + cardGap;
+                        cardStyle.left = beaconLeft + halfSize - cardWidth / 2 + cardPosOffsetY;
+                        cardStyle.transform = 'none';
                         break;
                       case 'left':
-                        cardStyle.right = elementSize + iconOffset + iconSize + cardGap;
-                        cardStyle.top = halfElement - 100 + cardPosOffsetY;
+                        // Beacon center is at: left of element, element center vertically
+                        beaconLeft = -halfSize - iconOffset;
+                        beaconTop = halfElement + iconOffsetY - halfSize;
+                        // Card to the right of beacon
+                        cardStyle.left = beaconLeft + iconSize + cardGap;
+                        cardStyle.top = beaconTop + halfSize - 100 + cardPosOffsetY;
+                        cardStyle.transform = 'none';
                         break;
                       case 'right':
                       default:
-                        cardStyle.left = elementSize + iconOffset + iconSize + cardGap;
-                        cardStyle.top = halfElement - 100 + cardPosOffsetY;
+                        // Beacon center is at: right of element, element center vertically
+                        beaconLeft = elementSize + halfSize + iconOffset;
+                        beaconTop = halfElement + iconOffsetY - halfSize;
+                        // Card to the right of beacon
+                        cardStyle.left = beaconLeft + halfSize + cardGap;
+                        cardStyle.top = beaconTop + halfSize - 100 + cardPosOffsetY;
+                        cardStyle.transform = 'none';
                         break;
                     }
 

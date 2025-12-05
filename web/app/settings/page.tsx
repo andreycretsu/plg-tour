@@ -84,12 +84,12 @@ export default function SettingsPage() {
     userLocale: 'en'            // User's language (en, uk, pl, es, de, ru, fr, it, ja, zh)
   };
 </script>
-<script src="https://plg-tour.vercel.app/embed.js"></script>`;
+<script src="https://www.cleaqops.com/embed.js"></script>`;
     }
     
     return `<!-- TourLayer - Product Tours (Basic) -->
 <script 
-  src="https://plg-tour.vercel.app/embed.js" 
+  src="https://www.cleaqops.com/embed.js" 
   data-token="${apiToken}">
 </script>`;
   };

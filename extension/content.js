@@ -7,7 +7,7 @@
   }
   window.__tourLayerInitialized = true;
 
-  const API_URL = 'https://plg-tour.vercel.app';
+  const API_URL = 'https://www.cleaqops.com';
   
   // Tour state
   let currentTour = null;
@@ -232,8 +232,9 @@
     getUserConfig();
     
     // Don't run on TourLayer web app itself
-    if (window.location.hostname.includes('plg-tour') || 
-        window.location.hostname.includes('vercel.app') && window.location.pathname.includes('/tours')) {
+    if (window.location.hostname.includes('cleaqops') || 
+        window.location.hostname.includes('plg-tour') || 
+        (window.location.hostname.includes('vercel.app') && window.location.pathname.includes('/tours'))) {
       console.log('TourLayer: Skipping on TourLayer app');
       showDebugBadge('Skipped (TourLayer app)', '#64748b');
       return;
