@@ -22,6 +22,7 @@ export default function SignupPage() {
       </div>
       <div className="relative hidden bg-muted lg:block">
         <RippleGrid
+          enableRainbow={false}
           gridColor="#8b5cf6"
           rippleIntensity={0.14}
           gridSize={21}
@@ -31,9 +32,8 @@ export default function SignupPage() {
           glowIntensity={0}
           opacity={0.7}
           gridRotation={0}
-          mouseInteractionRadius={1.2}
           mouseInteraction={true}
-          enableRainbow={false}
+          mouseInteractionRadius={1.2}
         />
         <img
           src="/placeholder.svg"
