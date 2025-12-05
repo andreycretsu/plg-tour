@@ -302,7 +302,7 @@ export default function EditTooltipPage() {
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.source !== window) return;
-      if (!event.data || event.data.source !== 'tourlayer-extension') return;
+      if (!event.data || (event.data.source !== 'walko-extension' && event.data.source !== 'tourlayer-extension')) return;
 
       if (event.data.type === 'PONG' || event.data.type === 'EXTENSION_READY') {
         setExtensionInstalled(true);
@@ -327,9 +327,9 @@ export default function EditTooltipPage() {
     };
 
     window.addEventListener('message', handleMessage);
-    window.postMessage({ source: 'tourlayer-webapp', type: 'PING' }, '*');
+    window.postMessage({ source: 'walko-webapp', type: 'PING' }, '*');
     const interval = setInterval(() => {
-      window.postMessage({ source: 'tourlayer-webapp', type: 'PING' }, '*');
+      window.postMessage({ source: 'walko-webapp', type: 'PING' }, '*');
     }, 3000);
 
     return () => {
@@ -355,7 +355,7 @@ export default function EditTooltipPage() {
     
     setPickingElement(true);
     window.postMessage({ 
-      source: 'tourlayer-webapp', 
+      source: 'walko-webapp', 
       type: 'START_PICKER',
       targetUrl
     }, '*');
@@ -378,7 +378,7 @@ export default function EditTooltipPage() {
     
     setCapturingScreenshot(true);
     window.postMessage({ 
-      source: 'tourlayer-webapp', 
+      source: 'walko-webapp', 
       type: 'CAPTURE_SCREENSHOT',
       targetUrl,
       selector: selector || undefined

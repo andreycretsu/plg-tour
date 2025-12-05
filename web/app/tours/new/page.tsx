@@ -100,12 +100,12 @@ export default function NewTourPage() {
   // Check if extension is installed
   useEffect(() => {
     const checkExtension = () => {
-      window.postMessage({ source: 'tourlayer-webapp', type: 'PING' }, '*');
+      window.postMessage({ source: 'walko-webapp', type: 'PING' }, '*');
     };
 
     const handleMessage = (event: MessageEvent) => {
       if (event.source !== window) return;
-      if (!event.data || event.data.source !== 'tourlayer-extension') return;
+      if (!event.data || (event.data.source !== 'walko-extension' && event.data.source !== 'tourlayer-extension')) return;
 
       switch (event.data.type) {
         case 'PONG':
@@ -207,7 +207,7 @@ export default function NewTourPage() {
     setPickingForStep(stepId);
     setPickerStatus('waiting');
     window.postMessage({ 
-      source: 'tourlayer-webapp', 
+      source: 'walko-webapp', 
       type: 'START_PICKER',
       stepId,
       targetUrl
@@ -237,7 +237,7 @@ export default function NewTourPage() {
     
     setCapturingScreenshot(true);
     window.postMessage({ 
-      source: 'tourlayer-webapp', 
+      source: 'walko-webapp', 
       type: 'CAPTURE_SCREENSHOT',
       targetUrl,
       selector: activeStep.selector
