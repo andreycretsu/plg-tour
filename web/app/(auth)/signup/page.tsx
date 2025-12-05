@@ -9,13 +9,13 @@ export default function SignupPage() {
       {/* Magnet Lines effect - covers entire page background */}
       <div className="absolute inset-0 flex items-center justify-center">
         <MagnetLines 
-          rows={15}
-          columns={15}
+          rows={50}
+          columns={50}
           containerSize="100%"
           lineColor="#d0d0d0"
-          lineWidth="2px"
-          lineHeight="40px"
-          baseAngle={-10}
+          lineWidth="1px"
+          lineHeight="8px"
+          baseAngle={0}
           style={{ width: '100%', height: '100%' }}
         />
       </div>
