@@ -23,9 +23,9 @@ export default function LoginPage() {
       <div className="relative hidden bg-muted lg:block">
         <RippleGrid
           enableRainbow={false}
-          gridColor="#8b5cf6"
+          gridColor="#CFCFCF"
           rippleIntensity={0.02}
-          gridSize={21}
+          gridSize={20}
           gridThickness={50}
           fadeDistance={1.5}
           vignetteStrength={2}
