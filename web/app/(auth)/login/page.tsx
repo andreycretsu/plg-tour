@@ -35,13 +35,15 @@ export default function LoginPage() {
             <div 
               className="absolute border-[#c7c7c7] border-[0.5px] border-solid h-[216px] left-[-25px] rounded-[12px] top-[19px] w-[451px] overflow-hidden"
             >
-              <div className="absolute inset-0 overflow-hidden pointer-events-none rounded-[12px]">
-                <img 
-                  alt="Walko preview" 
-                  className="absolute h-[175.3%] left-[-5.99%] max-w-none top-[-19.3%] w-[111.98%] object-cover"
-                  src="http://localhost:3845/assets/ca09867c21c144cd5ebf64e599be1994a116b0c5.png"
-                />
-              </div>
+              <div 
+                className="absolute inset-0 overflow-hidden pointer-events-none rounded-[12px]"
+                style={{
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'800\' height=\'600\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cdefs%3E%3ClinearGradient id=\'grad\' x1=\'0%25\' y1=\'0%25\' x2=\'100%25\' y2=\'100%25\'%3E%3Cstop offset=\'0%25\' style=\'stop-color:%23667eea;stop-opacity:1\' /%3E%3Cstop offset=\'100%25\' style=\'stop-color:%23764ba2;stop-opacity:1\' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width=\'800\' height=\'600\' fill=\'url(%23grad)\'/%3E%3C/svg%3E")',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
+              />
             </div>
             
             {/* Content */}

@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Spinner } from "@/components/ui/spinner"
 
 interface LoginFormProps extends React.ComponentPropsWithoutRef<"form"> {
   className?: string
@@ -95,7 +96,14 @@ export function LoginForm({ className, ...props }: LoginFormProps) {
           />
         </div>
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? 'Signing in...' : 'Login'}
+          {loading ? (
+            <>
+              <Spinner className="size-4" />
+              Signing in...
+            </>
+          ) : (
+            'Login'
+          )}
         </Button>
       </div>
       <div className="text-center text-sm">

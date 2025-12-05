@@ -15,6 +15,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
+import { Spinner } from '@/components/ui/spinner';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -62,7 +63,10 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <DashboardLayout>
-        <div className="text-center py-12">Loading...</div>
+        <div className="text-center py-12">
+          <Spinner className="size-8 text-primary-600 mx-auto" />
+          <p className="text-gray-500 mt-4">Loading...</p>
+        </div>
       </DashboardLayout>
     );
   }

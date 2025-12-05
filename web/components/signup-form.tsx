@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Spinner } from "@/components/ui/spinner"
 
 interface SignupFormProps extends React.ComponentPropsWithoutRef<"form"> {
   className?: string
@@ -136,7 +137,14 @@ export function SignupForm({ className, ...props }: SignupFormProps) {
           />
         </div>
         <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? 'Creating workspace...' : 'Continue'}
+          {loading ? (
+            <>
+              <Spinner className="size-4" />
+              Creating workspace...
+            </>
+          ) : (
+            'Continue'
+          )}
         </Button>
       </div>
       <div className="text-center text-sm">

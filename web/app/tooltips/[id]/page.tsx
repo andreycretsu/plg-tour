@@ -14,11 +14,12 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldLabel, FieldGroup, FieldDescription } from '@/components/ui/field';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { Stepper, StepContent } from '@/components/ui/stepper';
+import { Stepper, StepContent, StepNavigation } from '@/components/ui/stepper';
 import { VariableInput, VariableTextarea } from '@/components/ui/variable-input';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { useAlertDialog } from '@/components/useAlertDialog';
 import { Spinner } from '@/components/ui/spinner';
+import { DotPattern } from '@/components/ui/dot-pattern';
 
 // Define wizard steps
 const WIZARD_STEPS = [
@@ -83,6 +84,8 @@ export default function EditTooltipPage() {
   const [textAlign, setTextAlign] = useState<'left' | 'center' | 'right'>('left');
   const [cardTextColor, setCardTextColor] = useState('#1f2937');
   const [cardBgColor, setCardBgColor] = useState('#ffffff');
+  const [cardBlurIntensity, setCardBlurIntensity] = useState(0); // 0-20px blur
+  const [cardBgOpacity, setCardBgOpacity] = useState(100); // 0-100% opacity
   
   // Typography
   const [titleSize, setTitleSize] = useState(16);
@@ -663,8 +666,17 @@ export default function EditTooltipPage() {
             onClick={saveTooltip}
             disabled={saving}
           >
-            <Save size={18} />
-            {saving ? 'Saving...' : 'Save Changes'}
+            {saving ? (
+              <>
+                <Spinner className="size-4" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save size={18} />
+                Save Changes
+              </>
+            )}
           </Button>
         </div>
       }
@@ -676,7 +688,7 @@ export default function EditTooltipPage() {
         }
       `}</style>
 
-      <div className="flex h-full">
+      <div className="flex h-full relative">
         {/* Left Sidebar - Stepper */}
         <div className="w-52 border-r border-gray-200 bg-gray-50/50 p-4 overflow-y-auto shrink-0">
           {/* Vertical Stepper */}
@@ -688,16 +700,11 @@ export default function EditTooltipPage() {
         </div>
 
         {/* Middle Column - Form Content */}
-        <div className="flex-1 max-w-xl overflow-y-auto p-6">
+        <div className="flex-1 max-w-xl overflow-y-auto p-6 pb-20">
 
           {/* Step 1: Targeting & Trigger */}
           {activeStep === 1 && (
-            <StepContent
-              currentStep={activeStep}
-              onNext={() => setActiveStep(2)}
-              isFirst={true}
-              nextLabel="Next: Content"
-            >
+            <StepContent>
               <div className="space-y-6">
                 <div className="card p-5">
                   <h2 className="text-base font-semibold text-gray-900 mb-4">Targeting</h2>
@@ -740,8 +747,17 @@ export default function EditTooltipPage() {
                               : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                           }`}
                         >
-                          <Crosshair size={14} />
-                          {pickingElement ? '...' : 'Pick'}
+                          {pickingElement ? (
+                            <>
+                              <Spinner className="size-3.5" />
+                              Picking...
+                            </>
+                          ) : (
+                            <>
+                              <Crosshair size={14} />
+                              Pick
+                            </>
+                          )}
                         </button>
                       </div>
                     </Field>
@@ -803,12 +819,7 @@ export default function EditTooltipPage() {
 
           {/* Step 2: Content */}
           {activeStep === 2 && (
-            <StepContent
-              currentStep={activeStep}
-              onBack={() => setActiveStep(1)}
-              onNext={() => setActiveStep(3)}
-              nextLabel="Next: Beacon"
-            >
+            <StepContent>
               <div className="card p-5">
                 <h2 className="text-base font-semibold text-gray-900 mb-4">Tooltip Content</h2>
                 
@@ -986,12 +997,7 @@ export default function EditTooltipPage() {
 
           {/* Step 3: Beacon */}
           {activeStep === 3 && (
-            <StepContent
-              currentStep={activeStep}
-              onBack={() => setActiveStep(2)}
-              onNext={() => setActiveStep(4)}
-              nextLabel="Next: Card"
-            >
+            <StepContent>
               <div className="card p-5">
                 <h2 className="text-base font-semibold text-gray-900 mb-4">Beacon Settings</h2>
                 
@@ -1155,12 +1161,7 @@ export default function EditTooltipPage() {
 
           {/* Step 4: Card */}
           {activeStep === 4 && (
-            <StepContent
-              currentStep={activeStep}
-              onBack={() => setActiveStep(3)}
-              onNext={() => setActiveStep(5)}
-              nextLabel="Next: Frequency"
-            >
+            <StepContent>
               <div className="space-y-6">
                 {/* Card Style */}
                 <div className="card p-5">
@@ -1243,6 +1244,46 @@ export default function EditTooltipPage() {
                       <Field>
                         <FieldLabel>Text Color</FieldLabel>
                         <ColorPicker value={cardTextColor} onChange={setCardTextColor} />
+                      </Field>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <Field>
+                        <FieldLabel>Background Blur</FieldLabel>
+                        <div className="space-y-2">
+                          <Slider
+                            value={[cardBlurIntensity]}
+                            onValueChange={(value) => setCardBlurIntensity(value[0])}
+                            min={0}
+                            max={20}
+                            step={1}
+                            className="w-full"
+                          />
+                          <div className="flex justify-between text-xs text-gray-500">
+                            <span>None</span>
+                            <span>{cardBlurIntensity}px</span>
+                            <span>Strong</span>
+                          </div>
+                        </div>
+                      </Field>
+
+                      <Field>
+                        <FieldLabel>Background Opacity</FieldLabel>
+                        <div className="space-y-2">
+                          <Slider
+                            value={[cardBgOpacity]}
+                            onValueChange={(value) => setCardBgOpacity(value[0])}
+                            min={0}
+                            max={100}
+                            step={1}
+                            className="w-full"
+                          />
+                          <div className="flex justify-between text-xs text-gray-500">
+                            <span>Transparent</span>
+                            <span>{cardBgOpacity}%</span>
+                            <span>Opaque</span>
+                          </div>
+                        </div>
                       </Field>
                     </div>
                   </FieldGroup>
@@ -1403,11 +1444,7 @@ export default function EditTooltipPage() {
 
           {/* Step 5: Display Frequency */}
           {activeStep === 5 && (
-            <StepContent
-              currentStep={activeStep}
-              onBack={() => setActiveStep(4)}
-              isLast={true}
-            >
+            <StepContent>
               <div className="card p-5">
                 <h2 className="text-base font-semibold text-gray-900 mb-4">Display Frequency</h2>
                 <p className="text-sm text-gray-500 mb-4">Control how often users see this tooltip</p>
@@ -1968,9 +2005,18 @@ export default function EditTooltipPage() {
             {/* Preview Area */}
             {showPreview && (
               <div 
-                className="rounded-xl flex-1 flex items-center justify-center h-full overflow-hidden relative"
-                style={{ backgroundColor: '#f3f4f6', minHeight: 'calc(100vh - 100px)' }}
+                className="rounded-xl flex-1 flex items-center justify-center h-full overflow-hidden relative bg-white"
+                style={{ minHeight: 'calc(100vh - 100px)' }}
               >
+                <DotPattern
+                  className="absolute inset-0 [mask-image:radial-gradient(300px_circle_at_center,white,transparent)]"
+                  cellSize={20}
+                  dotRadius={1}
+                  color="000000"
+                  dotOpacity={0.15}
+                  lineOpacity={0}
+                  opacity={1}
+                />
                 {/* Screenshot Preview Mode */}
                 {screenshot ? (
                   <div className="relative w-full h-full">
@@ -2283,6 +2329,42 @@ export default function EditTooltipPage() {
             )}
           </div>
         </div>
+        
+        {/* Sticky Navigation Panel - Full Width */}
+        {activeStep === 1 && (
+          <StepNavigation
+            onNext={() => setActiveStep(2)}
+            isFirst={true}
+            nextLabel="Next: Content"
+          />
+        )}
+        {activeStep === 2 && (
+          <StepNavigation
+            onBack={() => setActiveStep(1)}
+            onNext={() => setActiveStep(3)}
+            nextLabel="Next: Beacon"
+          />
+        )}
+        {activeStep === 3 && (
+          <StepNavigation
+            onBack={() => setActiveStep(2)}
+            onNext={() => setActiveStep(4)}
+            nextLabel="Next: Card"
+          />
+        )}
+        {activeStep === 4 && (
+          <StepNavigation
+            onBack={() => setActiveStep(3)}
+            onNext={() => setActiveStep(5)}
+            nextLabel="Next: Frequency"
+          />
+        )}
+        {activeStep === 5 && (
+          <StepNavigation
+            onBack={() => setActiveStep(4)}
+            isLast={true}
+          />
+        )}
       </div>
     </FullScreenModal>
     <AlertDialogComponent />

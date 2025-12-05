@@ -13,11 +13,12 @@ import { Button } from '@/components/ui/button';
 import { Field, FieldLabel, FieldGroup, FieldDescription } from '@/components/ui/field';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { Stepper, StepContent } from '@/components/ui/stepper';
+import { Stepper, StepContent, StepNavigation } from '@/components/ui/stepper';
 import { VariableInput, VariableTextarea } from '@/components/ui/variable-input';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { useAlertDialog } from '@/components/useAlertDialog';
 import { Spinner } from '@/components/ui/spinner';
+import { DotPattern } from '@/components/ui/dot-pattern';
 
 // Define wizard steps for tours
 const TOUR_WIZARD_STEPS = [
@@ -321,8 +322,17 @@ export default function NewTourPage() {
           onClick={saveTour}
           disabled={loading || steps.length === 0 || !tourName || !urlPattern}
         >
-          <Save size={18} />
-          {loading ? 'Saving...' : 'Save Tour'}
+          {loading ? (
+            <>
+              <Spinner className="size-4" />
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save size={18} />
+              Save Tour
+            </>
+          )}
         </Button>
       }
     >
@@ -333,7 +343,7 @@ export default function NewTourPage() {
         }
       `}</style>
 
-      <div className="flex h-full">
+      <div className="flex h-full relative">
         {/* Left Sidebar - Stepper */}
         <div className="w-52 border-r border-gray-200 bg-gray-50/50 p-4 overflow-y-auto shrink-0">
           <Stepper
@@ -344,15 +354,10 @@ export default function NewTourPage() {
         </div>
 
         {/* Middle Column - Form Content */}
-        <div className="flex-1 max-w-xl overflow-y-auto p-6">
+        <div className="flex-1 max-w-xl overflow-y-auto p-6 pb-20">
           {/* Step 1: Tour Details */}
           {activeStep === 1 && (
-            <StepContent
-              currentStep={activeStep}
-              onNext={() => setActiveStep(2)}
-              isFirst={true}
-              nextLabel="Next: Steps"
-            >
+            <StepContent>
               <div className="card p-5">
                 <h2 className="text-base font-semibold text-gray-900 mb-4">Tour Details</h2>
                 
@@ -393,12 +398,7 @@ export default function NewTourPage() {
 
           {/* Step 2: Steps Management */}
           {activeStep === 2 && (
-            <StepContent
-              currentStep={activeStep}
-              onBack={() => setActiveStep(1)}
-              onNext={() => setActiveStep(3)}
-              nextLabel="Next: Card Style"
-            >
+            <StepContent>
               <div className="card p-5">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-base font-semibold text-gray-900">
@@ -573,12 +573,7 @@ export default function NewTourPage() {
 
           {/* Step 3: Card Style */}
           {activeStep === 3 && (
-            <StepContent
-              currentStep={activeStep}
-              onBack={() => setActiveStep(2)}
-              onNext={() => setActiveStep(4)}
-              nextLabel="Next: Typography"
-            >
+            <StepContent>
               <div className="card p-5">
                 <h2 className="text-base font-semibold text-gray-900 mb-4">Card Style</h2>
                 
@@ -640,12 +635,7 @@ export default function NewTourPage() {
 
           {/* Step 4: Typography */}
           {activeStep === 4 && (
-            <StepContent
-              currentStep={activeStep}
-              onBack={() => setActiveStep(3)}
-              onNext={() => setActiveStep(5)}
-              nextLabel="Next: Button"
-            >
+            <StepContent>
               <div className="card p-5">
                 <h2 className="text-base font-semibold text-gray-900 mb-4">Typography</h2>
                 <p className="text-sm text-gray-500 mb-4">Typography settings are applied at the step level. Configure individual step titles and content in Step 2.</p>
@@ -655,12 +645,7 @@ export default function NewTourPage() {
 
           {/* Step 5: Button */}
           {activeStep === 5 && (
-            <StepContent
-              currentStep={activeStep}
-              onBack={() => setActiveStep(4)}
-              onNext={() => setActiveStep(6)}
-              nextLabel="Next: Frequency"
-            >
+            <StepContent>
               <div className="card p-5">
                 <h2 className="text-base font-semibold text-gray-900 mb-4">Button Style</h2>
                 
@@ -696,11 +681,7 @@ export default function NewTourPage() {
 
           {/* Step 6: Frequency */}
           {activeStep === 6 && (
-            <StepContent
-              currentStep={activeStep}
-              onBack={() => setActiveStep(5)}
-              isLast={true}
-            >
+            <StepContent>
               <div className="card p-5">
                 <h2 className="text-base font-semibold text-gray-900 mb-4">Display Frequency</h2>
                 
@@ -849,9 +830,18 @@ export default function NewTourPage() {
 
             {/* Preview Area */}
             <div 
-              className="rounded-xl flex-1 flex items-center justify-center h-full overflow-hidden relative"
-              style={{ backgroundColor: '#f3f4f6', minHeight: 'calc(100vh - 100px)' }}
+              className="rounded-xl flex-1 flex items-center justify-center h-full overflow-hidden relative bg-white"
+              style={{ minHeight: 'calc(100vh - 100px)' }}
             >
+              <DotPattern
+                className="absolute inset-0 [mask-image:radial-gradient(300px_circle_at_center,white,transparent)]"
+                cellSize={20}
+                dotRadius={1}
+                color="000000"
+                dotOpacity={0.15}
+                lineOpacity={0}
+                opacity={1}
+              />
               {screenshot && activeStepData && screenshotElementRect ? (
                 /* Screenshot Preview Mode */
                 <div className="relative w-full h-full">
@@ -1038,6 +1028,49 @@ export default function NewTourPage() {
             </div>
           </div>
         </div>
+        
+        {/* Sticky Navigation Panel - Full Width */}
+        {activeStep === 1 && (
+          <StepNavigation
+            onNext={() => setActiveStep(2)}
+            isFirst={true}
+            nextLabel="Next: Steps"
+          />
+        )}
+        {activeStep === 2 && (
+          <StepNavigation
+            onBack={() => setActiveStep(1)}
+            onNext={() => setActiveStep(3)}
+            nextLabel="Next: Card Style"
+          />
+        )}
+        {activeStep === 3 && (
+          <StepNavigation
+            onBack={() => setActiveStep(2)}
+            onNext={() => setActiveStep(4)}
+            nextLabel="Next: Typography"
+          />
+        )}
+        {activeStep === 4 && (
+          <StepNavigation
+            onBack={() => setActiveStep(3)}
+            onNext={() => setActiveStep(5)}
+            nextLabel="Next: Button"
+          />
+        )}
+        {activeStep === 5 && (
+          <StepNavigation
+            onBack={() => setActiveStep(4)}
+            onNext={() => setActiveStep(6)}
+            nextLabel="Next: Frequency"
+          />
+        )}
+        {activeStep === 6 && (
+          <StepNavigation
+            onBack={() => setActiveStep(5)}
+            isLast={true}
+          />
+        )}
       </div>
     </FullScreenModal>
     </>

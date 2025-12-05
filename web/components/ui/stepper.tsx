@@ -66,53 +66,57 @@ export function Stepper({ steps, currentStep, onStepClick }: StepperProps) {
 
 interface StepContentProps {
   children: React.ReactNode
-  currentStep: number
-  onNext?: () => void
-  onBack?: () => void
-  isFirst?: boolean
-  isLast?: boolean
-  nextLabel?: string
 }
 
 export function StepContent({ 
-  children, 
-  currentStep, 
+  children
+}: StepContentProps) {
+  return (
+    <div className="space-y-6 pb-20">
+      {children}
+    </div>
+  )
+}
+
+export function StepNavigation({ 
   onNext, 
   onBack,
   isFirst,
   isLast,
   nextLabel = "Next"
-}: StepContentProps) {
+}: {
+  onNext?: () => void
+  onBack?: () => void
+  isFirst?: boolean
+  isLast?: boolean
+  nextLabel?: string
+}) {
   return (
-    <div className="space-y-6 pb-20">
-      {children}
+    <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-4 flex justify-between items-center z-10 shadow-sm">
+      {!isFirst ? (
+        <button
+          type="button"
+          onClick={onBack}
+          className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          ← Back
+        </button>
+      ) : <div />}
       
-      <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 -mx-6 -mb-6 mt-6 flex justify-between items-center">
-        {!isFirst ? (
-          <button
-            type="button"
-            onClick={onBack}
-            className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            ← Back
-          </button>
-        ) : <div />}
-        
-        {!isLast ? (
-          <button
-            type="button"
-            onClick={onNext}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors ml-auto"
-          >
-            {nextLabel} →
-          </button>
-        ) : (
-          <span className="flex items-center gap-2 text-sm text-green-600 font-medium ml-auto">
-            <Check className="h-4 w-4" />
-            Ready to save!
-          </span>
-        )}
-      </div>
+      {!isLast ? (
+        <button
+          type="button"
+          onClick={onNext}
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors ml-auto"
+        >
+          {nextLabel} →
+        </button>
+      ) : (
+        <span className="flex items-center gap-2 text-sm text-green-600 font-medium ml-auto">
+          <Check className="h-4 w-4" />
+          Ready to save!
+        </span>
+      )}
     </div>
   )
 }
