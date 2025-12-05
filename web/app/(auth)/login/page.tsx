@@ -25,12 +25,12 @@ export default function LoginPage() {
           enableRainbow={false}
           gridColor="#CFCFCF"
           rippleIntensity={0.02}
-          gridSize={20}
+          gridSize={30}
           gridThickness={50}
           fadeDistance={1.5}
           vignetteStrength={2}
           glowIntensity={0}
-          opacity={0.7}
+          opacity={0.5}
           gridRotation={0}
           mouseInteraction={true}
           mouseInteractionRadius={1.2}
