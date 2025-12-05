@@ -1,25 +1,10 @@
 import { GalleryVerticalEnd } from "lucide-react"
 import { LoginForm } from "@/components/login-form"
-import MagnetLines from "@/components/MagnetLines"
 import { TiltedCard } from "@/components/ui/tilted-card"
 
 export default function LoginPage() {
   return (
     <div className="grid min-h-svh lg:grid-cols-2 relative overflow-hidden" style={{ backgroundColor: '#F5F5F5' }}>
-      {/* Magnet Lines effect - covers entire page background */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-        <MagnetLines 
-          rows={80}
-          columns={100}
-          containerSize="100%"
-          lineColor="#d0d0d0"
-          lineWidth="1px"
-          lineHeight="8px"
-          baseAngle={-10}
-          style={{ width: '100%', height: '100%' }}
-        />
-      </div>
-      
       {/* Left section - white card */}
       <div className="relative flex flex-col gap-4 p-6 md:p-10 bg-white m-6 rounded-[32px] shadow-md z-20">
         <div className="flex justify-center gap-2 md:justify-start">

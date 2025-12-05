@@ -10,10 +10,15 @@
   height: 80vmin;
 }
 
+.magnetLines-container {
+  pointer-events: none;
+}
+
 .magnetLines-container span {
   display: block;
   transform-origin: center;
   will-change: transform;
   transform: rotate(var(--rotate));
   pointer-events: none;
+  transition: transform 0.1s ease-out;
 }

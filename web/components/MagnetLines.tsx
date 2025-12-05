@@ -33,55 +33,88 @@ export default function MagnetLines({
     if (!container) return;
 
     const items = container.querySelectorAll('span');
+    if (items.length === 0) return;
+
+    // Pre-calculate positions once
+    const itemPositions: Array<{ centerX: number; centerY: number; element: HTMLElement }> = [];
+    items.forEach((item) => {
+      const rect = item.getBoundingClientRect();
+      itemPositions.push({
+        centerX: rect.x + rect.width / 2,
+        centerY: rect.y + rect.height / 2,
+        element: item as HTMLElement
+      });
+    });
+
     let rafId: number | null = null;
     let lastPointer = { x: 0, y: 0 };
-    let needsUpdate = false;
+    let isUpdating = false;
 
     const updateLines = () => {
-      if (!needsUpdate) return;
+      isUpdating = true;
       
-      items.forEach(item => {
-        const rect = item.getBoundingClientRect();
-        const centerX = rect.x + rect.width / 2;
-        const centerY = rect.y + rect.height / 2;
-
+      itemPositions.forEach(({ centerX, centerY, element }) => {
         const b = lastPointer.x - centerX;
         const a = lastPointer.y - centerY;
         const c = Math.sqrt(a * a + b * b) || 1;
         const r = ((Math.acos(b / c) * 180) / Math.PI) * (lastPointer.y > centerY ? 1 : -1);
-
-        (item as HTMLElement).style.setProperty('--rotate', `${r}deg`);
+        element.style.setProperty('--rotate', `${r}deg`);
       });
       
-      needsUpdate = false;
+      isUpdating = false;
       rafId = null;
     };
 
+    let throttleTimeout: NodeJS.Timeout | null = null;
     const handlePointerMove = (e: PointerEvent) => {
       lastPointer = { x: e.clientX, y: e.clientY };
       
-      if (!needsUpdate) {
-        needsUpdate = true;
-        rafId = requestAnimationFrame(updateLines);
+      // Throttle updates to max 30fps for better performance
+      if (!isUpdating && rafId === null) {
+        if (throttleTimeout) {
+          clearTimeout(throttleTimeout);
+        }
+        throttleTimeout = setTimeout(() => {
+          rafId = requestAnimationFrame(updateLines);
+        }, 33); // ~30fps
       }
     };
 
     window.addEventListener('pointermove', handlePointerMove, { passive: true });
 
-    if (items.length) {
-      const middleIndex = Math.floor(items.length / 2);
-      const rect = items[middleIndex].getBoundingClientRect();
-      lastPointer = { x: rect.x, y: rect.y };
-      updateLines();
-    }
+    // Initial update
+    const containerRect = container.getBoundingClientRect();
+    lastPointer = { 
+      x: containerRect.left + containerRect.width / 2, 
+      y: containerRect.top + containerRect.height / 2 
+    };
+    updateLines();
+
+    // Recalculate positions on resize
+    const resizeObserver = new ResizeObserver(() => {
+      itemPositions.length = 0;
+      items.forEach((item) => {
+        const rect = item.getBoundingClientRect();
+        itemPositions.push({
+          centerX: rect.x + rect.width / 2,
+          centerY: rect.y + rect.height / 2,
+          element: item as HTMLElement
+        });
+      });
+    });
+    resizeObserver.observe(container);
 
     return () => {
       window.removeEventListener('pointermove', handlePointerMove);
       if (rafId !== null) {
         cancelAnimationFrame(rafId);
       }
+      if (throttleTimeout) {
+        clearTimeout(throttleTimeout);
+      }
+      resizeObserver.disconnect();
     };
-  }, []);
+  }, [rows, columns]);
 
   const total = rows * columns;
   const spans = Array.from({ length: total }, (_, i) => (
