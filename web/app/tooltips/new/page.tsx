@@ -1429,12 +1429,73 @@ export default function NewTooltipPage() {
                 ) : (
                   /* Mock Preview Mode */
                   <div className="relative p-6">
-                    {/* Mock Element */}
+                    {/* Mock Element - Figma Design */}
                     <div 
-                      className="bg-gray-300 rounded-lg flex items-center justify-center text-gray-500 font-medium text-sm"
-                      style={{ width: 100, height: 100 }}
+                      className="bg-white overflow-hidden relative rounded-[10px]"
+                      style={{ width: 80, height: 80 }}
                     >
-                      Element
+                      {/* Central black dot */}
+                      <div 
+                        className="absolute bg-black rounded-full"
+                        style={{ 
+                          width: 6, 
+                          height: 6, 
+                          left: '50%', 
+                          top: '50%', 
+                          transform: 'translate(-50%, -50%)',
+                          zIndex: 10
+                        }}
+                      />
+                      
+                      {/* Horizontal line */}
+                      <div 
+                        className="absolute bg-gray-300"
+                        style={{ 
+                          width: '100%', 
+                          height: 1, 
+                          left: 0, 
+                          top: '50%', 
+                          transform: 'translateY(-50%)',
+                          opacity: 0.3
+                        }}
+                      />
+                      
+                      {/* Vertical line */}
+                      <div 
+                        className="absolute bg-gray-300"
+                        style={{ 
+                          width: 1, 
+                          height: '100%', 
+                          left: '50%', 
+                          top: 0, 
+                          transform: 'translateX(-50%)',
+                          opacity: 0.3
+                        }}
+                      />
+                      
+                      {/* Diagonal lines */}
+                      <div 
+                        className="absolute bg-gray-300"
+                        style={{ 
+                          width: '141%', 
+                          height: 1, 
+                          left: '50%', 
+                          top: '50%', 
+                          transform: 'translate(-50%, -50%) rotate(45deg)',
+                          opacity: 0.2
+                        }}
+                      />
+                      <div 
+                        className="absolute bg-gray-300"
+                        style={{ 
+                          width: '141%', 
+                          height: 1, 
+                          left: '50%', 
+                          top: '50%', 
+                          transform: 'translate(-50%, -50%) rotate(-45deg)',
+                          opacity: 0.2
+                        }}
+                      />
                     </div>
                     
                     {/* Beacon - positioned on element edge */}
