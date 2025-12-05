@@ -84,10 +84,10 @@ export function StepContent({
   nextLabel = "Next"
 }: StepContentProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20">
       {children}
       
-      <div className="flex justify-between pt-4 border-t">
+      <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 -mx-6 -mb-6 mt-6 flex justify-between items-center">
         {!isFirst ? (
           <button
             type="button"
@@ -102,12 +102,12 @@ export function StepContent({
           <button
             type="button"
             onClick={onNext}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors"
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 transition-colors ml-auto"
           >
             {nextLabel} →
           </button>
         ) : (
-          <span className="flex items-center gap-2 text-sm text-green-600 font-medium">
+          <span className="flex items-center gap-2 text-sm text-green-600 font-medium ml-auto">
             <Check className="h-4 w-4" />
             Ready to save!
           </span>

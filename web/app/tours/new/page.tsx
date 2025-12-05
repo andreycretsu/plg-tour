@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import FullScreenModal from '@/components/FullScreenModal';
 import ImageUpload from '@/components/ImageUpload';
 import ColorPicker from '@/components/ColorPicker';
-import { Plus, Trash2, GripVertical, Save, Crosshair, Languages, Settings, FileText, Type, Palette, Repeat, Layers, Eye, Camera, Loader2 } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Save, Crosshair, Languages, Settings, FileText, Type, Palette, Repeat, Layers, Eye, Camera } from 'lucide-react';
 
 // Shadcn UI components
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,8 @@ import { Slider } from '@/components/ui/slider';
 import { Stepper, StepContent } from '@/components/ui/stepper';
 import { VariableInput, VariableTextarea } from '@/components/ui/variable-input';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { useAlertDialog } from '@/components/useAlertDialog';
+import { Spinner } from '@/components/ui/spinner';
 
 // Define wizard steps for tours
 const TOUR_WIZARD_STEPS = [
@@ -75,6 +77,7 @@ const defaultFrequency: TourFrequency = {
 
 export default function NewTourPage() {
   const router = useRouter();
+  const { showAlert, AlertDialogComponent } = useAlertDialog();
   const [activeStep, setActiveStep] = useState(1);
   const [tourName, setTourName] = useState('New Product Tour');
   const [urlPattern, setUrlPattern] = useState('*');
@@ -129,7 +132,7 @@ export default function NewTourPage() {
             setScreenshotElementRect(event.data.elementRect);
             setScreenshotViewport(event.data.viewport);
           } else {
-            alert('Failed to capture screenshot: ' + event.data.error);
+            showAlert('Failed to capture screenshot: ' + event.data.error);
           }
           break;
       }
@@ -187,13 +190,13 @@ export default function NewTourPage() {
 
   const startPicker = (stepId: string) => {
     if (!extensionInstalled) {
-      alert('Please install the Walko Chrome extension first!');
+      showAlert('Please install the Walko Chrome extension first!');
       return;
     }
 
     let targetUrl = urlPattern.replace(/\*+/g, '').trim();
     if (!targetUrl) {
-      alert('Please enter a URL pattern first!');
+      showAlert('Please enter a URL pattern first!');
       return;
     }
     if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
@@ -212,19 +215,19 @@ export default function NewTourPage() {
 
   const capturePreviewScreenshot = () => {
     if (!extensionInstalled) {
-      alert('Please install the Walko Chrome extension first!');
+      showAlert('Please install the Walko Chrome extension first!');
       return;
     }
 
     const activeStep = steps.find(s => s.id === activePreviewStep);
     if (!activeStep || !activeStep.selector) {
-      alert('Please select a step with a selector first!');
+      showAlert('Please select a step with a selector first!');
       return;
     }
 
     let targetUrl = urlPattern.replace(/\*+/g, '').trim();
     if (!targetUrl) {
-      alert('Please enter a URL pattern first!');
+      showAlert('Please enter a URL pattern first!');
       return;
     }
     if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
@@ -242,12 +245,12 @@ export default function NewTourPage() {
 
   const saveTour = async () => {
     if (!tourName || !urlPattern) {
-      alert('Please fill in tour name and URL pattern');
+      showAlert('Please fill in tour name and URL pattern');
       return;
     }
 
     if (steps.length === 0) {
-      alert('Please add at least one step');
+      showAlert('Please add at least one step');
       return;
     }
 
@@ -291,10 +294,10 @@ export default function NewTourPage() {
         throw new Error('Failed to save tour');
       }
 
-      alert('Tour saved successfully!');
+      showAlert('Tour saved successfully!');
       router.push('/tours');
     } catch (error) {
-      alert('Error saving tour: ' + error);
+      showAlert('Error saving tour: ' + error);
     } finally {
       setLoading(false);
     }
@@ -303,7 +306,9 @@ export default function NewTourPage() {
   const activeStepData = steps.find(s => s.id === activePreviewStep);
 
   return (
-    <FullScreenModal
+    <>
+      <AlertDialogComponent />
+      <FullScreenModal
       title="Create New Tour"
       headerExtra={
         <StatusBadge variant={extensionInstalled ? 'success' : 'fail'}>
@@ -407,7 +412,7 @@ export default function NewTourPage() {
 
                 {pickerStatus === 'waiting' && (
                   <div className="mb-4 p-3 rounded-lg bg-blue-50 border border-blue-200 flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+                    <Spinner className="size-4 text-blue-600" />
                     <p className="text-sm text-blue-800">Element Picker Active - Switch to target website and click an element</p>
                   </div>
                 )}
@@ -809,7 +814,7 @@ export default function NewTourPage() {
               >
                 {capturingScreenshot ? (
                   <>
-                    <Loader2 size={14} className="animate-spin" />
+                    <Spinner className="size-3.5" />
                     Capturing...
                   </>
                 ) : (
@@ -1035,5 +1040,6 @@ export default function NewTourPage() {
         </div>
       </div>
     </FullScreenModal>
+    </>
   );
 }

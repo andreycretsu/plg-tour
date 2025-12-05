@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import FullScreenModal from '@/components/FullScreenModal';
 import ImageUpload from '@/components/ImageUpload';
 import ColorPicker from '@/components/ColorPicker';
-import { Plus, Trash2, GripVertical, Save, Crosshair, AlertCircle, CheckCircle, Loader2, Languages, RefreshCw, Copy, Settings, FileText, Type, Palette, Repeat, Layers, Eye, Camera } from 'lucide-react';
+import { Plus, Trash2, GripVertical, Save, Crosshair, AlertCircle, CheckCircle, Languages, RefreshCw, Copy, Settings, FileText, Type, Palette, Repeat, Layers, Eye, Camera } from 'lucide-react';
 
 // Shadcn UI components
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Stepper, StepContent } from '@/components/ui/stepper';
 import { VariableInput, VariableTextarea } from '@/components/ui/variable-input';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { useAlertDialog } from '@/components/useAlertDialog';
+import { Spinner } from '@/components/ui/spinner';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 // Define wizard steps for tours
@@ -75,6 +77,7 @@ const defaultFrequency: TourFrequency = {
 
 export default function EditTourPage() {
   const router = useRouter();
+  const { showAlert, AlertDialogComponent } = useAlertDialog();
   const params = useParams();
   const tourId = params.id as string;
 
@@ -157,7 +160,7 @@ export default function EditTourPage() {
             setScreenshotElementRect(event.data.elementRect);
             setScreenshotViewport(event.data.viewport);
           } else {
-            alert('Failed to capture screenshot: ' + event.data.error);
+            showAlert('Failed to capture screenshot: ' + event.data.error);
           }
           break;
       }
@@ -276,7 +279,7 @@ export default function EditTourPage() {
 
   const handleAutoTranslate = async () => {
     if (!steps.length || !steps[0]?.title) {
-      alert('Please add at least one step with a title first');
+      showAlert('Please add at least one step with a title first');
       return;
     }
     
@@ -312,10 +315,10 @@ export default function EditTourPage() {
         setTranslations(grouped);
       }
       
-      alert('Successfully translated to all languages!');
+      showAlert('Successfully translated to all languages!');
     } catch (err) {
       console.error('Translation error:', err);
-      alert('Failed to translate. Please try again.');
+      showAlert('Failed to translate. Please try again.');
     } finally {
       setTranslating(false);
     }
@@ -343,10 +346,10 @@ export default function EditTourPage() {
         [langCode]: content,
       }));
       setEditingLang(null);
-      alert('Translation saved!');
+      showAlert('Translation saved!');
     } catch (err) {
       console.error('Save translation error:', err);
-      alert('Failed to save translation');
+      showAlert('Failed to save translation');
     }
   };
 
@@ -392,13 +395,13 @@ export default function EditTourPage() {
 
   const startPicker = (stepId: string) => {
     if (!extensionInstalled) {
-      alert('Please install the Walko Chrome extension first!');
+      showAlert('Please install the Walko Chrome extension first!');
       return;
     }
 
     let targetUrl = urlPattern.replace(/\*+/g, '').trim();
     if (!targetUrl) {
-      alert('Please enter a URL pattern first!');
+      showAlert('Please enter a URL pattern first!');
       return;
     }
     if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
@@ -417,19 +420,19 @@ export default function EditTourPage() {
 
   const capturePreviewScreenshot = () => {
     if (!extensionInstalled) {
-      alert('Please install the Walko Chrome extension first!');
+      showAlert('Please install the Walko Chrome extension first!');
       return;
     }
 
     const activeStep = steps.find(s => s.id === activePreviewStep);
     if (!activeStep || !activeStep.selector) {
-      alert('Please select a step with a selector first!');
+      showAlert('Please select a step with a selector first!');
       return;
     }
 
     let targetUrl = urlPattern.replace(/\*+/g, '').trim();
     if (!targetUrl) {
-      alert('Please enter a URL pattern first!');
+      showAlert('Please enter a URL pattern first!');
       return;
     }
     if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
@@ -447,12 +450,12 @@ export default function EditTourPage() {
 
   const saveTour = async () => {
     if (!tourName || !urlPattern) {
-      alert('Please fill in tour name and URL pattern');
+      showAlert('Please fill in tour name and URL pattern');
       return;
     }
 
     if (steps.length === 0) {
-      alert('Please add at least one step');
+      showAlert('Please add at least one step');
       return;
     }
 
@@ -498,10 +501,10 @@ export default function EditTourPage() {
         throw new Error('Failed to save tour');
       }
 
-      alert('Tour updated successfully!');
+      showAlert('Tour updated successfully!');
       router.push('/tours');
     } catch (error) {
-      alert('Error saving tour: ' + error);
+      showAlert('Error saving tour: ' + error);
     } finally {
       setSaving(false);
     }
@@ -520,7 +523,7 @@ export default function EditTourPage() {
       
       router.push('/tours');
     } catch (error) {
-      alert('Error deleting tour: ' + error);
+      showAlert('Error deleting tour: ' + error);
     } finally {
       setDeleting(false);
     }
@@ -538,7 +541,7 @@ export default function EditTourPage() {
       const newTour = await response.json();
       router.push(`/tours/${newTour.id}`);
     } catch (error) {
-      alert('Error duplicating tour: ' + error);
+      showAlert('Error duplicating tour: ' + error);
     } finally {
       setDuplicating(false);
     }
@@ -547,7 +550,7 @@ export default function EditTourPage() {
   if (loading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-gray-100">
-        <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+        <Spinner className="size-8 text-primary-600" />
       </div>
     );
   }
@@ -573,8 +576,10 @@ export default function EditTourPage() {
   const activeStepData = steps.find(s => s.id === activePreviewStep);
 
   return (
-    <FullScreenModal
-      title="Edit Tour"
+    <>
+      <AlertDialogComponent />
+      <FullScreenModal
+        title="Edit Tour"
       headerExtra={
         <div className="flex items-center gap-3">
           <StatusBadge variant={extensionInstalled ? 'success' : 'fail'}>
@@ -689,7 +694,7 @@ export default function EditTourPage() {
                     >
                       {translating ? (
                         <>
-                          <Loader2 size={14} className="animate-spin" />
+                          <Spinner className="size-3.5" />
                           Translating...
                         </>
                       ) : (
@@ -825,7 +830,7 @@ export default function EditTourPage() {
 
                 {pickerStatus === 'waiting' && (
                   <div className="mb-4 p-3 rounded-lg bg-blue-50 border border-blue-200 flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+                    <Spinner className="size-4 text-blue-600" />
                     <p className="text-sm text-blue-800">Element Picker Active - Switch to target website and click an element</p>
                   </div>
                 )}
@@ -1227,7 +1232,7 @@ export default function EditTourPage() {
               >
                 {capturingScreenshot ? (
                   <>
-                    <Loader2 size={14} className="animate-spin" />
+                    <Spinner className="size-3.5" />
                     Capturing...
                   </>
                 ) : (
@@ -1453,5 +1458,7 @@ export default function EditTourPage() {
         </div>
       </div>
     </FullScreenModal>
+    <AlertDialogComponent />
+  </>
   );
 }

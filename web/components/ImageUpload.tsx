@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { Upload, Link, X, Loader2, Image as ImageIcon } from 'lucide-react';
+import { Upload, Link, X, Image as ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 
 interface ImageUploadProps {
   value: string;
@@ -178,7 +179,7 @@ export default function ImageUpload({ value, onChange, placeholder }: ImageUploa
           
           {uploading ? (
             <div className="flex flex-col items-center gap-2">
-              <Loader2 size={24} className="animate-spin text-blue-500" />
+              <Spinner className="size-6 text-blue-500" />
               <span className="text-sm text-gray-600">Uploading...</span>
             </div>
           ) : (

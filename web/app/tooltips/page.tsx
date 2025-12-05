@@ -7,6 +7,7 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { Plus, MessageCircle, Trash2, Edit, ToggleLeft, ToggleRight, MousePointer, Hand, Copy, Sparkles, Eye } from 'lucide-react';
 import { PromoBanner } from '@/components/ui/banner';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 import {
   Empty,
   EmptyContent,
@@ -138,7 +139,7 @@ export default function TooltipsPage() {
         {/* Tooltips List */}
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
+            <Spinner className="size-8 text-primary-600 mx-auto" />
             <p className="text-gray-500 mt-4">Loading tooltips...</p>
           </div>
         ) : tooltips.length === 0 ? (

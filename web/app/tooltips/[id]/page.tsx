@@ -6,7 +6,7 @@ import FullScreenModal from '@/components/FullScreenModal';
 import ImageUpload from '@/components/ImageUpload';
 import ColorPicker from '@/components/ColorPicker';
 import CenterSlider from '@/components/CenterSlider';
-import { Save, Crosshair, AlertCircle, CheckCircle, MousePointer, Hand, Trash2, Loader2, Languages, Globe, RefreshCw, Settings, FileText, Star, Sparkles, Wand2, Circle, Copy, Type, Palette, Repeat, Target, Zap, Camera } from 'lucide-react';
+import { Save, Crosshair, AlertCircle, CheckCircle, MousePointer, Hand, Trash2, Languages, Globe, RefreshCw, Settings, FileText, Star, Sparkles, Wand2, Circle, Copy, Type, Palette, Repeat, Target, Zap, Camera } from 'lucide-react';
 
 // Shadcn UI components
 import { Input } from '@/components/ui/input';
@@ -17,21 +17,21 @@ import { Slider } from '@/components/ui/slider';
 import { Stepper, StepContent } from '@/components/ui/stepper';
 import { VariableInput, VariableTextarea } from '@/components/ui/variable-input';
 import { StatusBadge } from '@/components/ui/status-badge';
+import { useAlertDialog } from '@/components/useAlertDialog';
+import { Spinner } from '@/components/ui/spinner';
 
 // Define wizard steps
 const WIZARD_STEPS = [
-  { id: 1, title: 'Content', icon: FileText },
-  { id: 2, title: 'Targeting', icon: Target },
-  { id: 3, title: 'Trigger', icon: Zap },
-  { id: 4, title: 'Beacon', icon: Circle },
-  { id: 5, title: 'Card Style', icon: Palette },
-  { id: 6, title: 'Typography', icon: Type },
-  { id: 7, title: 'Button', icon: Settings },
-  { id: 8, title: 'Frequency', icon: Repeat },
+  { id: 1, title: 'Targeting & Trigger', icon: Target },
+  { id: 2, title: 'Content', icon: FileText },
+  { id: 3, title: 'Beacon', icon: Circle },
+  { id: 4, title: 'Card', icon: Palette },
+  { id: 5, title: 'Frequency', icon: Repeat },
 ];
 
 export default function EditTooltipPage() {
   const router = useRouter();
+  const { showAlert, AlertDialogComponent } = useAlertDialog();
   const params = useParams();
   const tooltipId = params.id as string;
   
@@ -189,7 +189,7 @@ export default function EditTooltipPage() {
         setIsActive(t.is_active ?? true);
       } catch (err) {
         console.error('Failed to load tooltip:', err);
-        alert('Failed to load tooltip');
+        showAlert('Failed to load tooltip');
         router.push('/tooltips');
       } finally {
         setLoading(false);
@@ -221,7 +221,7 @@ export default function EditTooltipPage() {
   // Auto-translate to all languages
   const handleAutoTranslate = async () => {
     if (!title) {
-      alert('Please add a title before translating');
+      showAlert('Please add a title before translating');
       return;
     }
 
@@ -243,7 +243,7 @@ export default function EditTooltipPage() {
       if (!response.ok) throw new Error('Translation failed');
 
       const data = await response.json();
-      alert(`Translated to ${data.translatedTo?.length || 0} languages!`);
+      showAlert(`Translated to ${data.translatedTo?.length || 0} languages!`);
       
       // Reload translations
       const reloadResponse = await fetch(`/api/translations?contentType=tooltip&contentId=${tooltipId}`);
@@ -252,7 +252,7 @@ export default function EditTooltipPage() {
         setTranslations(reloadData.translations || {});
       }
     } catch (error) {
-      alert('Error translating: ' + error);
+      showAlert('Error translating: ' + error);
     } finally {
       setTranslating(false);
     }
@@ -275,7 +275,7 @@ export default function EditTooltipPage() {
       setTranslations(prev => ({ ...prev, [langCode]: data }));
       setEditingLang(null);
     } catch (error) {
-      alert('Error saving translation: ' + error);
+      showAlert('Error saving translation: ' + error);
     }
   };
 
@@ -318,7 +318,7 @@ export default function EditTooltipPage() {
           setScreenshotElementRect(event.data.elementRect);
           setScreenshotViewport(event.data.viewport);
         } else {
-          alert('Failed to capture screenshot: ' + event.data.error);
+          showAlert('Failed to capture screenshot: ' + event.data.error);
         }
       }
     };
@@ -337,13 +337,13 @@ export default function EditTooltipPage() {
 
   const startPicker = () => {
     if (!extensionInstalled) {
-      alert('Please install the Walko Chrome extension first!');
+      showAlert('Please install the Walko Chrome extension first!');
       return;
     }
 
     let targetUrl = urlPattern.replace(/\*+/g, '').trim();
     if (!targetUrl) {
-      alert('Please enter a URL pattern first!');
+      showAlert('Please enter a URL pattern first!');
       return;
     }
     if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
@@ -360,13 +360,13 @@ export default function EditTooltipPage() {
 
   const capturePreviewScreenshot = () => {
     if (!extensionInstalled) {
-      alert('Please install the Walko Chrome extension first!');
+      showAlert('Please install the Walko Chrome extension first!');
       return;
     }
 
     let targetUrl = urlPattern.replace(/\*+/g, '').trim();
     if (!targetUrl) {
-      alert('Please enter a URL pattern first!');
+      showAlert('Please enter a URL pattern first!');
       return;
     }
     if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
@@ -416,7 +416,7 @@ export default function EditTooltipPage() {
 
   const saveTooltip = async () => {
     if (!name || !urlPattern || !selector || !title) {
-      alert('Please fill in name, URL pattern, selector, and title');
+      showAlert('Please fill in name, URL pattern, selector, and title');
       return;
     }
 
@@ -474,10 +474,10 @@ export default function EditTooltipPage() {
 
       if (!response.ok) throw new Error('Failed to save tooltip');
 
-      alert('Tooltip saved successfully!');
+      showAlert('Tooltip saved successfully!');
       router.push('/tooltips');
     } catch (error) {
-      alert('Error saving tooltip: ' + error);
+      showAlert('Error saving tooltip: ' + error);
     } finally {
       setSaving(false);
     }
@@ -496,7 +496,7 @@ export default function EditTooltipPage() {
       
       router.push('/tooltips');
     } catch (error) {
-      alert('Error deleting tooltip: ' + error);
+      showAlert('Error deleting tooltip: ' + error);
     } finally {
       setDeleting(false);
     }
@@ -514,7 +514,7 @@ export default function EditTooltipPage() {
       const newTooltip = await response.json();
       router.push(`/tooltips/${newTooltip.id}`);
     } catch (error) {
-      alert('Error duplicating tooltip: ' + error);
+      showAlert('Error duplicating tooltip: ' + error);
     } finally {
       setDuplicating(false);
     }
@@ -624,14 +624,16 @@ export default function EditTooltipPage() {
   if (loading) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-gray-100">
-        <Loader2 className="animate-spin text-blue-600" size={32} />
+        <Spinner className="size-8 text-blue-600" />
       </div>
     );
   }
 
   return (
-    <FullScreenModal
-      title="Edit Tooltip"
+    <>
+      <AlertDialogComponent />
+      <FullScreenModal
+        title="Edit Tooltip"
       headerExtra={
         <StatusBadge variant={extensionInstalled ? 'success' : 'fail'}>
           {extensionInstalled ? 'Extension ready' : 'Extension not connected'}
@@ -688,13 +690,124 @@ export default function EditTooltipPage() {
         {/* Middle Column - Form Content */}
         <div className="flex-1 max-w-xl overflow-y-auto p-6">
 
-          {/* Step 1: Content */}
+          {/* Step 1: Targeting & Trigger */}
           {activeStep === 1 && (
             <StepContent
               currentStep={activeStep}
               onNext={() => setActiveStep(2)}
               isFirst={true}
-              nextLabel="Next: Targeting"
+              nextLabel="Next: Content"
+            >
+              <div className="space-y-6">
+                <div className="card p-5">
+                  <h2 className="text-base font-semibold text-gray-900 mb-4">Targeting</h2>
+                  
+                  <FieldGroup>
+                    <Field>
+                      <FieldLabel>Tooltip Name</FieldLabel>
+                      <Input
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="e.g., Feature Discovery"
+                      />
+                    </Field>
+
+                    <Field>
+                      <FieldLabel>Website URL</FieldLabel>
+                      <Input
+                        value={urlPattern}
+                        onChange={(e) => setUrlPattern(e.target.value)}
+                        placeholder="/dashboard* or /teams"
+                      />
+                      <FieldDescription>Examples: /teams, /settings/*, or * for all pages</FieldDescription>
+                    </Field>
+
+                    <Field>
+                      <FieldLabel>Element Selector</FieldLabel>
+                      <div className="flex gap-2">
+                        <Input
+                          className="flex-1"
+                          value={selector}
+                          onChange={(e) => setSelector(e.target.value)}
+                          placeholder=".my-button"
+                        />
+                        <button
+                          onClick={startPicker}
+                          disabled={!extensionInstalled || pickingElement}
+                          className={`px-3 py-2 rounded-md flex items-center gap-1 text-sm font-medium transition-colors ${
+                            extensionInstalled 
+                              ? 'bg-purple-600 hover:bg-purple-700 text-white' 
+                              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                          }`}
+                        >
+                          <Crosshair size={14} />
+                          {pickingElement ? '...' : 'Pick'}
+                        </button>
+                      </div>
+                    </Field>
+                  </FieldGroup>
+                </div>
+
+                <div className="card p-5">
+                  <h2 className="text-base font-semibold text-gray-900 mb-4">Trigger Settings</h2>
+                  
+                  <FieldGroup>
+                    <Field>
+                      <FieldLabel>Trigger On</FieldLabel>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setTriggerType('click')}
+                          className={`flex-1 py-2 px-3 rounded-md flex items-center justify-center gap-2 text-sm transition-colors ${
+                            triggerType === 'click' 
+                              ? 'bg-primary text-primary-foreground' 
+                              : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                          }`}
+                        >
+                          <MousePointer size={14} />
+                          Click
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setTriggerType('hover')}
+                          className={`flex-1 py-2 px-3 rounded-md flex items-center justify-center gap-2 text-sm transition-colors ${
+                            triggerType === 'hover' 
+                              ? 'bg-primary text-primary-foreground' 
+                              : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                          }`}
+                        >
+                          <Hand size={14} />
+                          Hover
+                        </button>
+                      </div>
+                    </Field>
+
+                    <Field>
+                      <FieldLabel>Dismiss When</FieldLabel>
+                      <Select value={dismissType} onValueChange={(v) => setDismissType(v as any)}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="button">Click Button</SelectItem>
+                          <SelectItem value="click_element">Click Target Element</SelectItem>
+                          <SelectItem value="click_outside">Click Outside</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                  </FieldGroup>
+                </div>
+              </div>
+            </StepContent>
+          )}
+
+          {/* Step 2: Content */}
+          {activeStep === 2 && (
+            <StepContent
+              currentStep={activeStep}
+              onBack={() => setActiveStep(1)}
+              onNext={() => setActiveStep(3)}
+              nextLabel="Next: Beacon"
             >
               <div className="card p-5">
                 <h2 className="text-base font-semibold text-gray-900 mb-4">Tooltip Content</h2>
@@ -753,7 +866,7 @@ export default function EditTooltipPage() {
                   >
                     {translating ? (
                       <>
-                        <Loader2 size={14} className="animate-spin" />
+                        <Spinner className="size-3.5" />
                         Translating...
                       </>
                     ) : (
@@ -871,132 +984,13 @@ export default function EditTooltipPage() {
             </StepContent>
           )}
 
-          {/* Step 2: Targeting */}
-          {activeStep === 2 && (
-            <StepContent
-              currentStep={activeStep}
-              onBack={() => setActiveStep(1)}
-              onNext={() => setActiveStep(3)}
-              nextLabel="Next: Trigger"
-            >
-              <div className="card p-5">
-                <h2 className="text-base font-semibold text-gray-900 mb-4">Targeting</h2>
-                
-                <FieldGroup>
-                  <Field>
-                    <FieldLabel>Tooltip Name</FieldLabel>
-                    <Input
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="e.g., Feature Discovery"
-                    />
-                  </Field>
-
-                  <Field>
-                    <FieldLabel>Website URL</FieldLabel>
-                    <Input
-                      value={urlPattern}
-                      onChange={(e) => setUrlPattern(e.target.value)}
-                      placeholder="/dashboard* or /teams"
-                    />
-                    <FieldDescription>Examples: /teams, /settings/*, or * for all pages</FieldDescription>
-                  </Field>
-
-                  <Field>
-                    <FieldLabel>Element Selector</FieldLabel>
-                    <div className="flex gap-2">
-                      <Input
-                        className="flex-1"
-                        value={selector}
-                        onChange={(e) => setSelector(e.target.value)}
-                        placeholder=".my-button"
-                      />
-                      <button
-                        onClick={startPicker}
-                        disabled={!extensionInstalled || pickingElement}
-                        className={`px-3 py-2 rounded-md flex items-center gap-1 text-sm font-medium transition-colors ${
-                          extensionInstalled 
-                            ? 'bg-purple-600 hover:bg-purple-700 text-white' 
-                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                        }`}
-                      >
-                        <Crosshair size={14} />
-                        {pickingElement ? '...' : 'Pick'}
-                      </button>
-                    </div>
-                  </Field>
-                </FieldGroup>
-              </div>
-            </StepContent>
-          )}
-
-          {/* Step 3: Trigger */}
+          {/* Step 3: Beacon */}
           {activeStep === 3 && (
             <StepContent
               currentStep={activeStep}
               onBack={() => setActiveStep(2)}
               onNext={() => setActiveStep(4)}
-              nextLabel="Next: Beacon"
-            >
-              <div className="card p-5">
-                <h2 className="text-base font-semibold text-gray-900 mb-4">Trigger Settings</h2>
-                
-                <FieldGroup>
-                  <Field>
-                    <FieldLabel>Trigger On</FieldLabel>
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setTriggerType('click')}
-                        className={`flex-1 py-2 px-3 rounded-md flex items-center justify-center gap-2 text-sm transition-colors ${
-                          triggerType === 'click' 
-                            ? 'bg-primary text-primary-foreground' 
-                            : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                        }`}
-                      >
-                        <MousePointer size={14} />
-                        Click
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setTriggerType('hover')}
-                        className={`flex-1 py-2 px-3 rounded-md flex items-center justify-center gap-2 text-sm transition-colors ${
-                          triggerType === 'hover' 
-                            ? 'bg-primary text-primary-foreground' 
-                            : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                        }`}
-                      >
-                        <Hand size={14} />
-                        Hover
-                      </button>
-                    </div>
-                  </Field>
-
-                  <Field>
-                    <FieldLabel>Dismiss When</FieldLabel>
-                    <Select value={dismissType} onValueChange={(v) => setDismissType(v as any)}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="button">Click Button</SelectItem>
-                        <SelectItem value="click_element">Click Target Element</SelectItem>
-                        <SelectItem value="click_outside">Click Outside</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                </FieldGroup>
-              </div>
-            </StepContent>
-          )}
-
-          {/* Step 4: Beacon */}
-          {activeStep === 4 && (
-            <StepContent
-              currentStep={activeStep}
-              onBack={() => setActiveStep(3)}
-              onNext={() => setActiveStep(5)}
-              nextLabel="Next: Card Style"
+              nextLabel="Next: Card"
             >
               <div className="card p-5">
                 <h2 className="text-base font-semibold text-gray-900 mb-4">Beacon Settings</h2>
@@ -1159,274 +1153,259 @@ export default function EditTooltipPage() {
             </StepContent>
           )}
 
-          {/* Step 5: Card Style */}
-          {activeStep === 5 && (
+          {/* Step 4: Card */}
+          {activeStep === 4 && (
             <StepContent
               currentStep={activeStep}
-              onBack={() => setActiveStep(4)}
-              onNext={() => setActiveStep(6)}
-              nextLabel="Next: Typography"
+              onBack={() => setActiveStep(3)}
+              onNext={() => setActiveStep(5)}
+              nextLabel="Next: Frequency"
             >
-              <div className="card p-5">
-                <h2 className="text-base font-semibold text-gray-900 mb-4">Card Styling</h2>
-                
-                <FieldGroup>
-                  <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-6">
+                {/* Card Style */}
+                <div className="card p-5">
+                  <h2 className="text-base font-semibold text-gray-900 mb-4">Card Styling</h2>
+                  
+                  <FieldGroup>
+                    <div className="grid grid-cols-3 gap-4">
+                      <Field>
+                        <FieldLabel>Width (px)</FieldLabel>
+                        <Input
+                          type="number"
+                          value={cardWidth}
+                          onChange={(e) => setCardWidth(parseInt(e.target.value) || 320)}
+                        />
+                      </Field>
+
+                      <Field>
+                        <FieldLabel>Padding (px)</FieldLabel>
+                        <Input
+                          type="number"
+                          value={cardPadding}
+                          onChange={(e) => setCardPadding(parseInt(e.target.value) || 20)}
+                        />
+                      </Field>
+
+                      <Field>
+                        <FieldLabel>Corner Radius (px)</FieldLabel>
+                        <Input
+                          type="number"
+                          value={cardBorderRadius}
+                          onChange={(e) => setCardBorderRadius(parseInt(e.target.value) || 12)}
+                        />
+                      </Field>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <Field>
+                        <FieldLabel>Text Alignment</FieldLabel>
+                        <div className="flex gap-1">
+                          {['left', 'center', 'right'].map((align) => (
+                            <button
+                              key={align}
+                              type="button"
+                              onClick={() => setTextAlign(align as any)}
+                              className={`flex-1 py-1.5 rounded-md capitalize text-sm font-medium transition-colors ${
+                                textAlign === align 
+                                  ? 'bg-primary text-primary-foreground' 
+                                  : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                              }`}
+                            >
+                              {align}
+                            </button>
+                          ))}
+                        </div>
+                      </Field>
+
+                      <Field>
+                        <FieldLabel>Shadow</FieldLabel>
+                        <Select value={cardShadow} onValueChange={setCardShadow}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">None</SelectItem>
+                            <SelectItem value="small">Small</SelectItem>
+                            <SelectItem value="medium">Medium</SelectItem>
+                            <SelectItem value="large">Large</SelectItem>
+                            <SelectItem value="extra">Extra Large</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </Field>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <Field>
+                        <FieldLabel>Background Color</FieldLabel>
+                        <ColorPicker value={cardBgColor} onChange={setCardBgColor} />
+                      </Field>
+
+                      <Field>
+                        <FieldLabel>Text Color</FieldLabel>
+                        <ColorPicker value={cardTextColor} onChange={setCardTextColor} />
+                      </Field>
+                    </div>
+                  </FieldGroup>
+                </div>
+
+                {/* Typography */}
+                <div className="card p-5">
+                  <h2 className="text-base font-semibold text-gray-900 mb-4">Typography</h2>
+                  
+                  <FieldGroup>
+                    <div className="grid grid-cols-3 gap-4">
+                      <Field>
+                        <FieldLabel>Title Size: {titleSize}px</FieldLabel>
+                        <Slider
+                          value={[Number(titleSize)]}
+                          onValueChange={([value]) => setTitleSize(value)}
+                          min={12}
+                          max={24}
+                          step={1}
+                        />
+                      </Field>
+
+                      <Field>
+                        <FieldLabel>Body Size: {bodySize}px</FieldLabel>
+                        <Slider
+                          value={[Number(bodySize)]}
+                          onValueChange={([value]) => setBodySize(value)}
+                          min={10}
+                          max={18}
+                          step={1}
+                        />
+                      </Field>
+
+                      <Field>
+                        <FieldLabel>Line Height: {Number(bodyLineHeight).toFixed(2)}</FieldLabel>
+                        <Slider
+                          value={[Number(bodyLineHeight) * 100]}
+                          onValueChange={([value]) => setBodyLineHeight(value / 100)}
+                          min={100}
+                          max={200}
+                          step={10}
+                        />
+                      </Field>
+                    </div>
+                  </FieldGroup>
+                </div>
+
+                {/* Button Styling */}
+                <div className="card p-5">
+                  <h2 className="text-base font-semibold text-gray-900 mb-4">Button Styling</h2>
+                  
+                  <FieldGroup>
+                    {/* Size */}
                     <Field>
-                      <FieldLabel>Width (px)</FieldLabel>
-                      <Input
-                        type="number"
-                        value={cardWidth}
-                        onChange={(e) => setCardWidth(parseInt(e.target.value) || 320)}
-                      />
+                      <FieldLabel>Size</FieldLabel>
+                      <div className="flex gap-1">
+                        {[
+                          { size: 'xxs', label: 'XXS' },
+                          { size: 'xs', label: 'XS' },
+                          { size: 's', label: 'S' },
+                          { size: 'm', label: 'M' },
+                          { size: 'l', label: 'L' },
+                          { size: 'xl', label: 'XL' },
+                        ].map(({ size, label }) => (
+                          <button
+                            key={size}
+                            type="button"
+                            onClick={() => setButtonSize(size as any)}
+                            className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                              buttonSize === size
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
                     </Field>
 
-                    <Field>
-                      <FieldLabel>Padding (px)</FieldLabel>
-                      <Input
-                        type="number"
-                        value={cardPadding}
-                        onChange={(e) => setCardPadding(parseInt(e.target.value) || 20)}
-                      />
-                    </Field>
+                    {/* Position and Type */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <Field>
+                        <FieldLabel>Position</FieldLabel>
+                        <div className="flex gap-1">
+                          {[
+                            { pos: 'left', label: '←' },
+                            { pos: 'center', label: '•' },
+                            { pos: 'right', label: '→' },
+                          ].map(({ pos, label }) => (
+                            <button
+                              key={pos}
+                              type="button"
+                              onClick={() => setButtonPosition(pos as any)}
+                              className={`flex-1 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                                buttonPosition === pos
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      </Field>
 
+                      <Field>
+                        <FieldLabel>Type</FieldLabel>
+                        <div className="flex gap-1">
+                          {[
+                            { type: 'regular', label: 'Regular' },
+                            { type: 'stretched', label: 'Stretched' },
+                          ].map(({ type, label }) => (
+                            <button
+                              key={type}
+                              type="button"
+                              onClick={() => setButtonType(type as any)}
+                              className={`flex-1 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                                buttonType === type
+                                  ? 'bg-primary text-primary-foreground'
+                                  : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                              }`}
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      </Field>
+                    </div>
+
+                    {/* Corner Radius */}
                     <Field>
                       <FieldLabel>Corner Radius (px)</FieldLabel>
                       <Input
                         type="number"
-                        value={cardBorderRadius}
-                        onChange={(e) => setCardBorderRadius(parseInt(e.target.value) || 12)}
-                      />
-                    </Field>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <Field>
-                      <FieldLabel>Text Alignment</FieldLabel>
-                      <div className="flex gap-1">
-                        {['left', 'center', 'right'].map((align) => (
-                          <button
-                            key={align}
-                            type="button"
-                            onClick={() => setTextAlign(align as any)}
-                            className={`flex-1 py-1.5 rounded-md capitalize text-sm font-medium transition-colors ${
-                              textAlign === align 
-                                ? 'bg-primary text-primary-foreground' 
-                                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                            }`}
-                          >
-                            {align}
-                          </button>
-                        ))}
-                      </div>
-                    </Field>
-
-                    <Field>
-                      <FieldLabel>Shadow</FieldLabel>
-                      <Select value={cardShadow} onValueChange={setCardShadow}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">None</SelectItem>
-                          <SelectItem value="small">Small</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="large">Large</SelectItem>
-                          <SelectItem value="extra">Extra Large</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </Field>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <Field>
-                      <FieldLabel>Background Color</FieldLabel>
-                      <ColorPicker value={cardBgColor} onChange={setCardBgColor} />
-                    </Field>
-
-                    <Field>
-                      <FieldLabel>Text Color</FieldLabel>
-                      <ColorPicker value={cardTextColor} onChange={setCardTextColor} />
-                    </Field>
-                  </div>
-                </FieldGroup>
-              </div>
-            </StepContent>
-          )}
-
-          {/* Step 6: Typography */}
-          {activeStep === 6 && (
-            <StepContent
-              currentStep={activeStep}
-              onBack={() => setActiveStep(5)}
-              onNext={() => setActiveStep(7)}
-              nextLabel="Next: Button"
-            >
-              <div className="card p-5">
-                <h2 className="text-base font-semibold text-gray-900 mb-4">Typography</h2>
-                
-                <FieldGroup>
-                  <div className="grid grid-cols-3 gap-4">
-                    <Field>
-                      <FieldLabel>Title Size: {titleSize}px</FieldLabel>
-                      <Slider
-                        value={[Number(titleSize)]}
-                        onValueChange={([value]) => setTitleSize(value)}
-                        min={12}
-                        max={24}
-                        step={1}
+                        value={buttonBorderRadius}
+                        onChange={(e) => setButtonBorderRadius(parseInt(e.target.value) || 8)}
                       />
                     </Field>
 
-                    <Field>
-                      <FieldLabel>Body Size: {bodySize}px</FieldLabel>
-                      <Slider
-                        value={[Number(bodySize)]}
-                        onValueChange={([value]) => setBodySize(value)}
-                        min={10}
-                        max={18}
-                        step={1}
-                      />
-                    </Field>
+                    {/* Colors */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <Field>
+                        <FieldLabel>Button Background</FieldLabel>
+                        <ColorPicker value={buttonColor} onChange={setButtonColor} />
+                      </Field>
 
-                    <Field>
-                      <FieldLabel>Line Height: {Number(bodyLineHeight).toFixed(2)}</FieldLabel>
-                      <Slider
-                        value={[Number(bodyLineHeight) * 100]}
-                        onValueChange={([value]) => setBodyLineHeight(value / 100)}
-                        min={100}
-                        max={200}
-                        step={10}
-                      />
-                    </Field>
-                  </div>
-                </FieldGroup>
-              </div>
-            </StepContent>
-          )}
-
-          {/* Step 7: Button Styling */}
-          {activeStep === 7 && (
-            <StepContent
-              currentStep={activeStep}
-              onBack={() => setActiveStep(6)}
-              onNext={() => setActiveStep(8)}
-              nextLabel="Next: Frequency"
-            >
-              <div className="card p-5">
-                <h2 className="text-base font-semibold text-gray-900 mb-4">Button Styling</h2>
-                
-                <FieldGroup>
-                  {/* Size */}
-                  <Field>
-                    <FieldLabel>Size</FieldLabel>
-                    <div className="flex gap-1">
-                      {[
-                        { size: 'xxs', label: 'XXS' },
-                        { size: 'xs', label: 'XS' },
-                        { size: 's', label: 'S' },
-                        { size: 'm', label: 'M' },
-                        { size: 'l', label: 'L' },
-                        { size: 'xl', label: 'XL' },
-                      ].map(({ size, label }) => (
-                        <button
-                          key={size}
-                          type="button"
-                          onClick={() => setButtonSize(size as any)}
-                          className={`flex-1 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                            buttonSize === size
-                              ? 'bg-primary text-primary-foreground'
-                              : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                          }`}
-                        >
-                          {label}
-                        </button>
-                      ))}
+                      <Field>
+                        <FieldLabel>Button Text Color</FieldLabel>
+                        <ColorPicker value={buttonTextColor} onChange={setButtonTextColor} />
+                      </Field>
                     </div>
-                  </Field>
-
-                  {/* Position and Type */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <Field>
-                      <FieldLabel>Position</FieldLabel>
-                      <div className="flex gap-1">
-                        {[
-                          { pos: 'left', label: '←' },
-                          { pos: 'center', label: '•' },
-                          { pos: 'right', label: '→' },
-                        ].map(({ pos, label }) => (
-                          <button
-                            key={pos}
-                            type="button"
-                            onClick={() => setButtonPosition(pos as any)}
-                            className={`flex-1 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                              buttonPosition === pos
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                            }`}
-                          >
-                            {label}
-                          </button>
-                        ))}
-                      </div>
-                    </Field>
-
-                    <Field>
-                      <FieldLabel>Type</FieldLabel>
-                      <div className="flex gap-1">
-                        {[
-                          { type: 'regular', label: 'Regular' },
-                          { type: 'stretched', label: 'Stretched' },
-                        ].map(({ type, label }) => (
-                          <button
-                            key={type}
-                            type="button"
-                            onClick={() => setButtonType(type as any)}
-                            className={`flex-1 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                              buttonType === type
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                            }`}
-                          >
-                            {label}
-                          </button>
-                        ))}
-                      </div>
-                    </Field>
-                  </div>
-
-                  {/* Corner Radius */}
-                  <Field>
-                    <FieldLabel>Corner Radius (px)</FieldLabel>
-                    <Input
-                      type="number"
-                      value={buttonBorderRadius}
-                      onChange={(e) => setButtonBorderRadius(parseInt(e.target.value) || 8)}
-                    />
-                  </Field>
-
-                  {/* Colors */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <Field>
-                      <FieldLabel>Button Background</FieldLabel>
-                      <ColorPicker value={buttonColor} onChange={setButtonColor} />
-                    </Field>
-
-                    <Field>
-                      <FieldLabel>Button Text Color</FieldLabel>
-                      <ColorPicker value={buttonTextColor} onChange={setButtonTextColor} />
-                    </Field>
-                  </div>
-                </FieldGroup>
+                  </FieldGroup>
+                </div>
               </div>
             </StepContent>
           )}
 
-          {/* Step 8: Display Frequency */}
-          {activeStep === 8 && (
+          {/* Step 5: Display Frequency */}
+          {activeStep === 5 && (
             <StepContent
               currentStep={activeStep}
-              onBack={() => setActiveStep(7)}
+              onBack={() => setActiveStep(4)}
               isLast={true}
             >
               <div className="card p-5">
@@ -1974,7 +1953,7 @@ export default function EditTooltipPage() {
               >
                 {capturingScreenshot ? (
                   <>
-                    <Loader2 size={14} className="animate-spin" />
+                    <Spinner className="size-3.5" />
                     Capturing...
                   </>
                 ) : (
@@ -2306,6 +2285,8 @@ export default function EditTooltipPage() {
         </div>
       </div>
     </FullScreenModal>
+    <AlertDialogComponent />
+  </>
   );
 }
 

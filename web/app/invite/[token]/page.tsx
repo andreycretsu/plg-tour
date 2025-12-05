@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Spinner } from '@/components/ui/spinner';
 
 interface InviteInfo {
   workspaceName: string;
@@ -81,7 +82,7 @@ export default function InvitePage({ params }: { params: { token: string } }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <Spinner className="size-12 text-blue-600 mx-auto" />
           <p className="mt-4 text-gray-600">Loading invite...</p>
         </div>
       </div>
