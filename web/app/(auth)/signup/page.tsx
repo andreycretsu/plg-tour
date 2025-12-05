@@ -7,7 +7,7 @@ export default function SignupPage() {
   return (
     <div className="grid min-h-svh lg:grid-cols-2 relative overflow-hidden" style={{ backgroundColor: '#F5F5F5' }}>
       {/* Magnet Lines effect - covers entire page background */}
-      <div className="absolute inset-0 flex items-center justify-center">
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <MagnetLines 
           rows={80}
           columns={100}
