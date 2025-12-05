@@ -1,6 +1,6 @@
 import { GalleryVerticalEnd } from "lucide-react"
 import { LoginForm } from "@/components/login-form"
-import { ChalkboardGrid } from "@/components/ui/chalkboard-grid"
+import { RippleGrid } from "@/components/ui/ripple-grid"
 
 export default function LoginPage() {
   return (
@@ -36,9 +36,22 @@ export default function LoginPage() {
         </div>
       </div>
       
-      {/* Right section - grid pattern (2/3) */}
+      {/* Right section - animated ripple grid (2/3) */}
       <div className="relative hidden lg:block">
-        <ChalkboardGrid className="absolute inset-0" />
+        <RippleGrid
+          enableRainbow={false}
+          gridColor="#B0B0B0"
+          rippleIntensity={0.02}
+          gridSize={40}
+          gridThickness={1}
+          fadeDistance={1.5}
+          vignetteStrength={2}
+          glowIntensity={0}
+          opacity={0.3}
+          gridRotation={0}
+          mouseInteraction={true}
+          mouseInteractionRadius={1.2}
+        />
       </div>
     </div>
   )
