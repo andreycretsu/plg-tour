@@ -48,6 +48,10 @@ interface TourStyling {
   cardBorderRadius: number;
   cardPadding: number;
   cardShadow: string;
+  cardWidth: number;
+  textAlign: 'left' | 'center' | 'right';
+  cardBlurIntensity: number;
+  cardBgOpacity: number;
   buttonColor: string;
   buttonTextColor: string;
   buttonBorderRadius: number;
@@ -65,6 +69,10 @@ const defaultStyling: TourStyling = {
   cardBorderRadius: 12,
   cardPadding: 20,
   cardShadow: 'medium',
+  cardWidth: 400,
+  textAlign: 'left',
+  cardBlurIntensity: 0,
+  cardBgOpacity: 100,
   buttonColor: '#3b82f6',
   buttonTextColor: '#ffffff',
   buttonBorderRadius: 8,
@@ -271,6 +279,10 @@ export default function NewTourPage() {
           cardBorderRadius: styling.cardBorderRadius,
           cardPadding: styling.cardPadding,
           cardShadow: getShadowValue(styling.cardShadow),
+          cardWidth: styling.cardWidth,
+          textAlign: styling.textAlign,
+          cardBlurIntensity: styling.cardBlurIntensity,
+          cardBgOpacity: styling.cardBgOpacity,
           buttonColor: styling.buttonColor,
           buttonTextColor: styling.buttonTextColor,
           buttonBorderRadius: styling.buttonBorderRadius,
@@ -610,7 +622,15 @@ export default function NewTourPage() {
                     </Field>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-3 gap-4">
+                    <Field>
+                      <FieldLabel>Width (px)</FieldLabel>
+                      <Input
+                        type="number"
+                        value={styling.cardWidth}
+                        onChange={(e) => setStyling({...styling, cardWidth: parseInt(e.target.value) || 400})}
+                      />
+                    </Field>
                     <Field>
                       <FieldLabel>Corner Radius (px)</FieldLabel>
                       <Input
@@ -626,6 +646,69 @@ export default function NewTourPage() {
                         value={styling.cardPadding}
                         onChange={(e) => setStyling({...styling, cardPadding: parseInt(e.target.value) || 20})}
                       />
+                    </Field>
+                  </div>
+
+                  <Field>
+                    <FieldLabel>Text Alignment</FieldLabel>
+                    <div className="flex gap-2">
+                      {(['left', 'center', 'right'] as const).map((align) => (
+                        <button
+                          key={align}
+                          type="button"
+                          onClick={() => setStyling({...styling, textAlign: align})}
+                          className={`flex-1 py-2 px-3 rounded-md flex items-center justify-center gap-2 text-sm transition-colors ${
+                            styling.textAlign === align
+                              ? 'bg-primary text-primary-foreground'
+                              : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                          }`}
+                        >
+                          {align === 'left' && <span>←</span>}
+                          {align === 'center' && <span>•</span>}
+                          {align === 'right' && <span>→</span>}
+                          {align.charAt(0).toUpperCase() + align.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  </Field>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field>
+                      <FieldLabel>Background Blur</FieldLabel>
+                      <div className="space-y-2">
+                        <Slider
+                          value={[styling.cardBlurIntensity]}
+                          onValueChange={(value) => setStyling({...styling, cardBlurIntensity: value[0]})}
+                          min={0}
+                          max={20}
+                          step={1}
+                          className="w-full"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>None</span>
+                          <span>{styling.cardBlurIntensity}px</span>
+                          <span>Strong</span>
+                        </div>
+                      </div>
+                    </Field>
+
+                    <Field>
+                      <FieldLabel>Background Opacity</FieldLabel>
+                      <div className="space-y-2">
+                        <Slider
+                          value={[styling.cardBgOpacity]}
+                          onValueChange={(value) => setStyling({...styling, cardBgOpacity: value[0]})}
+                          min={0}
+                          max={100}
+                          step={1}
+                          className="w-full"
+                        />
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>Transparent</span>
+                          <span>{styling.cardBgOpacity}%</span>
+                          <span>Opaque</span>
+                        </div>
+                      </div>
                     </Field>
                   </div>
                 </FieldGroup>
@@ -877,17 +960,137 @@ export default function NewTourPage() {
                       )}
 
                       {/* Tour Card */}
+                      {(() => {
+                        // Convert hex to rgba with opacity
+                        const hexToRgba = (hex: string, opacity: number) => {
+                          const r = parseInt(hex.slice(1, 3), 16);
+                          const g = parseInt(hex.slice(3, 5), 16);
+                          const b = parseInt(hex.slice(5, 7), 16);
+                          return `rgba(${r}, ${g}, ${b}, ${opacity / 100})`;
+                        };
+                        
+                        return (
+                          <div 
+                            className="absolute pointer-events-none"
+                            style={{
+                              width: styling.cardWidth,
+                              backgroundColor: hexToRgba(styling.cardBgColor, styling.cardBgOpacity),
+                              backdropFilter: styling.cardBlurIntensity > 0 ? `blur(${styling.cardBlurIntensity}px)` : 'none',
+                              WebkitBackdropFilter: styling.cardBlurIntensity > 0 ? `blur(${styling.cardBlurIntensity}px)` : 'none',
+                              color: styling.cardTextColor,
+                              borderRadius: styling.cardBorderRadius,
+                              padding: styling.cardPadding,
+                              boxShadow: getShadowValue(styling.cardShadow),
+                              textAlign: styling.textAlign,
+                              left: screenshotElementRect.x + screenshotElementRect.width / 2 - styling.cardWidth / 2,
+                              top: screenshotElementRect.y + screenshotElementRect.height + 20,
+                              zIndex: 10,
+                              isolation: 'isolate' as const,
+                            }}
+                          >
+                            {activeStepData.imageUrl && (
+                              <img 
+                                src={activeStepData.imageUrl} 
+                                alt="Preview" 
+                                className="w-full object-cover mb-2"
+                                style={{ 
+                                  borderRadius: Math.max(0, styling.cardBorderRadius - 4),
+                                  aspectRatio: '16 / 9'
+                                }}
+                              />
+                            )}
+                            <h3 className="font-semibold text-sm mb-1">
+                              {activeStepData.title || 'Step Title'}
+                            </h3>
+                            <p className="text-xs opacity-80 mb-2">
+                              Step {steps.findIndex(s => s.id === activeStepData.id) + 1} of {steps.length}
+                            </p>
+                            <p className="text-xs opacity-70 mb-3">
+                              {activeStepData.content || 'Step content...'}
+                            </p>
+                            <div className="flex justify-between items-center">
+                              <button className="text-xs text-gray-400">Skip</button>
+                              <button
+                                style={{
+                                  backgroundColor: styling.buttonColor,
+                                  color: styling.buttonTextColor,
+                                  borderRadius: styling.buttonBorderRadius,
+                                  padding: '6px 12px',
+                                  border: 'none',
+                                  fontWeight: 500,
+                                  fontSize: '12px',
+                                }}
+                              >
+                                {activeStepData.buttonText || 'Next'}
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                  
+                  {/* Clear screenshot button */}
+                  <button
+                    onClick={() => { setScreenshot(null); setScreenshotElementRect(null); }}
+                    className="absolute top-2 right-10 bg-black/50 text-white px-2 py-1 rounded text-xs hover:bg-black/70 z-10"
+                  >
+                    Clear Screenshot
+                  </button>
+                </div>
+              ) : activeStepData ? (
+                /* Mock Preview Mode */
+                <div className="relative p-6">
+                  <div 
+                    className="bg-gray-300 rounded-lg flex items-center justify-center text-gray-500 font-medium text-sm"
+                    style={{ width: 100, height: 100 }}
+                  >
+                    Element
+                    {activeStepData.pulseEnabled && (
                       <div 
-                        className="absolute pointer-events-none"
+                        className="absolute w-4 h-4 bg-blue-500 rounded-full"
                         style={{
-                          width: 280,
-                          backgroundColor: styling.cardBgColor,
+                          animation: 'pulse 2s infinite',
+                          ...(activeStepData.placement === 'top' && { top: -8, left: '50%', marginLeft: -8 }),
+                          ...(activeStepData.placement === 'bottom' && { bottom: -8, left: '50%', marginLeft: -8 }),
+                          ...(activeStepData.placement === 'left' && { left: -8, top: '50%', marginTop: -8 }),
+                          ...(activeStepData.placement === 'right' && { right: -8, top: '50%', marginTop: -8 }),
+                          ...(activeStepData.placement === 'auto' && { right: -8, top: '50%', marginTop: -8 }),
+                        }}
+                      />
+                    )}
+                  </div>
+
+                  {/* Tour Card Preview */}
+                  {(() => {
+                    // Convert hex to rgba with opacity
+                    const hexToRgba = (hex: string, opacity: number) => {
+                      const r = parseInt(hex.slice(1, 3), 16);
+                      const g = parseInt(hex.slice(3, 5), 16);
+                      const b = parseInt(hex.slice(5, 7), 16);
+                      return `rgba(${r}, ${g}, ${b}, ${opacity / 100})`;
+                    };
+                    
+                    return (
+                      <div 
+                        className="absolute"
+                        style={{
+                          width: styling.cardWidth,
+                          backgroundColor: hexToRgba(styling.cardBgColor, styling.cardBgOpacity),
+                          backdropFilter: styling.cardBlurIntensity > 0 ? `blur(${styling.cardBlurIntensity}px)` : 'none',
+                          WebkitBackdropFilter: styling.cardBlurIntensity > 0 ? `blur(${styling.cardBlurIntensity}px)` : 'none',
                           color: styling.cardTextColor,
                           borderRadius: styling.cardBorderRadius,
                           padding: styling.cardPadding,
                           boxShadow: getShadowValue(styling.cardShadow),
-                          left: screenshotElementRect.x + screenshotElementRect.width / 2 - 140,
-                          top: screenshotElementRect.y + screenshotElementRect.height + 20,
+                          textAlign: styling.textAlign,
+                          ...(activeStepData.placement === 'top' && { bottom: 120, left: '50%', marginLeft: -styling.cardWidth / 2 }),
+                          ...(activeStepData.placement === 'bottom' && { top: 120, left: '50%', marginLeft: -styling.cardWidth / 2 }),
+                          ...(activeStepData.placement === 'left' && { right: 120, top: '50%', marginTop: -100 }),
+                          ...(activeStepData.placement === 'right' && { left: 120, top: '50%', marginTop: -100 }),
+                          ...(activeStepData.placement === 'auto' && { left: 120, top: '50%', marginTop: -100 }),
+                          zIndex: 10,
+                          isolation: 'isolate' as const,
                         }}
                       >
                         {activeStepData.imageUrl && (
@@ -927,94 +1130,8 @@ export default function NewTourPage() {
                           </button>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                  
-                  {/* Clear screenshot button */}
-                  <button
-                    onClick={() => { setScreenshot(null); setScreenshotElementRect(null); }}
-                    className="absolute top-2 right-10 bg-black/50 text-white px-2 py-1 rounded text-xs hover:bg-black/70 z-10"
-                  >
-                    Clear Screenshot
-                  </button>
-                </div>
-              ) : activeStepData ? (
-                /* Mock Preview Mode */
-                <div className="relative p-6">
-                  <div 
-                    className="bg-gray-300 rounded-lg flex items-center justify-center text-gray-500 font-medium text-sm"
-                    style={{ width: 100, height: 100 }}
-                  >
-                    Element
-                    {activeStepData.pulseEnabled && (
-                      <div 
-                        className="absolute w-4 h-4 bg-blue-500 rounded-full"
-                        style={{
-                          animation: 'pulse 2s infinite',
-                          ...(activeStepData.placement === 'top' && { top: -8, left: '50%', marginLeft: -8 }),
-                          ...(activeStepData.placement === 'bottom' && { bottom: -8, left: '50%', marginLeft: -8 }),
-                          ...(activeStepData.placement === 'left' && { left: -8, top: '50%', marginTop: -8 }),
-                          ...(activeStepData.placement === 'right' && { right: -8, top: '50%', marginTop: -8 }),
-                          ...(activeStepData.placement === 'auto' && { right: -8, top: '50%', marginTop: -8 }),
-                        }}
-                      />
-                    )}
-                  </div>
-
-                  {/* Tour Card Preview */}
-                  <div 
-                    className="absolute"
-                    style={{
-                      width: 280,
-                      backgroundColor: styling.cardBgColor,
-                      color: styling.cardTextColor,
-                      borderRadius: styling.cardBorderRadius,
-                      padding: styling.cardPadding,
-                      boxShadow: getShadowValue(styling.cardShadow),
-                      ...(activeStepData.placement === 'top' && { bottom: 120, left: '50%', marginLeft: -140 }),
-                      ...(activeStepData.placement === 'bottom' && { top: 120, left: '50%', marginLeft: -140 }),
-                      ...(activeStepData.placement === 'left' && { right: 120, top: '50%', marginTop: -100 }),
-                      ...(activeStepData.placement === 'right' && { left: 120, top: '50%', marginTop: -100 }),
-                      ...(activeStepData.placement === 'auto' && { left: 120, top: '50%', marginTop: -100 }),
-                    }}
-                  >
-                    {activeStepData.imageUrl && (
-                      <img 
-                        src={activeStepData.imageUrl} 
-                        alt="Preview" 
-                        className="w-full object-cover mb-2"
-                        style={{ 
-                          borderRadius: Math.max(0, styling.cardBorderRadius - 4),
-                          aspectRatio: '16 / 9'
-                        }}
-                      />
-                    )}
-                    <h3 className="font-semibold text-sm mb-1">
-                      {activeStepData.title || 'Step Title'}
-                    </h3>
-                    <p className="text-xs opacity-80 mb-2">
-                      Step {steps.findIndex(s => s.id === activeStepData.id) + 1} of {steps.length}
-                    </p>
-                    <p className="text-xs opacity-70 mb-3">
-                      {activeStepData.content || 'Step content...'}
-                    </p>
-                    <div className="flex justify-between items-center">
-                      <button className="text-xs text-gray-400">Skip</button>
-                      <button
-                        style={{
-                          backgroundColor: styling.buttonColor,
-                          color: styling.buttonTextColor,
-                          borderRadius: styling.buttonBorderRadius,
-                          padding: '6px 12px',
-                          border: 'none',
-                          fontWeight: 500,
-                          fontSize: '12px',
-                        }}
-                      >
-                        {activeStepData.buttonText || 'Next'}
-                      </button>
-                    </div>
-                  </div>
+                    );
+                  })()}
                 </div>
               ) : (
                 <div className="text-center text-gray-500">

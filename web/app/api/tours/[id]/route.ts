@@ -29,6 +29,7 @@ export async function GET(
     const tourResult = await query(
       `SELECT id, user_id, name, url_pattern, is_active, created_at, updated_at,
               card_bg_color, card_text_color, card_border_radius, card_padding, card_shadow,
+              card_width, text_align, card_blur_intensity, card_bg_opacity,
               button_color, button_text_color, button_border_radius,
               frequency_type, frequency_count, frequency_days
        FROM tours 
@@ -135,6 +136,10 @@ export async function PUT(
       cardBorderRadius,
       cardPadding,
       cardShadow,
+      cardWidth,
+      textAlign,
+      cardBlurIntensity,
+      cardBgOpacity,
       buttonColor,
       buttonTextColor,
       buttonBorderRadius,
@@ -165,16 +170,21 @@ export async function PUT(
            card_border_radius = COALESCE($6, card_border_radius),
            card_padding = COALESCE($7, card_padding),
            card_shadow = COALESCE($8, card_shadow),
-           button_color = COALESCE($9, button_color),
-           button_text_color = COALESCE($10, button_text_color),
-           button_border_radius = COALESCE($11, button_border_radius),
-           frequency_type = COALESCE($12, frequency_type),
-           frequency_count = COALESCE($13, frequency_count),
-           frequency_days = COALESCE($14, frequency_days),
+           card_width = COALESCE($9, card_width),
+           text_align = COALESCE($10, text_align),
+           card_blur_intensity = COALESCE($11, card_blur_intensity),
+           card_bg_opacity = COALESCE($12, card_bg_opacity),
+           button_color = COALESCE($13, button_color),
+           button_text_color = COALESCE($14, button_text_color),
+           button_border_radius = COALESCE($15, button_border_radius),
+           frequency_type = COALESCE($16, frequency_type),
+           frequency_count = COALESCE($17, frequency_count),
+           frequency_days = COALESCE($18, frequency_days),
            updated_at = CURRENT_TIMESTAMP
-       WHERE id = $15 AND user_id = $16
+       WHERE id = $19 AND user_id = $20
        RETURNING id, user_id, name, url_pattern, is_active, created_at, updated_at,
                  card_bg_color, card_text_color, card_border_radius, card_padding, card_shadow,
+                 card_width, text_align, card_blur_intensity, card_bg_opacity,
                  button_color, button_text_color, button_border_radius,
                  frequency_type, frequency_count, frequency_days`,
       [
@@ -186,6 +196,10 @@ export async function PUT(
         cardBorderRadius,
         cardPadding,
         cardShadow,
+        cardWidth,
+        textAlign,
+        cardBlurIntensity,
+        cardBgOpacity,
         buttonColor,
         buttonTextColor,
         buttonBorderRadius,

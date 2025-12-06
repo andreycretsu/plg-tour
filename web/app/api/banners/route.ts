@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 import { extractToken, verifyToken } from '@/lib/auth';
-import { CreateTourRequest } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
-// GET /api/tours - List all tours for workspace
+// GET /api/banners - List all banners for workspace
 export async function GET(request: NextRequest) {
   try {
-    // Try cookie first, then Authorization header
     const cookieToken = request.cookies.get('token')?.value;
     const authHeader = request.headers.get('authorization');
     const headerToken = extractToken(authHeader);
@@ -23,11 +21,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    // Get workspace_id from JWT or from user's membership
     let workspaceId = payload.workspaceId;
     
     if (!workspaceId) {
-      // Fallback: get first workspace the user belongs to
       const memberResult = await query(
         `SELECT workspace_id FROM workspace_members WHERE user_id = $1 LIMIT 1`,
         [payload.userId]
@@ -37,10 +33,9 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Query tours - support both workspace_id and legacy user_id
     const result = await query(
       `SELECT id, user_id, workspace_id, name, url_pattern, is_active, created_at, updated_at
-       FROM tours 
+       FROM banners 
        WHERE workspace_id = $1 OR (workspace_id IS NULL AND user_id = $2)
        ORDER BY created_at DESC`,
       [workspaceId, payload.userId]
@@ -48,15 +43,14 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(result.rows);
   } catch (error) {
-    console.error('Get tours error:', error);
+    console.error('Get banners error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-// POST /api/tours - Create new tour
+// POST /api/banners - Create new banner
 export async function POST(request: NextRequest) {
   try {
-    // Try cookie first, then Authorization header
     const cookieToken = request.cookies.get('token')?.value;
     const authHeader = request.headers.get('authorization');
     const headerToken = extractToken(authHeader);
@@ -71,11 +65,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    // Get workspace_id from JWT or from user's membership
     let workspaceId = payload.workspaceId;
     
     if (!workspaceId) {
-      // Fallback: get first workspace the user belongs to
       const memberResult = await query(
         `SELECT workspace_id FROM workspace_members WHERE user_id = $1 LIMIT 1`,
         [payload.userId]
@@ -89,83 +81,99 @@ export async function POST(request: NextRequest) {
     const { 
       name, 
       urlPattern, 
-      steps,
-      // Styling fields
+      // Content
+      title,
+      body: bannerBody,
+      imageUrl,
+      buttonText = 'Got it',
+      // Position
+      positionX = 'center',
+      positionY = 'top',
+      offsetX = 0,
+      offsetY = 0,
+      // Size
+      width = 400,
+      height = 'auto',
+      // Styling
       cardBgColor = '#ffffff',
       cardTextColor = '#1f2937',
       cardBorderRadius = 12,
       cardPadding = 20,
       cardShadow = '0 4px 20px rgba(0,0,0,0.15)',
-      cardWidth = 400,
       textAlign = 'left',
       cardBlurIntensity = 0,
       cardBgOpacity = 100,
+      // Typography
+      titleSize = 16,
+      bodySize = 14,
+      bodyLineHeight = 1.5,
+      // Button styling
       buttonColor = '#3b82f6',
       buttonTextColor = '#ffffff',
       buttonBorderRadius = 8,
-      // Frequency fields
+      buttonSize = 'm',
+      buttonPosition = 'left',
+      buttonType = 'regular',
+      // Advanced
+      zIndex = 2147483647,
+      delayMs = 0,
+      // Frequency
       frequencyType = 'once',
       frequencyCount = 1,
       frequencyDays = 7,
     } = body;
 
     // Validation
-    if (!name || !urlPattern) {
+    if (!name || !urlPattern || !title) {
       return NextResponse.json(
-        { error: 'Name and URL pattern are required' },
+        { error: 'Name, URL pattern, and title are required' },
         { status: 400 }
       );
     }
 
-    // Create tour with workspace_id, styling, and frequency
-    const tourResult = await query(
-      `INSERT INTO tours (
+    // Validate urlPattern - allow * or path patterns
+    if (urlPattern !== '*' && !urlPattern.startsWith('/')) {
+      return NextResponse.json(
+        { error: 'URL pattern must be * or start with /' },
+        { status: 400 }
+      );
+    }
+
+    const result = await query(
+      `INSERT INTO banners (
         user_id, workspace_id, name, url_pattern,
+        title, body, image_url, button_text,
+        position_x, position_y, offset_x, offset_y,
+        width, height,
         card_bg_color, card_text_color, card_border_radius, card_padding, card_shadow,
-        card_width, text_align, card_blur_intensity, card_bg_opacity,
+        text_align, card_blur_intensity, card_bg_opacity,
+        title_size, body_size, body_line_height,
         button_color, button_text_color, button_border_radius,
+        button_size, button_position, button_type,
+        z_index, delay_ms,
         frequency_type, frequency_count, frequency_days
       ) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36) 
        RETURNING *`,
       [
         payload.userId, workspaceId, name, urlPattern,
+        title, bannerBody || null, imageUrl || null, buttonText,
+        positionX, positionY, offsetX, offsetY,
+        width, height,
         cardBgColor, cardTextColor, cardBorderRadius, cardPadding, cardShadow,
-        cardWidth, textAlign, cardBlurIntensity, cardBgOpacity,
+        textAlign, cardBlurIntensity, cardBgOpacity,
+        titleSize, bodySize, bodyLineHeight,
         buttonColor, buttonTextColor, buttonBorderRadius,
+        buttonSize, buttonPosition, buttonType,
+        zIndex, delayMs,
         frequencyType, frequencyCount, frequencyDays
       ]
     );
 
-    const tour = tourResult.rows[0];
-
-    // Create steps if provided
-    if (steps && steps.length > 0) {
-      for (let i = 0; i < steps.length; i++) {
-        const step = steps[i];
-        await query(
-          `INSERT INTO tour_steps 
-           (tour_id, step_order, selector, title, content, image_url, button_text, placement, pulse_enabled, z_index) 
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-          [
-            tour.id,
-            i,
-            step.selector,
-            step.title,
-            step.content,
-            step.imageUrl || null,
-            step.buttonText,
-            step.placement,
-            step.pulseEnabled,
-            step.zIndex || 2147483647,
-          ]
-        );
-      }
-    }
-
-    return NextResponse.json(tour, { status: 201 });
+    return NextResponse.json(result.rows[0], { status: 201 });
   } catch (error) {
-    console.error('Create tour error:', error);
+    console.error('Create banner error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+
