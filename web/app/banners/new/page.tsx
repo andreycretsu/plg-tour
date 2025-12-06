@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import FullScreenModal from '@/components/FullScreenModal';
 import ImageUpload from '@/components/ImageUpload';
@@ -34,7 +34,6 @@ export default function NewBannerPage() {
   const { showAlert, AlertDialogComponent } = useAlertDialog();
   const [loading, setLoading] = useState(false);
   const [activeStep, setActiveStep] = useState(1);
-  const [showPreview, setShowPreview] = useState(true);
 
   // Form state
   const [name, setName] = useState('');
@@ -86,7 +85,7 @@ export default function NewBannerPage() {
   const [zIndex, setZIndex] = useState(2147483647);
   const [delayMs, setDelayMs] = useState(0);
 
-  const getShadowValue = (shadow: string) => {
+  const getShadowValue = (shadow: string): string => {
     const shadowMap: Record<string, string> = {
       'none': 'none',
       'small': '0 2px 8px rgba(0,0,0,0.1)',
@@ -132,7 +131,7 @@ export default function NewBannerPage() {
           offsetX,
           offsetY,
           width,
-          height: height === 'auto' ? 'auto' : Number(height),
+          height: typeof height === 'string' && height === 'auto' ? 'auto' : Number(height),
           cardBgColor,
           cardTextColor,
           cardBorderRadius,
@@ -173,8 +172,8 @@ export default function NewBannerPage() {
   };
 
   // Calculate banner position for preview
-  const getBannerPreviewStyle = (): React.CSSProperties => {
-    const hexToRgba = (hex: string, opacity: number) => {
+  const getBannerPreviewStyle = () => {
+    const hexToRgba = (hex: string, opacity: number): string => {
       const r = parseInt(hex.slice(1, 3), 16);
       const g = parseInt(hex.slice(3, 5), 16);
       const b = parseInt(hex.slice(5, 7), 16);
@@ -227,7 +226,7 @@ export default function NewBannerPage() {
       top: typeof top === 'string' ? top : `${top}px`,
       transform,
       width: `${width}px`,
-      height: height === 'auto' ? 'auto' : `${height}px`,
+      height: typeof height === 'string' && height === 'auto' ? 'auto' : `${height}px`,
       backgroundColor: hexToRgba(cardBgColor, cardBgOpacity),
       backdropFilter: cardBlurIntensity > 0 ? `blur(${cardBlurIntensity}px)` : 'none',
       WebkitBackdropFilter: cardBlurIntensity > 0 ? `blur(${cardBlurIntensity}px)` : 'none',
@@ -237,7 +236,7 @@ export default function NewBannerPage() {
       boxShadow: getShadowValue(cardShadow),
       textAlign: textAlign,
       zIndex: 10,
-      isolation: 'isolate' as const,
+      isolation: 'isolate',
     };
   };
 
@@ -254,12 +253,20 @@ export default function NewBannerPage() {
           </Button>
         }
       >
-        <div className="flex h-full">
-          {/* Left Column - Form */}
+        <div className="flex h-full relative">
+          {/* Left Sidebar - Stepper */}
+          <div className="w-52 border-r border-gray-200 bg-gray-50/50 p-4 overflow-y-auto shrink-0">
+            <Stepper
+              steps={BANNER_WIZARD_STEPS}
+              currentStep={activeStep}
+              onStepClick={setActiveStep}
+            />
+          </div>
+
+          {/* Middle Column - Form Content */}
           <div className="flex-1 max-w-xl overflow-y-auto">
-            <Stepper steps={BANNER_WIZARD_STEPS} activeStep={activeStep} onStepChange={setActiveStep}>
-              {/* Step 1: Targeting */}
-              {activeStep === 1 && (
+            {/* Step 1: Targeting */}
+            {activeStep === 1 && (
                 <StepContent>
                   <div className="p-5">
                     <h2 className="text-base font-semibold text-gray-900 mb-4">Targeting</h2>
@@ -841,7 +848,7 @@ export default function NewBannerPage() {
                   </div>
                 </StepContent>
               )}
-            </Stepper>
+            </div>
           </div>
 
           {/* Right Column - Preview */}
